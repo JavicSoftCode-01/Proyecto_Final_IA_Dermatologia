@@ -1,0 +1,291 @@
+{% block content %}
+  <div class="container mt-4 mb-5">
+    <div class="text-center mb-4">
+      <h1 class="display-5 fw-bold text-primary">Mis Reportes de Análisis</h1>
+      <div class="underline-custom"></div>
+    </div>
+
+    {% if reports %}
+      <div class="row">
+        {% for report in reports %}
+          <div class="col-lg-4 col-md-6 col-12 mb-4">
+            <div class="card card-report h-100">
+              <div class="card-body d-flex flex-column">
+                <!-- Card header with icon -->
+                <div class="d-flex align-items-center mb-3">
+            <span class="icon-circle me-2">
+              <i class="fas fa-microscope"></i>
+            </span>
+                  <span class="report-label">Resultado de análisis</span>
+                </div>
+
+                <!-- Card title (condition) -->
+                <h5 class="card-title mb-3">{{ report.condition|default:"Reporte sin título" }}</h5>
+
+                <!-- Patient information -->
+                <div class="patient-info flex-grow-1">
+                  <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user-clock me-2"></i>Edad:</span>
+                    <span class="info-value">{{ report.age_approx|default:"Sin especificar" }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="info-label"><i class="fas fa-venus-mars me-2"></i>Sexo:</span>
+                    <span class="info-value">{{ report.get_sex_display|default:"Sin especificar" }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Localización:</span>
+                    <span class="info-value">{{ report.get_anatom_site_general_display|default:"Sin especificar" }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="info-label"><i class="fas fa-calendar me-2"></i>Fecha:</span>
+                    <span class="info-value">{{ report.uploaded_at|date:"d \d\e F, Y"|default:"No disponible" }}</span>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="button-area mt-3">
+                  <div class="d-grid gap-2">
+                    <a href="{% url 'dermatology:report_detail' report.id %}" class="btn btn-action">
+                      <i class="fas fa-eye me-2"></i>Ver Detalle
+                    </a>
+                    <a href="{% url 'dermatology:generate_report' report.id %}" class="btn btn-action">
+                      <i class="fas fa-file-pdf me-2"></i>Generar PDF
+                    </a>
+                    <button type="button" class="btn btn-action toggle-email-form"
+                            data-target="email-form-{{ report.id }}">
+                      <i class="fas fa-envelope me-2"></i>Enviar por Correo
+                    </button>
+                  </div>
+
+                  <!-- Email form - Hidden by default -->
+                  <div id="email-form-{{ report.id }}" class="email-form mt-3" style="display: none;">
+                    <form action="{% url 'dermatology:send_report_email' image_id=report.id %}" method="post">
+                      {% csrf_token %}
+                      <div class="mb-3">
+                        <label for="email-input-{{ report.id }}" class="form-label">
+                          <i class="fas fa-at me-1"></i>Email del destinatario:
+                        </label>
+                        <div class="input-group">
+                          <input type="email" class="form-control" id="email-input-{{ report.id }}"
+                                 name="email" required placeholder="ejemplo@correo.com">
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-send w-100">
+                        <i class="fas fa-paper-plane me-1"></i>Enviar
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center empty-state mt-5">
+        <div class="empty-icon mb-3">
+          <i class="fas fa-folder-open"></i>
+        </div>
+        <h3 class="text-muted">No hay reportes disponibles</h3>
+        <p>¡Comienza a analizar imágenes para ver tus resultados aquí!</p>
+        <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary mt-2">
+          <i class="fas fa-upload me-2"></i>Cargar nueva imagen
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+      /* Modern Typography */
+      body {
+          font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+          background-color: #f8f9fa;
+          color: #495057;
+      }
+
+      /* Custom heading with underline */
+      h1.display-5 {
+          color: #2c3e50;
+          letter-spacing: -0.5px;
+      }
+
+      .underline-custom {
+          height: 4px;
+          width: 70px;
+          background: linear-gradient(90deg, #3498db, #2ecc71);
+          margin: 0 auto;
+          border-radius: 2px;
+      }
+
+      /* Card styling with soft shadow */
+      .card-report {
+          border: none;
+          border-radius: 12px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s ease;
+          overflow: hidden;
+      }
+
+      .card-report:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Icon circle styling */
+      .icon-circle {
+          background-color: #ebf5ff;
+          color: #3498db;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+      }
+
+      .report-label {
+          color: #6c757d;
+          font-size: 14px;
+          font-weight: 500;
+      }
+
+      /* Card title styling */
+      .card-title {
+          color: #3498db;
+          font-weight: 600;
+          font-size: 1.3rem;
+          position: relative;
+          padding-bottom: 8px;
+      }
+
+      .card-title:after {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          height: 2px;
+          width: 40px;
+          background-color: #e9ecef;
+      }
+
+      /* Patient info styling */
+      .patient-info {
+          margin-bottom: 15px;
+      }
+
+      .info-row {
+          display: flex;
+          margin-bottom: 10px;
+          align-items: center;
+      }
+
+      .info-label {
+          color: #6c757d;
+          font-size: 14px;
+          min-width: 120px;
+          display: flex;
+          align-items: center;
+      }
+
+      .info-value {
+          font-weight: 500;
+          color: #2c3e50;
+          font-size: 14px;
+      }
+
+      /* Button styling */
+      .btn-action {
+          background-color: #f8f9fa;
+          border: 1px solid #e9ecef;
+          color: #495057;
+          font-weight: 500;
+          padding: 10px;
+          transition: all 0.2s ease;
+          margin-bottom: 8px;
+      }
+
+      .btn-action:hover {
+          background-color: #3498db;
+          border-color: #3498db;
+          color: white;
+      }
+
+      .btn-send {
+          background-color: #3498db;
+          color: white;
+          font-weight: 500;
+          padding: 10px;
+          border: none;
+      }
+
+      .btn-send:hover {
+          background-color: #2980b9;
+      }
+
+      /* Email form styling */
+      .email-form {
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          padding: 15px;
+          border-top: 1px solid #e9ecef;
+          transition: all 0.3s ease;
+      }
+
+      /* Empty state styling */
+      .empty-state .empty-icon {
+          font-size: 4rem;
+          color: #dee2e6;
+      }
+
+      /* Media queries for responsive design */
+      @media (max-width: 767.98px) {
+          .info-row {
+              flex-direction: column;
+              align-items: flex-start;
+          }
+
+          .info-label {
+              margin-bottom: 4px;
+          }
+
+          .icon-circle {
+              width: 32px;
+              height: 32px;
+              font-size: 14px;
+          }
+      }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Select all toggle email form buttons
+      const toggleButtons = document.querySelectorAll('.toggle-email-form');
+
+      toggleButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          // Get the target form ID
+          const targetId = this.getAttribute('data-target');
+          const emailForm = document.getElementById(targetId);
+
+          // Toggle visibility with animation
+          if (emailForm.style.display === 'none' || emailForm.style.display === '') {
+            emailForm.style.display = 'block';
+            // Add a small delay before scrolling for better animation effect
+            setTimeout(() => {
+              emailForm.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }, 100);
+          } else {
+            emailForm.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}

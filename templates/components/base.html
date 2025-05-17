@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Página Principal</title>
+</head>
+<body>
+    <h1>Bienvenido a la App de Dermatología</h1>
+
+    
+    <ul>
+        <li><a href="{% url 'dermatology:upload_image' %}">Subir Imagen</a></li>
+        <li><a href="{% url 'dermatology:report_list' %}">Mis Reportes de Análisis de Enfermedades</a></li>
+    </ul>
+</body>
+</html>
