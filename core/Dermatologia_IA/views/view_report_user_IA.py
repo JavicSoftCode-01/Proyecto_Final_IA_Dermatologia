@@ -27,72 +27,22 @@ PREPROCESSOR_FILENAME = 'metadata_preprocessor.joblib'
 MODEL_PATH = os.path.join(RESULTS_DIR, MODEL_FILENAME)
 PREPROCESSOR_PATH = os.path.join(RESULTS_DIR, PREPROCESSOR_FILENAME)
 
-print(f"DEBUG: settings.BASE_DIR es: {settings.BASE_DIR}")
-print(f"DEBUG: RESULTADOS_DEL_MODELO_ENTRENADO en: {RESULTS_DIR}")
-print(f"DEBUG: Ruta modelo: {MODEL_PATH}")
-print(f"DEBUG: Ruta preprocesador: {PREPROCESSOR_PATH}")
+# (debug prints omitted for brevity)
 
 all_possible_classes_in_data = ['AK', 'BCC', 'BKL', 'DF', 'MEL', 'NV', 'SCC', 'VASC']
 condition_classes = sorted(all_possible_classes_in_data)
 index_to_class = {i: name for i, name in enumerate(condition_classes)}
 
-print(f"Clases esperadas por el modelo: {condition_classes}")
-print(f"Mapeo índice a clase: {index_to_class}")
-
-# --- Carga de Modelo Keras ---
-keras_model = None
-if os.path.exists(MODEL_PATH):
-  try:
-    keras_model = load_model(MODEL_PATH)
-    print(f"Modelo Keras cargado correctamente desde: {MODEL_PATH}")
-  except Exception as e:
-    print(f"Error crítico al cargar el modelo Keras desde {MODEL_PATH}: {e}")
-    traceback.print_exc()
-    keras_model = None
-else:
-  print(f"Error crítico: No se encontró el archivo del modelo Keras en {MODEL_PATH}")
-  keras_model = None
-
-# --- Carga del Preprocesador de Metadatos ---
-metadata_preprocessor = None
-if os.path.exists(PREPROCESSOR_PATH):
-  try:
-    metadata_preprocessor = joblib.load(PREPROCESSOR_PATH)
-    print(f"Preprocesador de metadatos cargado desde: {PREPROCESSOR_PATH}")
-    # Verificación inicial
-    metadata_cols = ['age_approx', 'sex', 'anatom_site_general', 'dataset']
-    dummy_metadata = pd.DataFrame({
-      'age_approx': [50], 'sex': ['male'], 'anatom_site_general': ['unknown'], 'dataset': ['ISIC']
-    })[metadata_cols]
-    dummy_metadata['age_approx'] = pd.to_numeric(dummy_metadata['age_approx'], errors='coerce').fillna(50)
-    for col in ['sex', 'anatom_site_general', 'dataset']:
-      dummy_metadata[col] = dummy_metadata[col].astype(str).fillna('unknown')
-    processed_shape = metadata_preprocessor.transform(dummy_metadata).shape[1]
-    print(f"DEBUG: Dimensión de metadatos procesados: {processed_shape}")
-  except Exception as e:
-    print(f"Error crítico al cargar o verificar el preprocesador desde {PREPROCESSOR_PATH}: {e}")
-    traceback.print_exc()
-    metadata_preprocessor = None
-else:
-  print(f"Error crítico: No se encontró el preprocesador en {PREPROCESSOR_PATH}")
-  metadata_preprocessor = None
+# --- Carga de Modelo Keras y Preprocesador ---
+keras_model = load_model(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
+metadata_preprocessor = joblib.load(PREPROCESSOR_PATH) if os.path.exists(PREPROCESSOR_PATH) else None
 
 # --- Configuración de Gemini AI ---
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 gemini_model = None
 if GEMINI_API_KEY:
-  try:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    gemini_model.generate_content("Hello", generation_config=genai.types.GenerationConfig(max_output_tokens=10))
-    print("Gemini AI configurado y conexión exitosa.")
-  except Exception as e:
-    print(f"Error al configurar o conectar con Gemini AI: {e}")
-    traceback.print_exc()
-    gemini_model = None
-else:
-  print("ADVERTENCIA: GEMINI_API_KEY no definida. Generación de reportes limitada.")
-  gemini_model = None
+  genai.configure(api_key=GEMINI_API_KEY)
+  gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 
 class ReportListView(ListView):
@@ -101,19 +51,27 @@ class ReportListView(ListView):
   context_object_name = 'reports'
 
   def get_queryset(self):
-    return SkinImage.objects.filter(processed=True)  # Filter processed reports only
+    return SkinImage.objects.filter(processed=True)
 
 
 class ReportDetailView(DetailView):
   model = SkinImage
-  template_name = 'Dermatologia_IA/results.html'  # Reusing your existing template
+  template_name = 'Dermatologia_IA/results.html'
   context_object_name = 'skin_image'
-  # Add this line to specify the URL kwarg to use for lookup
   pk_url_kwarg = 'image_id'
 
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
-    context['show_actions'] = False  # Hide action buttons in detail view
+    context['show_actions'] = False
+    # Agregar datos del paciente
+    si = context['skin_image']
+    context.update({
+      'first_name': si.first_name,
+      'last_name': si.last_name,
+      'dni': si.dni,
+      'phone': si.phone,
+      'email': si.email,
+    })
     return context
 
 
@@ -157,38 +115,96 @@ class AIProcessor:
 
   @staticmethod
   def calculate_gradcam_image_only(img_array, full_model, actual_pred_index):
+    """
+    Calcula el mapa de calor Grad-CAM para la imagen usando solo la parte de imagen del modelo.
+
+    Args:
+        img_array: Array numpy de la imagen preprocesada
+        full_model: Modelo completo de keras
+        actual_pred_index: Índice de la clase predicha
+
+    Returns:
+        Tupla de (heatmap, nombre_capa) o (None, nombre_capa) si hay error
+    """
     try:
-      base_model_name = 'resnet50_base'
-      base_model_layer = full_model.get_layer(base_model_name)
+      print(f"Iniciando cálculo de Grad-CAM para clase: {actual_pred_index}")
+      # Obtener la capa base del modelo ResNet50
+      try:
+        base_model_name = 'resnet50_base'
+        base_model_layer = full_model.get_layer(base_model_name)
+        print(f"Modelo base encontrado: {base_model_name}")
+      except Exception as e:
+        print(f"Error al obtener la capa base '{base_model_name}': {e}")
+        # Intentar con otra posible capa base si hay error
+        base_model_names = ['resnet', 'base_model', 'cnn_base']
+        for name in base_model_names:
+          try:
+            base_model_layer = full_model.get_layer(name)
+            base_model_name = name
+            print(f"Modelo base alternativo encontrado: {base_model_name}")
+            break
+          except:
+            continue
+        else:
+          # Si llegamos aquí, no encontramos ninguna capa base
+          raise ValueError("No se pudo encontrar una capa base válida en el modelo")
+
+      # Encontrar la última capa convolucional
       last_conv_layer = None
       last_conv_layer_name = None
       for layer in reversed(base_model_layer.layers):
         if isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
           last_conv_layer = layer
           last_conv_layer_name = layer.name
+          print(f"Última capa convolucional encontrada: {last_conv_layer_name}")
           break
+
       if not last_conv_layer:
         raise ValueError(f"No se encontró capa convolucional en {base_model_name}")
 
+      # Crear modelo para extraer características y salida de la última capa convolucional
+      print("Creando modelo para Grad-CAM...")
       image_only_grad_model = tf.keras.Model(
         inputs=base_model_layer.input,
         outputs=[last_conv_layer.output, base_model_layer.output]
       )
 
+      # Calcular gradientes
+      print("Calculando gradientes...")
       with tf.GradientTape() as tape:
         conv_output_value, base_output_value = image_only_grad_model(tf.cast(img_array, tf.float32), training=False)
         tape.watch(conv_output_value)
-        output_for_grads = tf.reduce_sum(base_output_value)
+
+        # Usar el índice correcto para la clase predicha o sumar todas
+        if actual_pred_index >= 0:
+          output_for_grads = base_output_value[:, actual_pred_index]
+        else:
+          output_for_grads = tf.reduce_sum(base_output_value)
+
+      # Obtener gradientes
       grads = tape.gradient(output_for_grads, conv_output_value)
       if grads is None:
         raise ValueError("Gradientes no calculados")
 
+      # Procesar gradientes para generar heatmap
+      print("Generando heatmap...")
       pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-      heatmap = conv_output_value[0] @ pooled_grads[..., tf.newaxis]
-      heatmap = tf.squeeze(tf.maximum(heatmap, 0))
+      heatmap = tf.matmul(conv_output_value[0], pooled_grads[..., tf.newaxis])
+      heatmap = tf.squeeze(heatmap)
+      heatmap = tf.maximum(heatmap, 0)  # ReLU para mantener solo activaciones positivas
+
+      # Normalizar heatmap a [0,1]
       max_val = tf.reduce_max(heatmap)
-      heatmap = heatmap / max_val if max_val > 0 else heatmap
-      return heatmap.numpy(), last_conv_layer_name
+      if max_val > 0:
+        heatmap = heatmap / max_val
+
+      # Convertir a numpy para su uso
+      heatmap_np = heatmap.numpy()
+      print(
+        f"Heatmap generado exitosamente. Shape: {heatmap_np.shape}, Rango: [{np.min(heatmap_np)}, {np.max(heatmap_np)}]")
+
+      return heatmap_np, last_conv_layer_name
+
     except Exception as e:
       print(f"Error crítico al calcular Grad-CAM: {e}")
       traceback.print_exc()
@@ -218,48 +234,38 @@ class AIProcessor:
 
 # --- Clase UploadImageView ---
 class UploadImageView(View):
-  template_name = 'Dermatologia_IA/upload.html'
+    template_name = 'Dermatologia_IA/upload.html'
 
-  def get(self, request):
-    form = SkinImageForm()
-    return render(request, self.template_name, {'form': form})
+    def get(self, request):
+        form = SkinImageForm()
+        return render(request, self.template_name, {'form': form})
 
-  def post(self, request):
-    form = SkinImageForm(request.POST, request.FILES)
-    if form.is_valid():
-      try:
-        if keras_model is None or metadata_preprocessor is None:
-          print("Error crítico: Modelo o preprocesador no cargados")
-          return JsonResponse({
-            'success': False,
-            'error': 'Sistema de análisis no disponible. Contacte al administrador.'
-          })
+    def post(self, request):
+        form = SkinImageForm(request.POST, request.FILES)
+        if not form.is_valid():
+            # For debugging, print the errors to your console
+            print("Form errors:", form.errors.as_json())
+            return JsonResponse({
+                'success': False,
+                'error': 'Corrija los errores del formulario.',
+                'form_errors': form.errors
+            })
+
+        # For debugging, print cleaned_data
+        print("Form cleaned_data:", form.cleaned_data)
+
         skin_image = form.save(commit=False)
+
+        # This is correct, as 'processed' is likely not part of the form
         skin_image.processed = False
-        skin_image.condition = None
-        skin_image.location = skin_image.get_anatom_site_general_display()
-        skin_image.confidence = None
-        skin_image.ai_report = ""
-        skin_image.ai_treatment = ""
-        skin_image.gradcam_path = None
+
+        # Now save the instance to the database
         skin_image.save()
-        print(f"Imagen guardada con ID: {skin_image.id}")
-        process_url = reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
-        return JsonResponse({'success': True, 'redirect_url': process_url})
-      except Exception as e:
-        print(f"Error crítico al guardar imagen y metadatos: {e}")
-        traceback.print_exc()
+
         return JsonResponse({
-          'success': False,
-          'error': 'Error interno al guardar los datos. Intente nuevamente o contacte soporte.'
+            'success': True,
+            'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
         })
-    else:
-      print(f"Error de formulario: {form.errors.as_json()}")
-      return JsonResponse({
-        'success': False,
-        'error': 'Corrija los errores del formulario.',
-        'form_errors': form.errors.as_json()
-      })
 
 
 # --- Clase ProcessImageView ---
@@ -271,134 +277,118 @@ class ProcessImageView(DetailView):
 
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
-    skin_image = self.object
+    si = self.object
 
-    if skin_image.processed:
-      print(f"Mostrando resultados procesados para ID {skin_image.id}")
+    # Si ya fue procesada, cargamos datos guardados
+    if si.processed:
+      # Datos IA
       context.update({
-        'condition': skin_image.condition or "No determinado",
-        'location': skin_image.location or skin_image.get_anatom_site_general_display() or "No especificado",
-        'confidence': skin_image.confidence,
-        'report': skin_image.ai_report or "No disponible",
-        'treatment': skin_image.ai_treatment or "No disponible",
-        'gradcam_path': skin_image.gradcam_path,
-        'age_approx': skin_image.age_approx,
-        'sex': skin_image.get_sex_display() or "No especificado",
-        'anatom_site_general': skin_image.get_anatom_site_general_display() or "No especificado",
-        'uploaded_at': skin_image.uploaded_at,
-        'image_url': skin_image.image.url if skin_image.image else None,
+        'condition': si.condition or 'No determinada',
+        'confidence': si.confidence,
+        'report': si.ai_report or 'No disponible',
+        'treatment': si.ai_treatment or 'No disponible',
+        'gradcam_path': si.gradcam_path,
+        # Metadatos originales
+        'age_approx': si.age_approx,
+        'sex': si.get_sex_display(),
+        'anatom_site_general': si.get_anatom_site_general_display(),
+        # Nuevos datos de paciente
+        'first_name': si.first_name,
+        'last_name': si.last_name,
+        'dni': si.dni,
+        'phone': si.phone,
+        'email': si.email,
+        # Otros
+        'uploaded_at': si.uploaded_at,
+        'image_url': si.image.url if si.image else None,
       })
       return context
 
-    print(f"Iniciando procesamiento para ID {skin_image.id}")
-    context['processing_now'] = True
-
+    # Procesamiento inicial
     try:
+      # Verificar componentes IA
       if keras_model is None or metadata_preprocessor is None:
-        raise Exception("Sistema de análisis no disponible")
+        raise RuntimeError('Sistema de IA no disponible')
 
-      image_path = skin_image.image.path
-      if not os.path.exists(image_path):
-        raise FileNotFoundError(f"Imagen no encontrada en {image_path}")
+      # Preprocesado
+      img_array, original_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
+      if img_array is None:
+        raise ValueError('No se pudo preprocesar la imagen')
 
-      img_array, original_img_rgb = AIProcessor.preprocess_image_for_model(image_path)
-      if img_array is None or original_img_rgb is None:
-        raise ValueError("Fallo al preprocesar la imagen")
+      meta = AIProcessor.preprocess_metadata_for_model({
+        'age_approx': si.age_approx,
+        'sex': si.sex,
+        'anatom_site_general': si.anatom_site_general,
+        'dataset': 'ISIC'
+      }, metadata_preprocessor)
+      if meta is None:
+        raise ValueError('No se pudo preprocesar metadatos')
 
-      metadata_dict = {
-        'age_approx': skin_image.age_approx, 'sex': skin_image.sex,
-        'anatom_site_general': skin_image.anatom_site_general, 'dataset': 'ISIC'
-      }
-      metadata_processed = AIProcessor.preprocess_metadata_for_model(metadata_dict, metadata_preprocessor)
-      if metadata_processed is None:
-        raise ValueError("Fallo al preprocesar metadatos")
+      # Predicción
+      preds = keras_model.predict([tf.constant(img_array), tf.constant(meta)], verbose=0)[0]
+      idx = int(np.argmax(preds))
+      si.condition = index_to_class.get(idx, 'Condición desconocida')
+      si.confidence = float(preds[idx] * 100)
 
-      img_input = tf.constant(img_array, dtype=tf.float32)
-      meta_input = tf.constant(metadata_processed, dtype=tf.float32)
-      prediction = keras_model.predict([img_input, meta_input], verbose=0)
-
-      if prediction.shape != (1, len(condition_classes)):
-        raise ValueError(f"Predicción con forma inválida: {prediction.shape}")
-
-      condition_pred_probs = prediction[0]
-      condition_index = np.argmax(condition_pred_probs)
-      predicted_condition = index_to_class.get(condition_index, "Condición desconocida")
-      confidence = float(condition_pred_probs[condition_index] * 100)
-      skin_image.condition = predicted_condition
-      skin_image.confidence = confidence
-
+      # Generar Grad-CAM - Añadir más manejo de errores y logs
       try:
-        heatmap_np_0_1, layer_name_used = AIProcessor.calculate_gradcam_image_only(img_array, keras_model,
-                                                                                   condition_index)
-        if heatmap_np_0_1 is not None:
-          target_h, target_w = original_img_rgb.shape[0], original_img_rgb.shape[1]
-          heatmap_resized = cv2.resize(heatmap_np_0_1, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+        print(f"Generando Grad-CAM para imagen ID: {si.id}")
+        heatmap, layer_name = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
+        if heatmap is not None:
+          print(f"Heatmap generado correctamente. Shape: {heatmap.shape}")
+          h, w = original_rgb.shape[:2]
+          print(f"Imagen original dimensiones: {w}x{h}")
+
+          # Asegurarse de que el heatmap tiene valores correctos
+          if np.isnan(heatmap).any() or np.isinf(heatmap).any():
+            print("¡ADVERTENCIA! Heatmap contiene NaN o Inf. Corrigiendo...")
+            heatmap = np.nan_to_num(heatmap)
+
+          heatmap_resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
           heatmap_uint8 = np.uint8(255 * heatmap_resized)
-          heatmap_colored = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
-          original_img_bgr = cv2.cvtColor(original_img_rgb, cv2.COLOR_RGB2BGR)
-          if original_img_bgr.dtype != np.uint8:
-            original_img_bgr = cv2.normalize(original_img_bgr, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-          superimposed_img = cv2.addWeighted(original_img_bgr, 0.6, heatmap_colored, 0.4, 0)
-          gradcam_filename = f'gradcam_{skin_image.id}.jpg'
-          gradcam_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
-          os.makedirs(gradcam_dir, exist_ok=True)
-          gradcam_path_fs = os.path.join(gradcam_dir, gradcam_filename)
-          if cv2.imwrite(gradcam_path_fs, superimposed_img):
-            skin_image.gradcam_path = os.path.join(settings.MEDIA_URL, 'gradcam_images', gradcam_filename).replace("\\",
-                                                                                                                   "/")
+          heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
+          orig_bgr = cv2.cvtColor(original_rgb, cv2.COLOR_RGB2BGR)
+          overlay = cv2.addWeighted(orig_bgr, 0.6, heatmap_color, 0.4, 0)
+
+          # Crear directorio si no existe
+          grad_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
+          os.makedirs(grad_dir, exist_ok=True)
+
+          # Guardar la imagen
+          fname = f'gradcam_{si.id}.jpg'
+          fpath = os.path.join(grad_dir, fname)
+          success = cv2.imwrite(fpath, overlay)
+
+          if success:
+            print(f"Grad-CAM guardado correctamente en: {fpath}")
+            # Usar os.path.join correctamente para la URL
+            media_url = settings.MEDIA_URL.rstrip('/')
+            si.gradcam_path = f"{media_url}/gradcam_images/{fname}"
+            print(f"URL del Grad-CAM: {si.gradcam_path}")
           else:
-            raise Exception("Fallo al guardar Grad-CAM")
+            print(f"¡ERROR! No se pudo guardar el Grad-CAM en: {fpath}")
+            messages.warning(self.request, f'No se pudo guardar el mapa de calor en: {fpath}')
         else:
-          messages.warning(self.request, "No se pudo generar el mapa de calor (Grad-CAM).")
-      except Exception as e_gradcam:
-        print(f"Error crítico al generar Grad-CAM: {e_gradcam}")
+          print("Heatmap es None, no se puede generar Grad-CAM")
+          messages.warning(self.request, 'No se pudo generar el mapa de calor: heatmap vacío')
+      except Exception as grad_error:
+        print(f"Error al generar Grad-CAM: {grad_error}")
         traceback.print_exc()
-        messages.warning(self.request, "No se pudo generar el mapa de calor.")
-        skin_image.gradcam_path = None
+        messages.warning(self.request, f'Error en Grad-CAM: {grad_error}')
 
-      if predicted_condition:
-        ai_report, ai_treatment = AIProcessor.generate_ai_content(predicted_condition)
-        skin_image.ai_report = ai_report
-        skin_image.ai_treatment = ai_treatment
-        if not gemini_model:
-          messages.info(self.request, "Generación de detalles por IA no activa.")
-      else:
-        skin_image.ai_report = "Reporte no generado."
-        skin_image.ai_treatment = "Tratamiento no generado."
+      # Contenido IA
+      si.ai_report, si.ai_treatment = AIProcessor.generate_ai_content(si.condition)
 
-      skin_image.processed = True
-      skin_image.save()
-      messages.success(self.request, f"Análisis completado: {predicted_condition}")
+      # Guardar todo el objeto antes de retornar
+      si.processed = True
+      si.save()
 
-      context.update({
-        'condition': predicted_condition,
-        'location': skin_image.location or skin_image.get_anatom_site_general_display(),
-        'confidence': confidence,
-        'report': skin_image.ai_report,
-        'treatment': skin_image.ai_treatment,
-        'gradcam_path': skin_image.gradcam_path,
-        'age_approx': skin_image.age_approx,
-        'sex': skin_image.get_sex_display(),
-        'anatom_site_general': skin_image.get_anatom_site_general_display(),
-        'uploaded_at': skin_image.uploaded_at,
-        'image_url': skin_image.image.url if skin_image.image else None,
-      })
+      messages.success(self.request, f'Análisis completado: {si.condition}')
 
-    except FileNotFoundError as e:
-      print(f"Error crítico: Imagen no encontrada - {e}")
+      # Volver a cargar contexto con resultados
+      return self.get_context_data(**kwargs)
+
+    except Exception as error:
       traceback.print_exc()
-      messages.error(self.request, "No se encontró la imagen. Suba la imagen nuevamente.")
-      context['error'] = "Archivo de imagen no encontrado."
-    except ValueError as e:
-      print(f"Error crítico de datos: {e}")
-      traceback.print_exc()
-      messages.error(self.request, "Error en los datos. Verifique la información ingresada.")
-      context['error'] = "Error en los datos."
-    except Exception as e:
-      print(f"Error crítico inesperado: {e}")
-      traceback.print_exc()
-      messages.error(self.request, "Error durante el procesamiento. Contacte soporte.")
-      context['error'] = "Error inesperado."
-
-    context.pop('processing_now', None)
-    return context
+      messages.error(self.request, f'Error al procesar imagen: {error}')
+      return context

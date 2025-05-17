@@ -1,8 +1,32 @@
+# core/Dermatologia_IA/models.py
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 
 class SkinImage(models.Model):
+  # Información del paciente
+  first_name = models.CharField(
+    max_length=100,
+    help_text="Nombre del paciente"
+  )
+  last_name = models.CharField(
+    max_length=100,
+    help_text="Apellido del paciente"
+  )
+  dni = models.CharField(
+    max_length=20,
+    help_text="Documento de identidad del paciente"
+  )
+  phone = models.CharField(
+    max_length=20,
+    help_text="Teléfono de contacto"
+  )
+  email = models.EmailField(
+    help_text="Correo electrónico"
+  )
+
+  # Imagen y metadatos clínicos
   image = models.ImageField(upload_to='skin_images/')
   uploaded_at = models.DateTimeField(auto_now_add=True)
   processed = models.BooleanField(default=False)
@@ -13,15 +37,14 @@ class SkinImage(models.Model):
   ai_report = models.TextField(blank=True, null=True)
   ai_treatment = models.TextField(blank=True, null=True)
 
-  # Edad aproximada (campo numérico requerido)
+  # Campos originales de metadatos
   age_approx = models.PositiveIntegerField(
     blank=False,
     null=False,
-    validators=[MinValueValidator(0), MaxValueValidator(120)],  # Validación básica
+    validators=[MinValueValidator(0), MaxValueValidator(120)],
     help_text="Edad aproximada del paciente (0-120)."
   )
 
-  # Sexo (campo categórico requerido)
   SEX_CHOICES = [
     ('female', 'Femenino'),
     ('male', 'Masculino'),
@@ -36,7 +59,6 @@ class SkinImage(models.Model):
     help_text="Sexo del paciente."
   )
 
-  # Localización anatómica general (campo categórico requerido)
   ANATOM_SITE_CHOICES = [
     ('abdomen', 'Abdomen'),
     ('acral', 'Acral (Palmas, Plantas, Dedos)'),
@@ -56,23 +78,22 @@ class SkinImage(models.Model):
     ('palms/soles', 'Palmas/Plantas'),
     ('posterior torso', 'Torso Posterior'),
     ('scalp', 'Cuero Cabelludo'),
-    ('trunk', 'Tronco (General)'),  # Usar 'trunk' como lo vio el preprocesador
-    ('unknown', 'Desconocida/Otra'),  # El preprocesador aprendió 'unknown'
+    ('trunk', 'Tronco (General)'),
+    ('unknown', 'Desconocida/Otra'),
     ('upper extremity', 'Extremidad Superior'),
   ]
   anatom_site_general = models.CharField(
-    max_length=50,  # Asegúrate de que sea suficiente para el valor más largo
+    max_length=50,
     choices=ANATOM_SITE_CHOICES,
     blank=False,
     null=False,
-    default='unknown',  # Valor por defecto
+    default='unknown',
     help_text="Localización anatómica general de la lesión."
   )
 
   def __str__(self):
     status = self.condition or ('Procesada' if self.processed else 'Pendiente')
-    # Incluir metadatos en la representación string
     age_str = f"Edad: {self.age_approx}" if self.age_approx is not None else "Edad: ?"
     sex_str = f"Sexo: {self.get_sex_display()}" if self.sex else "Sexo: ?"
-    site_str = f"Loc: {self.get_anatom_site_general_display()}" if self.anatom_site_general else "Loc: ?"
+    site_str = f"Locación: {self.get_anatom_site_general_display()}" if self.anatom_site_general else "Locación: ?"
     return f"Imagen {self.id} ({status}) - {age_str}, {sex_str}, {site_str}"

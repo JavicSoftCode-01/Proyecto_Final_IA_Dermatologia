@@ -10,7 +10,7 @@ from core.Dermatologia_IA.utils.sendReportEmail import send_report_email
 
 class GenerateReportView(View):
   """
-  Vista basada en clase para generar y descargar el reporte PDF.
+   generar y descargar el reporte PDF.
   """
 
   def get(self, request, image_id):
@@ -29,7 +29,7 @@ class GenerateReportView(View):
 
 class SendReportEmailView(View):
   """
-  Vista basada en clase para enviar el reporte por email.
+  enviar el reporte por email.
   """
 
   def post(self, request, image_id):

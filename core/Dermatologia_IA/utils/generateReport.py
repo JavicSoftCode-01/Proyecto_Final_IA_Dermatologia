@@ -26,130 +26,149 @@ def generate_report(image_id):
 
     # Crear una respuesta HttpResponse con tipo de contenido PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="reporte_dermatologico_{image_id}.pdf"'
+    response['Content-Disposition'] = (
+      f'attachment; filename="reporte_dermatologico_{image_id}.pdf"'
+    )
 
     # Configurar el documento PDF con ReportLab
-    doc = SimpleDocTemplate(response, pagesize=letter,
-                            leftMargin=0.75 * inch, rightMargin=0.75 * inch,
-                            topMargin=0.75 * inch, bottomMargin=0.75 * inch)
+    doc = SimpleDocTemplate(
+      response,
+      pagesize=letter,
+      leftMargin=0.75 * inch,
+      rightMargin=0.75 * inch,
+      topMargin=0.75 * inch,
+      bottomMargin=0.75 * inch,
+    )
     styles = getSampleStyleSheet()
-    h1_style = styles['h1']
-    h2_style = styles['h2']
-    h3_style = styles['h3']
-    normal_style = styles['Normal']
-    normal_style.wordWrap = 'CJK'
-    italic_style = styles['Italic']
+    h1 = styles['h1']
+    h2 = styles['h2']
+    h3 = styles['h3']
+    normal = styles['Normal']
+    normal.wordWrap = 'CJK'
+    italic = styles['Italic']
 
-    # Construir el contenido del PDF
+    # Construir contenido
     story = [
-      Paragraph("Reporte de Análisis Dermatológico Preliminar", h1_style),
+      Paragraph("Reporte de Análisis Dermatológico Preliminar", h1),
       Spacer(1, 0.2 * inch),
-      Paragraph("Datos de la Imagen/Paciente:", h2_style),
-      Paragraph(f"<b>ID de Imagen:</b> {skin_image.id}", normal_style)
+      Paragraph("Datos del Paciente e Imagen:", h2),
+      Paragraph(f"<b>ID de Imagen:</b> {skin_image.id}", normal),
     ]
 
+    # Datos de paciente
+    if skin_image.first_name or skin_image.last_name:
+      nombre = f"{skin_image.first_name or ''} {skin_image.last_name or ''}".strip()
+      story.append(Paragraph(f"<b>Nombre:</b> {nombre}", normal))
+    if skin_image.dni:
+      story.append(Paragraph(f"<b>DNI:</b> {skin_image.dni}", normal))
+    if skin_image.phone:
+      story.append(Paragraph(f"<b>Teléfono:</b> {skin_image.phone}", normal))
+    if skin_image.email:
+      story.append(Paragraph(f"<b>Correo Electrónico:</b> {skin_image.email}", normal))
     if skin_image.uploaded_at:
       story.append(
-        Paragraph(f"<b>Fecha de Análisis:</b> {skin_image.uploaded_at.strftime('%Y-%m-%d %H:%M')}", normal_style))
+        Paragraph(
+          f"<b>Fecha de Análisis:</b> {skin_image.uploaded_at.strftime('%Y-%m-%d %H:%M')}",
+          normal,
+        )
+      )
     if skin_image.age_approx is not None:
-      story.append(Paragraph(f"<b>Edad Aproximada:</b> {skin_image.age_approx}", normal_style))
+      story.append(
+        Paragraph(f"<b>Edad Aproximada:</b> {skin_image.age_approx}", normal)
+      )
     if skin_image.sex:
-      story.append(Paragraph(f"<b>Sexo:</b> {skin_image.get_sex_display()}", normal_style))
+      story.append(
+        Paragraph(f"<b>Sexo:</b> {skin_image.get_sex_display()}", normal)
+      )
     if skin_image.anatom_site_general:
       story.append(
-        Paragraph(f"<b>Localización Anatómica:</b> {skin_image.get_anatom_site_general_display()}", normal_style))
-
+        Paragraph(
+          f"<b>Localización Anatómica:</b> {skin_image.get_anatom_site_general_display()}",
+          normal,
+        )
+      )
     story.append(Spacer(1, 0.2 * inch))
 
-    # Imagen Original
+    # Imagen original
     img_path = skin_image.image.path
     if os.path.exists(img_path):
-      story.append(Paragraph("Imagen Analizada:", h3_style))
+      story.append(Paragraph("Imagen Analizada:", h3))
       try:
         img = ReportlabImage(img_path, width=2.5 * inch, height=2.5 * inch)
         img.hAlign = 'CENTER'
-        story.append(img)
-        story.append(Spacer(1, 0.1 * inch))
-      except Exception as img_err:
-        print(f"Error al cargar imagen original para PDF {image_id}: {img_err}")
-        story.append(Paragraph("<i>Error al cargar imagen original.</i>", italic_style))
+        story.extend([img, Spacer(1, 0.1 * inch)])
+      except Exception:
+        story.append(Paragraph("<i>Error al cargar imagen original.</i>", italic))
     else:
-      print(f"PDF Gen: Imagen original NO encontrada en ruta: {img_path}")
-      story.append(Paragraph("<i>Imagen original no encontrada.</i>", italic_style))
+      story.append(Paragraph("<i>Imagen original no encontrada.</i>", italic))
 
     # Grad-CAM
-    gradcam_fs_path = None
+    grad_fs = None
     if skin_image.gradcam_path:
-      print(f"PDF Gen: URL Grad-CAM encontrada en DB: {skin_image.gradcam_path}")
       try:
-        relative_path = skin_image.gradcam_path.replace(settings.MEDIA_URL, '', 1).lstrip('/')
-        gradcam_fs_path = os.path.join(settings.MEDIA_ROOT, relative_path)
-        print(f"PDF Gen: Ruta Grad-CAM calculada: {gradcam_fs_path}")
-      except Exception as e:
-        print(f"PDF Gen: Error al convertir URL GradCAM a ruta de archivo: {e}")
-        gradcam_fs_path = None
-
-    if gradcam_fs_path and os.path.exists(gradcam_fs_path):
-      story.append(Paragraph("Mapa de Calor (Grad-CAM):", h3_style))
+        rel = skin_image.gradcam_path.replace(settings.MEDIA_URL, '').lstrip('/')
+        grad_fs = os.path.join(settings.MEDIA_ROOT, rel)
+      except Exception:
+        grad_fs = None
+    if grad_fs and os.path.exists(grad_fs):
+      story.append(Paragraph("Mapa de Calor (Grad-CAM):", h3))
       try:
-        grad_img = ReportlabImage(gradcam_fs_path, width=2.5 * inch, height=2.5 * inch)
+        grad_img = ReportlabImage(grad_fs, width=2.5 * inch, height=2.5 * inch)
         grad_img.hAlign = 'CENTER'
-        story.append(grad_img)
-        story.append(Spacer(1, 0.2 * inch))
-        print(f"PDF Gen: Imagen Grad-CAM añadida desde {gradcam_fs_path}")
-      except Exception as grad_err:
-        print(f"Error al cargar imagen Grad-CAM para PDF {image_id} desde {gradcam_fs_path}: {grad_err}")
-        story.append(Paragraph(f"<i>Error al cargar imagen Grad-CAM desde {gradcam_fs_path}.</i>", italic_style))
-    elif skin_image.gradcam_path:
-      print(f"PDF Gen: Archivo Grad-CAM NO encontrado en ruta calculada: {gradcam_fs_path}")
-      story.append(Paragraph("<i>Imagen Grad-CAM no encontrada en el servidor.</i>", italic_style))
+        story.extend([grad_img, Spacer(1, 0.2 * inch)])
+      except Exception:
+        story.append(Paragraph("<i>Error al cargar Grad-CAM.</i>", italic))
     else:
-      story.append(Paragraph("<i>Mapa de calor no disponible.</i>", italic_style))
+      story.append(Paragraph("<i>Mapa de calor no disponible.</i>", italic))
 
-    # Diagnóstico Preliminar
-    story.append(Paragraph("Diagnóstico Preliminar (Basado en IA):", h2_style))
-    story.append(Paragraph(f"<b>Condición Sugerida:</b> {skin_image.condition or 'No determinada'}", normal_style))
+    # Diagnóstico preliminar
+    story.append(Paragraph("Diagnóstico Preliminar (Basado en IA):", h2))
+    story.append(
+      Paragraph(
+        f"<b>Condición Sugerida:</b> {skin_image.condition or 'No determinada'}", normal
+      )
+    )
     if skin_image.confidence is not None:
-      story.append(Paragraph(f"<b>Confianza del Modelo:</b> {skin_image.confidence:.2f}%", normal_style))
-    if skin_image.location and skin_image.location != "No determinado":
-      story.append(Paragraph(f"<b>Ubicación Registrada:</b> {skin_image.location}", normal_style))
-
+      story.append(
+        Paragraph(
+          f"<b>Confianza del Modelo:</b> {skin_image.confidence:.2f}%", normal
+        )
+      )
     story.append(Spacer(1, 0.2 * inch))
 
-    # Reporte Detallado IA
-    story.append(Paragraph("Reporte (Generado por IA):", h2_style))
-    report_text = (skin_image.ai_report or "No disponible.").replace('**', '').strip()
-    story.append(Paragraph(report_text.replace('\n', '<br/>'), normal_style))
+    # Reporte IA
+    story.append(Paragraph("Reporte (Generado por IA):", h2))
+    report = (skin_image.ai_report or "No disponible.").replace('**', '').strip()
+    story.append(Paragraph(report.replace('\n', '<br/>'), normal))
     story.append(Spacer(1, 0.2 * inch))
 
     # Tratamiento IA
-    story.append(Paragraph("Tratamiento (Generado por IA):", h2_style))
-    treatment_text = (skin_image.ai_treatment or "No disponible.").replace('**', '').strip()
-    story.append(Paragraph(treatment_text.replace('\n', '<br/>'), normal_style))
+    story.append(Paragraph("Tratamiento (Generado por IA):", h2))
+    treat = (skin_image.ai_treatment or "No disponible.").replace('**', '').strip()
+    story.append(Paragraph(treat.replace('\n', '<br/>'), normal))
     story.append(Spacer(1, 0.3 * inch))
 
-    # Aviso Importante
-    story.append(Paragraph("<u>Aviso Importante:</u>", h3_style))
-    story.append(Paragraph(
-      "Este reporte se genera mediante inteligencia artificial. Es una herramienta de apoyo y <b>NO sustit Hannahs sustituye el diagnóstico ni la consulta con un médico dermatólogo cualificado</b>. Los resultados son preliminares y deben ser confirmados por un profesional de la salud. Consulte siempre a su médico.",
-      normal_style
-    ))
-    story.append(Spacer(1, 0.1 * inch))
-    story.append(Paragraph(
-      "<i>No tome decisiones médicas basándose únicamente en este reporte.</i>",
-      italic_style
-    ))
+    # # Aviso
+    # story.append(Paragraph("<u>Aviso Importante:</u>", h3))
+    # story.append(
+    #   Paragraph(
+    #     "Este reporte se genera mediante inteligencia artificial. Es una herramienta de apoyo y "
+    #     "<b>NO sustituye el diagnóstico ni la consulta con un médico dermatólogo cualificado</b>. "
+    #     "Los resultados son preliminares y deben ser confirmados por un profesional de la salud.",
+    #     normal,
+    #   )
+    # )
+    # story.append(Spacer(1, 0.1 * inch))
+    # story.append(
+    #   Paragraph("<i>No tome decisiones médicas basándose únicamente en este reporte.</i>", italic)
+    # )
 
-    # Construir el documento PDF
+    # Construir PDF
     doc.build(story)
-    print(f"PDF generado correctamente para imagen ID {image_id}")
     return response
 
   except SkinImage.DoesNotExist:
-    print(f"Error: No se encontró la imagen con ID {image_id} o no está procesada.")
     return None
   except Exception as e:
-    print(f"Error crítico al generar el PDF para imagen ID {image_id}: {e}")
-    import traceback
-    traceback.print_exc()
+    print(f"Error crítico al generar PDF para ID {image_id}: {e}")
     return None
