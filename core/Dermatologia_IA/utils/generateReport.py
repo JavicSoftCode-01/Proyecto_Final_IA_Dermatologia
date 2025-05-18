@@ -1,5 +1,4 @@
 # core/Dermatologia_IA/utils/generateReport.py
-
 import os
 
 from django.conf import settings
@@ -147,21 +146,6 @@ def generate_report(image_id):
     treat = (skin_image.ai_treatment or "No disponible.").replace('**', '').strip()
     story.append(Paragraph(treat.replace('\n', '<br/>'), normal))
     story.append(Spacer(1, 0.3 * inch))
-
-    # # Aviso
-    # story.append(Paragraph("<u>Aviso Importante:</u>", h3))
-    # story.append(
-    #   Paragraph(
-    #     "Este reporte se genera mediante inteligencia artificial. Es una herramienta de apoyo y "
-    #     "<b>NO sustituye el diagnóstico ni la consulta con un médico dermatólogo cualificado</b>. "
-    #     "Los resultados son preliminares y deben ser confirmados por un profesional de la salud.",
-    #     normal,
-    #   )
-    # )
-    # story.append(Spacer(1, 0.1 * inch))
-    # story.append(
-    #   Paragraph("<i>No tome decisiones médicas basándose únicamente en este reporte.</i>", italic)
-    # )
 
     # Construir PDF
     doc.build(story)

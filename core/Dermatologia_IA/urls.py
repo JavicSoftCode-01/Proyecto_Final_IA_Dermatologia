@@ -1,5 +1,4 @@
 # core/Dermatologia_IA/urls.py
-
 from django.urls import path
 
 from .views.generateReport_and_sendReportEmail import GenerateReportView, SendReportEmailView

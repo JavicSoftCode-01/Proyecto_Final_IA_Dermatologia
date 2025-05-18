@@ -1,5 +1,4 @@
 # core/Dermatologia_IA/forms/form_report_user_IA.py
-
 from django import forms
 
 from core.Dermatologia_IA.models import SkinImage
