@@ -1,5 +1,4 @@
 # core/Dermatologia_IA/utils/sendReportEmail.py
-
 from django.conf import settings
 from django.core.mail import EmailMessage
 
