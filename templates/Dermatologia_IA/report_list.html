@@ -1,89 +1,134 @@
 {#templates/Dermatologia_IA/report_list.html#}
 
+{% extends "components/base.html" %}
+{% load static %}
+
+{% block title %}Mis Reportes{% endblock %}
+
 {% block content %}
-  <ul>
-  <li><a href="{% url 'dermatology:upload_image' %}">Subir Imagen</a></li>
-  <li><a href="{% url 'dermatology:report_list' %}">Mis Reportes de Análisis de Enfermedades</a></li>
-</ul>
-  <div class="container mt-4 mb-5">
+  <div class="container-fluid mt-4 mb-5 px-md-4"> {# Usar container-fluid para más ancho en pantallas grandes #}
     <div class="text-center mb-4">
       <h1 class="display-5 fw-bold text-primary">Mis Reportes de Análisis</h1>
       <div class="underline-custom"></div>
     </div>
 
+    {% if messages %}
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
     {% if reports %}
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
         {% for report in reports %}
           <div class="col">
             <div class="card card-report h-100">
               <div class="card-body d-flex flex-column">
                 <div class="d-flex align-items-center mb-3">
-                  <span class="icon-circle me-2">
-                    <i class="fas fa-microscope"></i>
-                  </span>
+                <span class="icon-circle me-2">
+                  <i class="fas fa-microscope"></i>
+                </span>
                   <span class="report-label">Reporte ID {{ report.id }}</span>
                 </div>
 
-                <h5 class="card-title mb-2">{{ report.condition|default:"Sin condición" }}</h5>
+                <h5 class="card-title mb-2">{{ report.condition|default:"Sin condición"|truncatewords:5 }}</h5>
 
-                <!-- Patient information -->
                 <div class="patient-info flex-grow-1">
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-user me-2"></i>Nombre:</span>
-                    <span class="info-value">{{ report.first_name|default:"" }} {{ report.last_name|default:"" }}</span>
+                    <span class="info-label"><i class="fas fa-user me-1"></i>Nombre:</span>
+                    <span class="info-value">{{ report.first_name|default:"" }} {{ report.last_name|default:""|truncatechars:15 }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-id-card me-2"></i>DNI:</span>
-                    <span class="info-value">{{ report.dni|default:"No proporcionado" }}</span>
+                    <span class="info-label"><i class="fas fa-id-card me-1"></i>DNI:</span>
+                    <span class="info-value">{{ report.dni|default:"N/A" }}</span>
+                  </div>
+                  {% comment %}
+                <div class="info-row">
+                  <span class="info-label"><i class="fas fa-phone me-1"></i>Teléfono:</span>
+                  <span class="info-value">{{ report.phone|default:"N/A" }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"><i class="fas fa-envelope me-1"></i>Email:</span>
+                  <span class="info-value">{{ report.email|default:"N/A"|truncatechars:18 }}</span>
+                </div>
+                {% endcomment %}
+                  <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user-clock me-1"></i>Edad:</span>
+                    <span class="info-value">{{ report.age_approx|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-phone me-2"></i>Teléfono:</span>
-                    <span class="info-value">{{ report.phone|default:"No proporcionado" }}</span>
+                    <span class="info-label"><i class="fas fa-venus-mars me-1"></i>Sexo:</span>
+                    <span class="info-value">{{ report.get_sex_display|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-envelope me-2"></i>Email:</span>
-                    <span class="info-value">{{ report.email|default:"No proporcionado" }}</span>
+                    <span class="info-label"><i class="fas fa-map-marker-alt me-1"></i>Localización:</span>
+                    <span class="info-value">{{ report.get_anatom_site_general_display|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-user-clock me-2"></i>Edad:</span>
-                    <span class="info-value">{{ report.age_approx|default:"Sin especificar" }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i class="fas fa-venus-mars me-2"></i>Sexo:</span>
-                    <span class="info-value">{{ report.get_sex_display|default:"Sin especificar" }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Localización:</span>
-                    <span class="info-value">{{ report.get_anatom_site_general_display|default:"Sin especificar" }}</span>
+                    <span class="info-label"><i class="fas fa-calendar-alt me-1"></i>Fecha:</span>
+                    <span class="info-value">{{ report.created_at|date:"d/m/Y H:i" }}</span>
                   </div>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="mt-3">
-                  <a href="{% url 'dermatology:report_detail' report.id %}" class="btn btn-action w-100 mb-2">
-                    <i class="fas fa-eye me-2"></i>Ver Detalle
+                <div class="mt-3 pt-3 border-top">
+                  <a href="{% url 'dermatology:report_detail' report.id %}"
+                     class="btn btn-sm btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-eye me-1"></i>Ver Detalle
                   </a>
-                  <a href="{% url 'dermatology:generate_report' report.id %}" class="btn btn-action w-100 mb-2">
-                    <i class="fas fa-file-pdf me-2"></i>PDF
+                  <a href="{% url 'dermatology:generate_report' image_id=report.id %}"
+                     class="btn btn-sm btn-outline-danger w-100 mb-2">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
                   </a>
-                  <button type="button" class="btn btn-action w-100 toggle-email-form" data-target="email-form-{{ report.id }}">
-                    <i class="fas fa-envelope me-2"></i>Email
+                  {% include "includes/sendEmail.html" with skin_image=report %}
+                  <button
+                          type="button"
+                          class="btn btn-sm btn-outline-info w-100"
+                          data-bs-toggle="modal"
+                          data-bs-target="#emailModal{{ report.id }}">
+                    <i class="fas fa-envelope me-1"></i> Enviar por Email
                   </button>
-                  <div id="email-form-{{ report.id }}" class="email-form mt-2" style="display:none;">
-                    <form action="{% url 'dermatology:send_report_email' image_id=report.id %}" method="post">
-                      {% csrf_token %}
-                      <div class="input-group">
-                        <input type="email" name="email" class="form-control" placeholder="correo@dominio.com" required>
-                        <button class="btn btn-send" type="submit"><i class="fas fa-paper-plane"></i></button>
-                      </div>
-                    </form>
-                  </div>
+
                 </div>
               </div>
             </div>
           </div>
         {% endfor %}
       </div>
+
+      <!-- Paginación (si la tienes) -->
+      {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page=1">« Primera</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última »</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
     {% else %}
       <div class="text-center empty-state mt-5">
         <i class="fas fa-folder-open empty-icon mb-3"></i>
@@ -94,18 +139,6 @@
         </a>
       </div>
     {% endif %}
+
   </div>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.toggle-email-form').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const form = document.getElementById(btn.dataset.target);
-          form.style.display = form.style.display === 'block' ? 'none' : 'block';
-        });
-      });
-    });
-  </script>
 {% endblock %}

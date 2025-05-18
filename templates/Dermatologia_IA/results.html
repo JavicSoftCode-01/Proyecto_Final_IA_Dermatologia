@@ -1,211 +1,160 @@
 {#templates/Dermatologia_IA/results.html#}
 
-<!DOCTYPE html>
-<html lang="es" dir="ltr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resultados del Análisis Dermatológico</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <style>
-      .container {
-          max-width: 900px;
-          margin: 30px auto;
-      }
+{% extends "components/base.html" %}
+{% load static %}
 
-      .card {
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          margin-bottom: 20px;
-      }
+{% block title %}Mis Reportes{% endblock %}
 
-      .img-thumbnail {
-          max-height: 250px;
-          width: auto;
-          max-width: 100%;
-          object-fit: contain;
-          margin-bottom: 10px;
-          border: 1px solid #dee2e6;
-      }
+{% block content %}
+  <div class="container">
+    <div class="card p-4">
+      <h1 class="text-center mb-4">Resultados del Análisis</h1>
 
-      .report-content, .treatment-content {
-          text-align: justify;
-      }
-
-      .image-container {
-          text-align: center;
-          margin-bottom: 15px;
-      }
-
-      .diagnosis-card .card-body p {
-          margin-bottom: 0.5rem;
-      }
-
-      .card-header h5 {
-          font-weight: bold;
-      }
-
-      strong {
-          font-weight: bold;
-      }
-
-      .report-actions a, .report-actions button {
-          margin-right: 5px;
-      }
-  </style>
-</head>
-<body>
-<div class="container">
-  <div class="card p-4">
-    <h1 class="text-center mb-4">Resultados del Análisis</h1>
-
-    {% if messages %}
-      <div class="mb-3">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    {% if error %}
-      <div class="alert alert-danger">
-        <h4>Error en el Procesamiento</h4>
-        <p>{{ error }}</p>
-        <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary mt-2">Subir otra Imagen</a>
-      </div>
-    {% else %}
-      {% if skin_image and skin_image.processed %}
-
-        <!-- Datos del Paciente -->
-        <div class="card mb-4">
-          <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Información del Paciente</h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <p><strong>Nombre:</strong> {{ skin_image.first_name|default:"" }} {{ skin_image.last_name|default:"" }}
-                </p>
-                <p><strong>DNI:</strong> {{ skin_image.dni|default:"No proporcionado" }}</p>
-                <p><strong>Teléfono:</strong> {{ skin_image.phone|default:"No proporcionado" }}</p>
-              </div>
-              <div class="col-md-6">
-                <p><strong>Edad Aproximada:</strong> {{ skin_image.age_approx }}</p>
-                <p><strong>Sexo:</strong> {{ skin_image.get_sex_display }}</p>
-                <p><strong>Localización Anatómica:</strong> {{ skin_image.get_anatom_site_general_display }}</p>
-              </div>
+      {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 image-container">
-            <h4 class="mb-3">Imágenes</h4>
-            {% if skin_image.image and skin_image.image.url %}
-              <p class="mb-1 small text-muted">Imagen Original</p>
-              <img src="{{ skin_image.image.url }}" class="img-thumbnail" alt="Imagen de piel">
-            {% else %}
-              <div class="alert alert-warning small">No se encontró la imagen original.</div>
-            {% endif %}
-            {% if skin_image.gradcam_path %}
-              <p class="mt-3 mb-1 small text-muted">Mapa de Calor (Grad-CAM)</p>
-              <img src="{{ skin_image.gradcam_path }}" class="img-thumbnail" alt="Grad-CAM Heatmap">
-            {% else %}
-              <div class="alert alert-info small mt-2">Mapa de calor no disponible.</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <div class="card mb-3 diagnosis-card">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Diagnóstico (IA)</h5>
-              </div>
-              <div class="card-body">
-                <p><strong>Condición Sugerida:</strong> {{ skin_image.condition|default:"No determinada" }}</p>
-                <p><strong>Confianza del Modelo:</strong> {{ skin_image.confidence|floatformat:2 }}%</p>
-              </div>
-            </div>
-
-            {% if skin_image.ai_report %}
-              <div class="card mb-3">
-                <div class="card-header bg-info text-dark">
-                  <h5 class="mb-0">Reporte</h5>
-                </div>
-                <div class="card-body report-content">
-                  {{ skin_image.ai_report|linebreaksbr }}
-                </div>
-              </div>
-            {% endif %}
-
-            {% if skin_image.ai_treatment %}
-              <div class="card">
-                <div class="card-header bg-success text-white">
-                  <h5 class="mb-0">Tratamiento</h5>
-                </div>
-                <div class="card-body treatment-content">
-                  {{ skin_image.ai_treatment|linebreaksbr }}
-                </div>
-              </div>
-            {% endif %}
-          </div>
-        </div>
-
-        {% if show_actions != False %}
-          <div class="mt-4 d-flex justify-content-between flex-wrap gap-2 report-actions">
-            <div>
-              <a href="{% url 'dermatology:generate_report' image_id=skin_image.id %}" class="btn btn-primary">
-                <i class="bi bi-file-pdf"></i> Descargar PDF
-              </a>
-              <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">
-                <i class="bi bi-envelope"></i> Enviar por Email
-              </button>
-            </div>
-            <a href="{% url 'dermatology:upload_image' %}" class="btn btn-secondary">
-              <i class="bi bi-arrow-left"></i> Nueva Consulta
-            </a>
-          </div>
-
-          <!-- Modal envío por email -->
-          <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="emailModalLabel">Enviar Reporte por Email</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{% url 'dermatology:send_report_email' image_id=skin_image.id %}" method="post">
-                  {% csrf_token %}
-                  <div class="modal-body">
-                    <div class="mb-3">
-                      <label for="email" class="form-label">Email destinatario:</label>
-                      <input value="{{ skin_image.email }}" type="email" class="form-control" name="email" id="email"
-                             required placeholder="correo@dominio.com">
-                    </div>
-                    <p class="small text-muted">Se enviará el reporte PDF a la dirección indicada.</p>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar Reporte</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        {% endif %}
-
-      {% else %}
-        <div class="alert alert-info">
-          La imagen está siendo procesada o no se encontraron resultados.
-          <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary btn-sm ms-2">Subir otra Imagen</a>
+          {% endfor %}
         </div>
       {% endif %}
-    {% endif %}
-  </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+      {% if error %}
+        <div class="alert alert-danger">
+          <h4>Error en el Procesamiento</h4>
+          <p>{{ error }}</p>
+          <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary mt-2">Subir otra Imagen</a>
+        </div>
+      {% else %}
+        {% if skin_image and skin_image.processed %}
+
+          <!-- Datos del Paciente -->
+          <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+              <h5 class="mb-0">Información del Paciente</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p>
+                    <strong>Nombre:</strong> {{ skin_image.first_name|default:"" }} {{ skin_image.last_name|default:"" }}
+                  </p>
+                  <p><strong>DNI:</strong> {{ skin_image.dni|default:"No proporcionado" }}</p>
+                  <p><strong>Teléfono:</strong> {{ skin_image.phone|default:"No proporcionado" }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Edad Aproximada:</strong> {{ skin_image.age_approx }}</p>
+                  <p><strong>Sexo:</strong> {{ skin_image.get_sex_display }}</p>
+                  <p><strong>Localización Anatómica:</strong> {{ skin_image.get_anatom_site_general_display }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 image-container">
+              <h4 class="mb-3">Imágenes</h4>
+              {% if skin_image.image and skin_image.image.url %}
+                <p class="mb-1 small text-muted">Imagen Original</p>
+                <img src="{{ skin_image.image.url }}" class="img-thumbnail" alt="Imagen de piel">
+              {% else %}
+                <div class="alert alert-warning small">No se encontró la imagen original.</div>
+              {% endif %}
+              {% if skin_image.gradcam_path %}
+                <p class="mt-3 mb-1 small text-muted">Mapa de Calor (Grad-CAM)</p>
+                <img src="{{ skin_image.gradcam_path }}" class="img-thumbnail" alt="Grad-CAM Heatmap">
+              {% else %}
+                <div class="alert alert-info small mt-2">Mapa de calor no disponible.</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <div class="card mb-3 diagnosis-card">
+                <div class="card-header bg-primary text-white">
+                  <h5 class="mb-0">Diagnóstico (IA)</h5>
+                </div>
+                <div class="card-body">
+                  <p><strong>Condición Sugerida:</strong> {{ skin_image.condition|default:"No determinada" }}</p>
+                  <p><strong>Confianza del Modelo:</strong> {{ skin_image.confidence|floatformat:2 }}%</p>
+                </div>
+              </div>
+
+              {% if skin_image.ai_report %}
+                <div class="card mb-3">
+                  <div class="card-header bg-info text-dark">
+                    <h5 class="mb-0">Reporte</h5>
+                  </div>
+                  <div class="card-body report-content">
+                    {{ skin_image.ai_report|linebreaksbr }}
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if skin_image.ai_treatment %}
+                <div class="card">
+                  <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Tratamiento</h5>
+                  </div>
+                  <div class="card-body treatment-content">
+                    {{ skin_image.ai_treatment|linebreaksbr }}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {#          {% if show_actions != False %}#}
+          {#            <div class="mt-4 d-flex justify-content-between flex-wrap gap-2 report-actions">#}
+          {#              <div>#}
+          {#                <a href="{% url 'dermatology:generate_report' image_id=skin_image.id %}" class="btn btn-primary">#}
+          {#                  <i class="bi bi-file-pdf"></i> Descargar PDF#}
+          {#                </a>#}
+          {#                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">#}
+          {#                  <i class="bi bi-envelope"></i> Enviar por Email#}
+          {#                </button>#}
+          {#              </div>#}
+          {#              <a href="{% url 'dermatology:upload_image' %}" class="btn btn-secondary">#}
+          {#                <i class="bi bi-arrow-left"></i> Nueva Consulta#}
+          {#              </a>#}
+          {#            </div>#}
+          {#            <!-- Modal para enviar el reporte por email -->#}
+          {#            {% include "includes/sendEmail.html" %}#}
+          {#          {% endif %}#}
+          {% if show_actions != False %}
+            <div class="mt-4 d-flex justify-content-between flex-wrap gap-2 report-actions">
+              <div>
+                <a href="{% url 'dermatology:generate_report' image_id=skin_image.id %}" class="btn btn-primary">
+                  <i class="bi bi-file-pdf"></i> Descargar PDF
+                </a>
+                <!-- Botón que abre el modal -->
+                <button
+                        type="button"
+                        class="btn btn-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#emailModal{{ skin_image.id }}">
+                  <i class="bi bi-envelope"></i> Enviar por Email
+                </button>
+              </div>
+              <a href="{% url 'dermatology:upload_image' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Nueva Consulta
+              </a>
+            </div>
+
+            <!-- Incluimos el mismo partial, pasándole skin_image -->
+            {% include "includes/sendEmail.html" with skin_image=skin_image %}
+          {% endif %}
+
+        {% else %}
+          <div class="alert alert-info">
+            La imagen está siendo procesada o no se encontraron resultados.
+            <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary btn-sm ms-2">Subir otra Imagen</a>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

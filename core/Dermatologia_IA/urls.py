@@ -15,5 +15,5 @@ urlpatterns = [
 
   # URL para generar el reporte PDF y enviarlo por email
   path('generate/report/<int:image_id>/', GenerateReportView.as_view(), name='generate_report'),
-  path('send/email/<int:image_id>/', SendReportEmailView.as_view(), name='send_report_email'),
+  path('send_report_email/<int:image_id>/', SendReportEmailView.as_view(), name='send_report_email'),
 ]

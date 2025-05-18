@@ -1,490 +1,480 @@
 {#templates/Dermatologia_IA/upload.html#}
 
-<!DOCTYPE html>
-<html lang="es" dir="ltr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subir Imagen para Análisis Dermatológico</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <style>
-      /* ... (Tu CSS existente, sin cambios) ... */
-      .container {
-          max-width: 800px;
-          margin: 50px auto;
-      }
+<style>
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+    }
 
-      .card {
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
+    .card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-      .upload-area {
-          border: 2px dashed #ccc;
-          border-radius: 8px;
-          padding: 50px 20px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-      }
+    .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 50px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
 
-      .upload-area:hover {
-          border-color: #007bff;
-          background-color: #f8fbff;
-      }
+    .upload-area:hover {
+        border-color: #007bff;
+        background-color: #f8fbff;
+    }
 
-      .upload-area i {
-          font-size: 48px;
-          color: #6c757d;
-      }
+    .upload-area i {
+        font-size: 48px;
+        color: #6c757d;
+    }
 
-      .image-preview {
-          max-height: 300px;
-          width: 100%;
-          object-fit: contain;
-          border-radius: 6px;
-          margin-top: 15px;
-          display: none;
-      }
+    .image-preview {
+        max-height: 300px;
+        width: 100%;
+        object-fit: contain;
+        border-radius: 6px;
+        margin-top: 15px;
+        display: none;
+    }
 
-      #fileInput {
-          display: none;
-      }
+    #fileInput {
+        display: none;
+    }
 
-      .loading-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(255, 255, 255, 0.9);
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-          display: none;
-      }
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        display: none;
+    }
 
-      .loading-container {
-          background-color: white;
-          border: 2px solid #40e0d0; /* Color turquesa */
-          border-radius: 8px;
-          padding: 30px;
-          text-align: center;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          width: 300px;
-      }
+    .loading-container {
+        background-color: white;
+        border: 2px solid #40e0d0; /* Color turquesa */
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
 
-      .hourglass {
-          position: relative;
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 20px;
-      }
+    .hourglass {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+    }
 
-      .hourglass-top, .hourglass-bottom {
-          position: absolute;
-          width: 80px;
-          height: 40px;
-          overflow: hidden;
-      }
+    .hourglass-top, .hourglass-bottom {
+        position: absolute;
+        width: 80px;
+        height: 40px;
+        overflow: hidden;
+    }
 
-      .hourglass-top {
-          top: 0;
-      }
+    .hourglass-top {
+        top: 0;
+    }
 
-      .hourglass-bottom {
-          bottom: 0;
-      }
+    .hourglass-bottom {
+        bottom: 0;
+    }
 
-      .hourglass-top:before, .hourglass-bottom:before {
-          content: '';
-          position: absolute;
-          width: 80px;
-          height: 80px;
-          border: 4px solid #40e0d0;
-          border-radius: 50%;
-      }
+    .hourglass-top:before, .hourglass-bottom:before {
+        content: '';
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border: 4px solid #40e0d0;
+        border-radius: 50%;
+    }
 
-      .hourglass-top:before {
-          top: 0;
-      }
+    .hourglass-top:before {
+        top: 0;
+    }
 
-      .hourglass-bottom:before {
-          bottom: 0;
-      }
+    .hourglass-bottom:before {
+        bottom: 0;
+    }
 
-      .hourglass-center {
-          position: absolute;
-          width: 16px;
-          height: 16px;
-          background: #40e0d0;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          border-radius: 50%;
-          z-index: 2;
-      }
+    .hourglass-center {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: #40e0d0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        z-index: 2;
+    }
 
-      .hourglass-neck {
-          position: absolute;
-          width: 16px;
-          height: 20px;
-          background: #40e0d0;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          z-index: 1;
-      }
+    .hourglass-neck {
+        position: absolute;
+        width: 16px;
+        height: 20px;
+        background: #40e0d0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
 
-      .sand {
-          position: absolute;
-          width: 60px;
-          height: 30px;
-          background-color: #40e0d0;
-          opacity: 0.7;
-          top: 10px;
-          left: 10px;
-          border-radius: 0 0 50% 50%;
-          animation: sandFall 3s linear infinite;
-          transform-origin: center bottom;
-      }
+    .sand {
+        position: absolute;
+        width: 60px;
+        height: 30px;
+        background-color: #40e0d0;
+        opacity: 0.7;
+        top: 10px;
+        left: 10px;
+        border-radius: 0 0 50% 50%;
+        animation: sandFall 3s linear infinite;
+        transform-origin: center bottom;
+    }
 
-      .sand-bottom {
-          position: absolute;
-          width: 60px;
-          height: 0;
-          background-color: #40e0d0;
-          opacity: 0.7;
-          bottom: 10px;
-          left: 10px;
-          border-radius: 50% 50% 0 0;
-          animation: sandAccumulate 3s linear infinite;
-      }
+    .sand-bottom {
+        position: absolute;
+        width: 60px;
+        height: 0;
+        background-color: #40e0d0;
+        opacity: 0.7;
+        bottom: 10px;
+        left: 10px;
+        border-radius: 50% 50% 0 0;
+        animation: sandAccumulate 3s linear infinite;
+    }
 
-      @keyframes sandFall {
-          0% {
-              height: 30px;
-              top: 10px;
-          }
-          90% {
-              height: 0;
-              top: 40px;
-          }
-          100% {
-              height: 0;
-              top: 40px;
-          }
-      }
+    @keyframes sandFall {
+        0% {
+            height: 30px;
+            top: 10px;
+        }
+        90% {
+            height: 0;
+            top: 40px;
+        }
+        100% {
+            height: 0;
+            top: 40px;
+        }
+    }
 
-      @keyframes sandAccumulate {
-          0% {
-              height: 0;
-          }
-          90% {
-              height: 30px;
-          }
-          100% {
-              height: 30px;
-          }
-      }
+    @keyframes sandAccumulate {
+        0% {
+            height: 0;
+        }
+        90% {
+            height: 30px;
+        }
+        100% {
+            height: 30px;
+        }
+    }
 
-      .loading-text {
-          margin-top: 20px;
-          font-size: 18px;
-          color: #333;
-      }
+    .loading-text {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #333;
+    }
 
-      .instructions {
-          margin-bottom: 20px;
-      }
+    .instructions {
+        margin-bottom: 20px;
+    }
 
-      .instructions ul {
-          text-align: left;
-      }
+    .instructions ul {
+        text-align: left;
+    }
 
-      .alert-error {
-          margin-top: 15px;
-          /*display: none;*/ /* Inicialmente oculto */
-      }
-  </style>
-</head>
-<body>
-<ul>
-  <li><a href="{% url 'dermatology:upload_image' %}">Subir Imagen</a></li>
-  <li><a href="{% url 'dermatology:report_list' %}">Mis Reportes de Análisis de Enfermedades</a></li>
-</ul>
+    .alert-error {
+        margin-top: 15px;
+    }
+</style>
 
-<div class="container">
-  <div class="card p-4">
-    <h1 class="text-center mb-4">Análisis Dermatológico con IA</h1>
+{% extends "components/base.html" %}
+{% load static %}
 
-    {% if messages %}
-      <div class="mb-3">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+{% block title %}Subir Imagen para Análisis{% endblock %}
+
+{% block content %}
+
+  <div class="container">
+    <div class="card p-4">
+      <h1 class="text-center mb-4">Análisis Dermatológico con IA</h1>
+
+      {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form id="uploadForm" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Campos de Paciente -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }}</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+              <div class="alert alert-danger mt-2">{{ form.first_name.errors }}</div>
+            {% endif %}
           </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+              <div class="alert alert-danger mt-2">{{ form.last_name.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.dni.id_for_label }}" class="form-label">{{ form.dni.label }}</label>
+            {{ form.dni }}
+            {% if form.dni.errors %}
+              <div class="alert alert-danger mt-2">{{ form.dni.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="alert alert-danger mt-2">{{ form.phone.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="alert alert-danger mt-2">{{ form.email.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-      {% csrf_token %}
+        <!-- Campo de imagen -->
+        <div class="mb-3">
+          <label for="fileInput" class="form-label">{{ form.image.label }}</label>
+          <div class="upload-area" id="uploadArea">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <h4 class="mt-3">Arrastra una imagen aquí o haz clic para seleccionar</h4>
+            <p class="text-muted">Formatos aceptados: JPG, PNG, JPEG</p>
+            <input type="file" id="fileInput" name="{{ form.image.name }}" accept="image/*" required>
+            <img id="imagePreview" class="image-preview" src="#" alt="Vista previa">
+          </div>
+          {% if form.image.errors %}
+            <div class="alert alert-danger mt-2">{{ form.image.errors }}</div>
+          {% endif %}
+        </div>
 
-      <!-- Campos de Paciente -->
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }}</label>
-          {{ form.first_name }}
-          {% if form.first_name.errors %}
-            <div class="alert alert-danger mt-2">{{ form.first_name.errors }}</div>
-          {% endif %}
+        <!-- Campos de Metadatos -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="{{ form.age_approx.id_for_label }}" class="form-label">{{ form.age_approx.label }}</label>
+            {{ form.age_approx }}
+            {% if form.age_approx.errors %}
+              <div class="alert alert-danger mt-2">{{ form.age_approx.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4">
+            <label for="{{ form.sex.id_for_label }}" class="form-label">{{ form.sex.label }}</label>
+            {{ form.sex }}
+            {% if form.sex.errors %}
+              <div class="alert alert-danger mt-2">{{ form.sex.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4">
+            <label for="{{ form.anatom_site_general.id_for_label }}"
+                   class="form-label">{{ form.anatom_site_general.label }}</label>
+            {{ form.anatom_site_general }}
+            {% if form.anatom_site_general.errors %}
+              <div class="alert alert-danger mt-2">{{ form.anatom_site_general.errors }}</div>
+            {% endif %}
+          </div>
         </div>
-        <div class="col-md-6 mb-3">
-          <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
-          {{ form.last_name }}
-          {% if form.last_name.errors %}
-            <div class="alert alert-danger mt-2">{{ form.last_name.errors }}</div>
-          {% endif %}
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          <label for="{{ form.dni.id_for_label }}" class="form-label">{{ form.dni.label }}</label>
-          {{ form.dni }}
-          {% if form.dni.errors %}
-            <div class="alert alert-danger mt-2">{{ form.dni.errors }}</div>
-          {% endif %}
-        </div>
-        <div class="col-md-4 mb-3">
-          <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
-          {{ form.phone }}
-          {% if form.phone.errors %}
-            <div class="alert alert-danger mt-2">{{ form.phone.errors }}</div>
-          {% endif %}
-        </div>
-        <div class="col-md-4 mb-3">
-          <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
-          {{ form.email }}
-          {% if form.email.errors %}
-            <div class="alert alert-danger mt-2">{{ form.email.errors }}</div>
-          {% endif %}
-        </div>
-      </div>
 
-      <!-- Campo de imagen -->
-      <div class="mb-3">
-        <label for="fileInput" class="form-label">{{ form.image.label }}</label>
-        <div class="upload-area" id="uploadArea">
-          <i class="bi bi-cloud-arrow-up"></i>
-          <h4 class="mt-3">Arrastra una imagen aquí o haz clic para seleccionar</h4>
-          <p class="text-muted">Formatos aceptados: JPG, PNG, JPEG</p>
-          <input type="file" id="fileInput" name="{{ form.image.name }}" accept="image/*" required>
-          <img id="imagePreview" class="image-preview" src="#" alt="Vista previa">
-        </div>
-        {% if form.image.errors %}
-          <div class="alert alert-danger mt-2">{{ form.image.errors }}</div>
-        {% endif %}
-      </div>
+        <div class="alert alert-danger alert-error" id="errorAlert" style="display: none;"></div>
 
-      <!-- Campos de Metadatos -->
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="{{ form.age_approx.id_for_label }}" class="form-label">{{ form.age_approx.label }}</label>
-          {{ form.age_approx }}
-          {% if form.age_approx.errors %}
-            <div class="alert alert-danger mt-2">{{ form.age_approx.errors }}</div>
-          {% endif %}
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">
+            <i class="bi bi-search"></i> Analizar Imagen
+          </button>
         </div>
-        <div class="col-md-4">
-          <label for="{{ form.sex.id_for_label }}" class="form-label">{{ form.sex.label }}</label>
-          {{ form.sex }}
-          {% if form.sex.errors %}
-            <div class="alert alert-danger mt-2">{{ form.sex.errors }}</div>
-          {% endif %}
-        </div>
-        <div class="col-md-4">
-          <label for="{{ form.anatom_site_general.id_for_label }}"
-                 class="form-label">{{ form.anatom_site_general.label }}</label>
-          {{ form.anatom_site_general }}
-          {% if form.anatom_site_general.errors %}
-            <div class="alert alert-danger mt-2">{{ form.anatom_site_general.errors }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="alert alert-danger alert-error" id="errorAlert" style="display: none;"></div>
-
-      <div class="d-grid gap-2 mt-4">
-        <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">
-          <i class="bi bi-search"></i> Analizar Imagen
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Overlay de carga mejorado -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-container">
-    <div class="hourglass">
-      <div class="hourglass-neck"></div>
-      <div class="hourglass-center"></div>
-      <div class="hourglass-top">
-        <div class="sand"></div>
-      </div>
-      <div class="hourglass-bottom">
-        <div class="sand-bottom"></div>
-      </div>
-    </div>
-    <div class="loading-text">
-      <p>Analizando su imagen...</p>
-      <p class="small text-muted">Este proceso puede tardar unos segundos</p>
+      </form>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const uploadForm = document.getElementById('uploadForm');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const errorAlert = document.getElementById('errorAlert');
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  <!-- Overlay de carga mejorado -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+      <div class="hourglass">
+        <div class="hourglass-neck"></div>
+        <div class="hourglass-center"></div>
+        <div class="hourglass-top">
+          <div class="sand"></div>
+        </div>
+        <div class="hourglass-bottom">
+          <div class="sand-bottom"></div>
+        </div>
+      </div>
+      <div class="loading-text">
+        <p>Analizando su imagen...</p>
+        <p class="small text-muted">Este proceso puede tardar unos segundos</p>
+      </div>
+    </div>
+  </div>
 
-    // Obtener referencias a los nuevos campos de metadatos
-    const ageInput = document.getElementById('{{ form.age_approx.id_for_label }}');
-    const sexSelect = document.getElementById('{{ form.sex.id_for_label }}');
-    const siteSelect = document.getElementById('{{ form.anatom_site_general.id_for_label }}');
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('fileInput');
+      const imagePreview = document.getElementById('imagePreview');
+      const uploadForm = document.getElementById('uploadForm');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const errorAlert = document.getElementById('errorAlert');
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    // Obtener referencias a los campos de paciente
-    const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
-    const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
-    const dniInput = document.getElementById('{{ form.dni.id_for_label }}');
-    const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
-    const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+      // Obtener referencias a los nuevos campos de metadatos
+      const ageInput = document.getElementById('{{ form.age_approx.id_for_label }}');
+      const sexSelect = document.getElementById('{{ form.sex.id_for_label }}');
+      const siteSelect = document.getElementById('{{ form.anatom_site_general.id_for_label }}');
+
+      // Obtener referencias a los campos de paciente
+      const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
+      const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
+      const dniInput = document.getElementById('{{ form.dni.id_for_label }}');
+      const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
+      const emailInput = document.getElementById('{{ form.email.id_for_label }}');
 
 
-    // Abrir selector de archivos al hacer clic en el área (ahora solo para la imagen)
-    // Mantenemos el clic en uploadArea solo para la imagen, los otros campos tienen sus labels
-    uploadArea.addEventListener('click', () => fileInput.click());
+      // Abrir selector de archivos al hacer clic en el área (ahora solo para la imagen)
+      // Mantenemos el clic en uploadArea solo para la imagen, los otros campos tienen sus labels
+      uploadArea.addEventListener('click', () => fileInput.click());
 
-    // Drag & drop (solo para la imagen)
-    uploadArea.addEventListener('dragover', e => {
-      e.preventDefault();
-      uploadArea.style.borderColor = '#007bff';
-      uploadArea.style.backgroundColor = '#f8fbff';
-    });
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = '#ccc';
-      uploadArea.style.backgroundColor = '';
-    });
-    uploadArea.addEventListener('drop', e => {
-      e.preventDefault();
-      uploadArea.style.borderColor = '#ccc';
-      uploadArea.style.backgroundColor = '';
-      if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
-        previewImage(fileInput.files[0]);
-      }
-    });
+      // Drag & drop (solo para la imagen)
+      uploadArea.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#007bff';
+        uploadArea.style.backgroundColor = '#f8fbff';
+      });
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = '#ccc';
+        uploadArea.style.backgroundColor = '';
+      });
+      uploadArea.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#ccc';
+        uploadArea.style.backgroundColor = '';
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          previewImage(fileInput.files[0]);
+        }
+      });
 
-    // Preview (solo para la imagen)
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length) previewImage(fileInput.files[0]);
-    });
+      // Preview (solo para la imagen)
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) previewImage(fileInput.files[0]);
+      });
 
-    function previewImage(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        imagePreview.src = e.target.result;
-        imagePreview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Submit via AJAX
-    uploadForm.addEventListener('submit', e => {
-      e.preventDefault();
-      errorAlert.style.display = 'none';
-
-      // Validación básica de campos requeridos antes de enviar
-      if (!fileInput.files.length) {
-        showError('Por favor seleccione una imagen para analizar.');
-        return;
-      }
-      if (!ageInput.value) {
-        showError('Por favor ingrese la edad aproximada.');
-        return;
-      }
-      if (!sexSelect.value) {
-        showError('Por favor seleccione el sexo.');
-        return;
-      }
-      if (!siteSelect.value) {
-        showError('Por favor seleccione la localización anatómica.');
-        return;
+      function previewImage(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
       }
 
+      // Submit via AJAX
+      uploadForm.addEventListener('submit', e => {
+        e.preventDefault();
+        errorAlert.style.display = 'none';
 
-      loadingOverlay.style.display = 'flex';
+        // Validación básica de campos requeridos antes de enviar
+        if (!fileInput.files.length) {
+          showError('Por favor seleccione una imagen para analizar.');
+          return;
+        }
+        if (!ageInput.value) {
+          showError('Por favor ingrese la edad aproximada.');
+          return;
+        }
+        if (!sexSelect.value) {
+          showError('Por favor seleccione el sexo.');
+          return;
+        }
+        if (!siteSelect.value) {
+          showError('Por favor seleccione la localización anatómica.');
+          return;
+        }
 
-      const formData = new FormData();
-      formData.append('first_name', firstNameInput.value);
-      formData.append('last_name', lastNameInput.value);
-      formData.append('dni', dniInput.value);
-      formData.append('phone', phoneInput.value);
-      formData.append('email', emailInput.value);
-      formData.append('image', fileInput.files[0]);
-      formData.append('age_approx', ageInput.value);
-      formData.append('sex', sexSelect.value);
-      formData.append('anatom_site_general', siteSelect.value);
-      formData.append('csrfmiddlewaretoken', csrfToken);
 
-      fetch("{% url 'dermatology:upload_image' %}", {
-        method: 'POST',
-        body: formData
-      })
-        .then(res => {
-          // Manejar respuestas no OK (ej. 400 Bad Request por errores de formulario)
-          if (!res.ok) {
-            // Si la respuesta es JSON y tiene errores de formulario
-            if (res.headers.get('content-type')?.includes('application/json')) {
-              return res.json().then(data => {
-                throw new Error(data.error || 'Error desconocido del servidor');
-              });
+        loadingOverlay.style.display = 'flex';
+
+        const formData = new FormData();
+        formData.append('first_name', firstNameInput.value);
+        formData.append('last_name', lastNameInput.value);
+        formData.append('dni', dniInput.value);
+        formData.append('phone', phoneInput.value);
+        formData.append('email', emailInput.value);
+        formData.append('image', fileInput.files[0]);
+        formData.append('age_approx', ageInput.value);
+        formData.append('sex', sexSelect.value);
+        formData.append('anatom_site_general', siteSelect.value);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch("{% url 'dermatology:upload_image' %}", {
+          method: 'POST',
+          body: formData
+        })
+          .then(res => {
+            // Manejar respuestas no OK (ej. 400 Bad Request por errores de formulario)
+            if (!res.ok) {
+              // Si la respuesta es JSON y tiene errores de formulario
+              if (res.headers.get('content-type')?.includes('application/json')) {
+                return res.json().then(data => {
+                  throw new Error(data.error || 'Error desconocido del servidor');
+                });
+              }
+              // Si no es JSON o no tiene errores de formulario específicos
+              throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
             }
-            // Si no es JSON o no tiene errores de formulario específicos
-            throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          if (data.success && data.redirect_url) {
-            window.location.href = data.redirect_url;
-          } else {
-            // Si success es false, data.error contendrá el mensaje de error
-            throw new Error(data.error || 'Error desconocido');
-          }
-        })
-        .catch(err => {
-          console.error("Fetch error:", err); // Log del error completo
-          showError(err.message);
-          loadingOverlay.style.display = 'none';
-        });
-    });
+            return res.json();
+          })
+          .then(data => {
+            if (data.success && data.redirect_url) {
+              window.location.href = data.redirect_url;
+            } else {
+              // Si success es false, data.error contendrá el mensaje de error
+              throw new Error(data.error || 'Error desconocido');
+            }
+          })
+          .catch(err => {
+            console.error("Fetch error:", err); // Log del error completo
+            showError(err.message);
+            loadingOverlay.style.display = 'none';
+          });
+      });
 
-    function showError(msg) {
-      errorAlert.textContent = msg;
-      errorAlert.style.display = 'block';
-    }
-  });
-</script>
-</body>
-</html>
+      function showError(msg) {
+        errorAlert.textContent = msg;
+        errorAlert.style.display = 'block';
+      }
+    });
+  </script>
+{% endblock %}

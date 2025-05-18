@@ -1,27 +1,27 @@
-{#templates/includes/sendEmail.html  #}
-
 <!-- Modal envío por email -->
-    <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="emailModalLabel">Enviar Reporte por Email</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form action="{% url 'dermatology:send_report_email' image_id=skin_image.id %}" method="post">
-            {% csrf_token %}
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="email" class="form-label">Email destinatario:</label>
-                <input type="email" class="form-control" name="email" id="email" required placeholder="correo@dominio.com">
-              </div>
-              <p class="small text-muted">Se enviará el reporte PDF a la dirección indicada.</p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary">Enviar Reporte</button>
-            </div>
-          </form>
-        </div>
+{#<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">#}
+<div class="modal fade" id="emailModal{{ skin_image.id }}" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel">Enviar Reporte por Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <form action="{% url 'dermatology:send_report_email' image_id=skin_image.id %}" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email destinatario:</label>
+            <input value="{{ skin_image.email }}" type="email" class="form-control" name="email" id="email"
+                   required placeholder="correo@dominio.com">
+          </div>
+          <p class="small text-muted">Se enviará el reporte PDF a la dirección indicada.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
