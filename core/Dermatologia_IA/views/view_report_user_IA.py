@@ -1,3 +1,4 @@
+# core/Dermatologia_IA/views/view_report_user_IA.py
 import os
 import traceback
 
@@ -26,8 +27,6 @@ MODEL_FILENAME = 'Modelo_IA_Entrenada.keras'
 PREPROCESSOR_FILENAME = 'metadata_preprocessor.joblib'
 MODEL_PATH = os.path.join(RESULTS_DIR, MODEL_FILENAME)
 PREPROCESSOR_PATH = os.path.join(RESULTS_DIR, PREPROCESSOR_FILENAME)
-
-# (debug prints omitted for brevity)
 
 all_possible_classes_in_data = ['AK', 'BCC', 'BKL', 'DF', 'MEL', 'NV', 'SCC', 'VASC']
 condition_classes = sorted(all_possible_classes_in_data)
@@ -63,7 +62,6 @@ class ReportDetailView(DetailView):
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
     context['show_actions'] = False
-    # Agregar datos del paciente
     si = context['skin_image']
     context.update({
       'first_name': si.first_name,
@@ -218,8 +216,8 @@ class AIProcessor:
       print(f"Gemini AI no configurado. Usando valores por defecto para {condition}.")
       return default_report, default_treatment
     try:
-      report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas. Consulta profesional requerida."
-      treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para {condition}: tratamientos generales, cuidados. Consulta dermatólogo esencial."
+      report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas. (Hazte pasar como un doctor real con una especialidad en desmatología)"
+      treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados, pastillas para tomar o cremas para aplicar en la zona afectada. Consulta dermatólogo esencial. (Hazte pasar como un doctor real con una especialidad en desmatología)"
       config = genai.types.GenerationConfig(max_output_tokens=150, temperature=0.7)
       report_response = gemini_model.generate_content(report_prompt, generation_config=config)
       treatment_response = gemini_model.generate_content(treatment_prompt, generation_config=config)
@@ -234,38 +232,38 @@ class AIProcessor:
 
 # --- Clase UploadImageView ---
 class UploadImageView(View):
-    template_name = 'Dermatologia_IA/upload.html'
+  template_name = 'Dermatologia_IA/upload.html'
 
-    def get(self, request):
-        form = SkinImageForm()
-        return render(request, self.template_name, {'form': form})
+  def get(self, request):
+    form = SkinImageForm()
+    return render(request, self.template_name, {'form': form})
 
-    def post(self, request):
-        form = SkinImageForm(request.POST, request.FILES)
-        if not form.is_valid():
-            # For debugging, print the errors to your console
-            print("Form errors:", form.errors.as_json())
-            return JsonResponse({
-                'success': False,
-                'error': 'Corrija los errores del formulario.',
-                'form_errors': form.errors
-            })
+  def post(self, request):
+    form = SkinImageForm(request.POST, request.FILES)
+    if not form.is_valid():
+      # For debugging, print the errors to your console
+      print("Form errors:", form.errors.as_json())
+      return JsonResponse({
+        'success': False,
+        'error': 'Corrija los errores del formulario.',
+        'form_errors': form.errors
+      })
 
-        # For debugging, print cleaned_data
-        print("Form cleaned_data:", form.cleaned_data)
+    # For debugging, print cleaned_data
+    print("Form cleaned_data:", form.cleaned_data)
 
-        skin_image = form.save(commit=False)
+    skin_image = form.save(commit=False)
 
-        # This is correct, as 'processed' is likely not part of the form
-        skin_image.processed = False
+    # This is correct, as 'processed' is likely not part of the form
+    skin_image.processed = False
 
-        # Now save the instance to the database
-        skin_image.save()
+    # Now save the instance to the database
+    skin_image.save()
 
-        return JsonResponse({
-            'success': True,
-            'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
-        })
+    return JsonResponse({
+      'success': True,
+      'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
+    })
 
 
 # --- Clase ProcessImageView ---
@@ -292,13 +290,13 @@ class ProcessImageView(DetailView):
         'age_approx': si.age_approx,
         'sex': si.get_sex_display(),
         'anatom_site_general': si.get_anatom_site_general_display(),
-        # Nuevos datos de paciente
+        # Datos de paciente
         'first_name': si.first_name,
         'last_name': si.last_name,
         'dni': si.dni,
         'phone': si.phone,
         'email': si.email,
-        # Otros
+        # subida
         'uploaded_at': si.uploaded_at,
         'image_url': si.image.url if si.image else None,
       })

@@ -1,5 +1,4 @@
 # core/Dermatologia_IA/models.py
-
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
