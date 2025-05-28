@@ -1,0 +1,22 @@
+<!-- Sistema de mensajes/alertas -->
+
+{% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            <!-- Icono según tipo de mensaje -->
+                            <i class="fas fa-{% if message.tags == 'success' %}check-circle
+                                        {% elif message.tags == 'error' %}exclamation-circle
+                                        {% elif message.tags == 'warning' %}exclamation-triangle
+                                        {% else %}info-circle{% endif %}">
+                            </i>
+                            {{ message }}
+                            <!-- Botón para cerrar alerta -->
+                            <button class="close-btn" 
+                                    onclick="this.parentElement.style.display='none'">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}

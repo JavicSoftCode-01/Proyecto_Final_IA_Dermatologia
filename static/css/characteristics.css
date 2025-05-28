@@ -1,0 +1,226 @@
+.features-container {
+    padding: 40px;
+}
+
+.features-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.features-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #3b82f6;
+    margin-bottom: 16px;
+}
+
+.features-description {
+    max-width: 800px;
+    margin: 0 auto;
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.features-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.feature-card {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 30px 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid #f0f2f5;
+    width: 100%;
+    max-width: 700px;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+}
+
+.feature-icon {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-icon::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.feature-card:hover .feature-icon::before {
+    opacity: 1;
+    animation: shimmer 0.6s ease-in-out;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.feature-icon img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+}
+
+.feature-icon i {
+    font-size: 40px;
+    color: #3b82f6;
+    position: relative;
+    z-index: 2;
+}
+
+.feature-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 14px;
+}
+
+.feature-description {
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* Sección de características adicionales */
+.additional-features {
+    margin-top: 60px;
+    padding: 40px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 24px;
+}
+
+.additional-features-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 40px;
+}
+
+.features-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+}
+
+.feature-item i {
+    font-size: 20px;
+    color: #3b82f6;
+    min-width: 20px;
+}
+
+.feature-item span {
+    font-size: 14px;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .features-container {
+        padding: 20px;
+    }
+    
+    .feature-card {
+        padding: 25px;
+        max-width: 90%;
+    }
+    
+    .features-title {
+        font-size: 28px;
+    }
+    
+    .additional-features {
+        margin-top: 40px;
+        padding: 30px 20px;
+    }
+    
+    .additional-features-title {
+        font-size: 24px;
+    }
+    
+    .features-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .features-container {
+        padding: 15px;
+    }
+    
+    .feature-card {
+        padding: 20px;
+    }
+    
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-icon img,
+    .feature-icon i {
+        width: 35px;
+        height: 35px;
+        font-size: 35px;
+    }
+    
+    .feature-title {
+        font-size: 18px;
+    }
+    
+    .feature-description {
+        font-size: 14px;
+    }
+}
