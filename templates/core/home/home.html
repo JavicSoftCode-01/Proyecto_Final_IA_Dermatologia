@@ -1,0 +1,76 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block title %}Home - DermaIA{% endblock %}
+
+{% block content %}
+  <div class="home-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-background">
+        <img src="{% static 'img/fondo.png' %}" alt="Dermatología AI">
+        <div class="hero-overlay"></div>
+      </div>
+      <div class="hero-content">
+        <h1 class="hero-title">DermaIA</h1>
+        <p class="hero-subtitle">
+          Sistema avanzado de diagnóstico dermatológico mediante<br>
+          inteligencia artificial
+        </p>
+        <button class="btn-primary" onclick="window.location.href='#'">
+          Comenzar
+        </button>
+      </div>
+    </div>
+
+    <!-- Reportes Recientes -->
+    <div class="reports-section">
+      <h2 class="section-title">Reportes recientes</h2>
+
+      <div class="reports-grid">
+        {% for img in recent_images %}
+          <div class="report-card">
+            <div class="report-header">
+              <div class="report-icon">
+                <i class="fas fa-image"></i>
+              </div>
+              <span class="report-status">Imagen detectada {{ forloop.counter }}</span>
+            </div>
+
+            <div class="report-body">
+              <div class="report-diagnosis">
+                <strong>Reporte:</strong> {{ img.condition|default:"Pendiente" }}
+              </div>
+              <div class="report-patient">
+                <strong>Paciente:</strong> {{ img.first_name }} {{ img.last_name }}
+              </div>
+              <div class="report-details">
+                <div class="report-detail-item">
+                  <strong>Edad:</strong> {{ img.age_approx }}
+                </div>
+                <div class="report-detail-item">
+                  <strong>Sexo:</strong> {{ img.get_sex_display }}
+                </div>
+                <div class="report-detail-item">
+                  <strong>Localización:</strong> {{ img.get_anatom_site_general_display }}
+                </div>
+              </div>
+              <div class="report-date">
+                Análisis realizado el {{ img.uploaded_at|date:"d de F, Y H:i" }}
+              </div>
+            </div>
+
+            <div class="report-footer">
+              <a href="{% url 'dermatology:report_detail' img.id %}" class="btn-secondary">Ver Detalles</a>
+            </div>
+          </div>
+        {% empty %}
+          <!-- Mensaje cuando no hay datos -->
+          <div class="no-reports">
+            <p>No hay imágenes recientes.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

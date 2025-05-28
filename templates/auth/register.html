@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro - DermaIA</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="auth-container">
+  <!-- Logo en el panel izquierdo -->
+  <div class="logo-panel">
+    <div class="logo-container">
+      <img src="{% static 'img/portada.png' %}" alt="DermaIA Logo" class="logo"/>
+
+    </div>
+  </div>
+
+  <div class="auth-card">
+    <!-- Mensajes -->
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-info-circle"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <form method="post" class="auth-form" id="registerForm">
+      {% csrf_token %}
+      <h2>Registro</h2>
+      <h3>Ingrese sus datos del formulario para registrarse en el sistema</h3>
+
+      <!-- Nombre y Apellido en fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.first_name.id_for_label }}">Nombres</label>
+          <input type="text" name="{{ form.first_name.html_name }}" id="{{ form.first_name.id_for_label }}"
+                 placeholder="Ingrese sus nombres" required
+                 {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}/>
+          {% if form.first_name.errors %}
+            <div class="error-message">{{ form.first_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
+          <input type="text" name="{{ form.last_name.html_name }}" id="{{ form.last_name.id_for_label }}"
+                 placeholder="Ingrese sus apellidos" required
+                 {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}/>
+          {% if form.last_name.errors %}
+            <div class="error-message">{{ form.last_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>
+        <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+               placeholder="Ingrese su correo electrónico" required
+               {% if form.email.value %}value="{{ form.email.value }}"{% endif %}/>
+        {% if form.email.errors %}
+          <div class="error-message">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+        <input type="password" name="{{ form.password1.html_name }}" id="{{ form.password1.id_for_label }}"
+               placeholder="Ingrese su contraseña" required/>
+        {% if form.password1.errors %}
+          <div class="error-message">{{ form.password1.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">Confirmar Contraseña</label>
+        <input type="password" name="{{ form.password2.html_name }}" id="{{ form.password2.id_for_label }}"
+               placeholder="Confirme su contraseña" required/>
+        {% if form.password2.errors %}
+          <div class="error-message">{{ form.password2.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn-auth">Registrarse</button>
+
+      <div class="auth-links">
+        <p>¿Ya tienes cuenta? <a href="{% url 'auth:login' %}">Inicia sesión</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Este bloque unifica cierre de alertas, validaciones y comparación de contraseñas
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // ——— Helpers ———
+    const emptyMsg = 'El campo está vacío, por favor rellénelo.';
+
+    const createErrorDiv = (input) => {
+      let div = input.parentElement.querySelector('.error-message-js');
+      if (!div) {
+        div = document.createElement('div');
+        div.className = 'error-message error-message-js';
+        div.style.marginTop = '5px';
+        input.parentElement.appendChild(div);
+      }
+      return div;
+    };
+
+    const showError = (input, message) => {
+      const div = createErrorDiv(input);
+      div.textContent = message;
+    };
+
+    const clearError = (input) => {
+      const div = input.parentElement.querySelector('.error-message-js');
+      if (div) div.remove();
+    };
+
+    const onBlurValidate = (input, fn) => {
+      input.addEventListener('blur', () => fn(input));
+      input.addEventListener('input', () => {
+        if (input.parentElement.querySelector('.error-message-js')) fn(input);
+      });
+    };
+
+    // ——— Alertas ———
+    document.querySelectorAll(".alert").forEach(alert => {
+      if (!alert.querySelector(".close-btn")) {
+        const btn = document.createElement("button");
+        Object.assign(btn.style, {
+          float: "right", background: "none", border: "none",
+          fontSize: "1.2rem", cursor: "pointer", marginLeft: "10px"
+        });
+        btn.className = "close-btn";
+        btn.textContent = "×";
+        btn.onclick = () => alert.style.display = "none";
+        alert.insertBefore(btn, alert.firstChild);
+      }
+    });
+    setTimeout(() => {
+      document.querySelectorAll(".alert").forEach(alert => {
+        alert.style.transition = "opacity 0.5s";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.style.display = "none", 500);
+      });
+    }, 5000);
+
+    // ——— Validadores ———
+    const validators = {
+      fullName: v => {
+        if (!v) return emptyMsg;
+        if (v.length < 3) return 'Debe tener al menos 3 caracteres.';
+        if (v.length > 50) return 'No puede tener más de 50 caracteres.';
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(v)) return 'Solo letras y espacios.';
+      },
+      email: v => {
+        if (!v) return emptyMsg;
+        if (v.length > 50) return 'Máx. 50 caracteres.';
+        if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(v))
+          return 'Ingrese un correo válido.';
+      },
+      dni: v => {
+        if (!/^[0-9]{10}$/.test(v)) return 'La cédula debe tener 10 dígitos numéricos.';
+        const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+        let sum = [...v].slice(0, 9).reduce((acc, d, i) => {
+          let p = +d * coef[i];
+          return acc + (p > 9 ? p - 9 : p);
+        }, 0);
+        if (((sum * 9) % 10) !== +v[9]) return 'La cédula no es válida.';
+      },
+      addressCity: v => {
+        if (!v) return;
+        if (v.length > 255) return 'Máx. 255 caracteres.';
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ.\s]+$/.test(v))
+          return 'Solo letras, puntos y espacios.';
+      },
+      phone: v => {
+        if (!v) return;
+        if (v.length > 16) return 'Máx. 16 caracteres.';
+        if (!/^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/.test(v))
+          return 'Formato: 0995336523 o +593 99 533 6523.';
+      },
+      password: v => {
+        if (!v) return emptyMsg;
+        if (v.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+      },
+      confirmPassword: (v, pwd1) => {
+        if (!v) return emptyMsg;
+        if (v !== pwd1) return 'Las contraseñas no coinciden.';
+      }
+    };
+
+    // ——— Asociación de campos ———
+    const fields = [
+      {id: 'id_first_name', fn: validators.fullName},
+      {id: 'id_last_name', fn: validators.fullName},
+      {id: 'id_email', fn: validators.email},
+      {id: 'id_dni', fn: validators.dni},
+      {id: 'id_address', fn: validators.addressCity},
+      {id: 'id_city', fn: validators.addressCity},
+      {id: 'id_phone', fn: validators.phone}
+    ];
+    fields.forEach(({id, fn}) => {
+      const el = document.getElementById(id);
+      if (el) onBlurValidate(el, inp => {
+        const msg = fn(inp.value.trim());
+        msg ? showError(inp, msg) : clearError(inp);
+      });
+    });
+
+    // ——— Contraseñas ———
+    const pwd1 = document.getElementById('id_password1');
+    const pwd2 = document.getElementById('id_password2');
+    if (pwd1) {
+      onBlurValidate(pwd1, inp => {
+        const msg = validators.password(inp.value.trim());
+        msg ? showError(inp, msg) : clearError(inp);
+      });
+    }
+    if (pwd2 && pwd1) {
+      onBlurValidate(pwd2, inp => {
+        const msg = validators.confirmPassword(inp.value.trim(), pwd1.value.trim());
+        msg ? showError(inp, msg) : clearError(inp);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

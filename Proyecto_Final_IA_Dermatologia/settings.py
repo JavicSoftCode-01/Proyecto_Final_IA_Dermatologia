@@ -11,8 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
-from dotenv import load_dotenv
 from pathlib import Path
+
+from dotenv import load_dotenv
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,9 +42,9 @@ INSTALLED_APPS = [
   'django.contrib.sessions',
   'django.contrib.messages',
   'django.contrib.staticfiles',
-  'core.Dermatologia_IA.apps.DermatologiaIaConfig',
-  'core.apps.CoreConfig',
-  'core.auth.apps.AuthConfig',
+  'apps.Dermatologia_IA.apps.DermatologiaIaConfig',
+  'apps.core.apps.CoreConfig',
+  'apps.auth.apps.AuthConfig',
 ]
 
 MIDDLEWARE = [
@@ -79,16 +81,15 @@ WSGI_APPLICATION = 'Proyecto_Final_IA_Dermatologia.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-    }
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.getenv('DB_NAME'),
+    'USER': os.getenv('DB_USER'),
+    'PASSWORD': os.getenv('DB_PASSWORD'),
+    'HOST': os.getenv('DB_HOST'),
+    'PORT': os.getenv('DB_PORT'),
+  }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -106,6 +107,11 @@ AUTH_PASSWORD_VALIDATORS = [
   {
     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
   },
+]
+
+# Backends de autenticación personalizados
+AUTHENTICATION_BACKENDS = [
+  'django.contrib.auth.backends.ModelBackend',  # Backend predeterminado
 ]
 
 # Internationalization
@@ -132,11 +138,28 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+# STATIC_URL = 'static/'
+#
+# MEDIA_URL = '/media/'
+#
+# MEDIA_ROOT = BASE_DIR / 'media'
+
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+  BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Media files
 MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'static' / 'media'
 
-MEDIA_ROOT = BASE_DIR / 'media'
+# Modelo de usuario personalizado
+AUTH_USER_MODEL = 'AUTH.User'
+PASSWORD_RESET_URL = '/auth/password_reset/'
+LOGIN_URL = '/'
+LOGOUT_REDIRECT_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/core/home/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
