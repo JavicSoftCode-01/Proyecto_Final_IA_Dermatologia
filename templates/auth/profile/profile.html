@@ -1,64 +1,81 @@
-{% extends 'components/base.html' %} {% load static %} {% block title %}Mi
-  Perfil - DermaIA{% endblock %} {% block extra_css %}
+{% extends 'components/base.html' %}
+{% load static %}
+
+<!-- Estilos adicionales -->
+{% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/profile.css' %}"/>
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
   <div class="profile-container">
-    <h1 class="page-title">Perfil de usuario</h1>
+    <h1 class="page-title">{{ title }}</h1>
 
     <div class="profile-layout">
+      <!-- Sección de foto de perfil -->
       <div class="profile-photo-section">
-        <div class="photo-label">Foto de perfil</div>
+        <div class="photo-label">{{ photo_label }}</div>
         <div class="profile-picture-container">
           {% if user.profile_picture %}
-            <img class="profile-picture" src="{{ user.profile_picture.url }}" alt="Foto de perfil"/>
+            <img class="profile-picture" 
+                 src="{{ user.profile_picture.url }}" 
+                 alt="{{ photo_section.alt_text }}"/>
           {% else %}
-            <img class="profile-picture" src="{% static 'img/avatar.jpg' %}" alt="Foto de perfil predeterminada"/>
+            <img class="profile-picture" 
+                 src="{% static 'img/avatar.jpg' %}" 
+                 alt="{{ photo_section.alt_text_default }}"/>
           {% endif %}
         </div>
       </div>
 
+      <!-- Sección de información del usuario -->
       <div class="profile-info-section">
+        <!-- Campo Nombres -->
         <div class="profile-field">
-          <div class="profile-field-label">Nombres</div>
+          <div class="profile-field-label">{{ field_labels.names }}</div>
           <div class="profile-field-value">{{ user.first_name }}</div>
         </div>
 
+        <!-- Campo Apellidos -->
         <div class="profile-field">
-          <div class="profile-field-label">Apellidos</div>
+          <div class="profile-field-label">{{ field_labels.last_names }}</div>
           <div class="profile-field-value">{{ user.last_name }}</div>
         </div>
 
+        <!-- Campo DNI -->
         <div class="profile-field">
-          <div class="profile-field-label">DNI</div>
-          <div class="profile-field-value">{{ user.dni|default:"No especificado" }}</div>
+          <div class="profile-field-label">{{ field_labels.dni }}</div>
+          <div class="profile-field-value">{{ user.dni|default:default_messages.not_specified }}</div>
         </div>
 
+        <!-- Campo Dirección -->
         <div class="profile-field">
-          <div class="profile-field-label">Dirección</div>
-          <div class="profile-field-value">{{ user.address|default:"No especificada" }}</div>
+          <div class="profile-field-label">{{ field_labels.address }}</div>
+          <div class="profile-field-value">{{ user.address|default:default_messages.not_specified_f }}</div>
         </div>
 
-             <div class="profile-field">
-          <div class="profile-field-label">Ciudad</div>
-          <div class="profile-field-value">{{ user.city|default:"No especificada" }}</div>
+        <!-- Campo Ciudad -->
+        <div class="profile-field">
+          <div class="profile-field-label">{{ field_labels.city }}</div>
+          <div class="profile-field-value">{{ user.city|default:default_messages.not_specified_f }}</div>
         </div>
 
+        <!-- Campo Teléfono -->
         <div class="profile-field">
-          <div class="profile-field-label">Teléfono</div>
-          <div class="profile-field-value ">{{ user.phone|default:"No especificado" }}</div>
+          <div class="profile-field-label">{{ field_labels.phone }}</div>
+          <div class="profile-field-value">{{ user.phone|default:default_messages.not_specified }}</div>
         </div>
 
+        <!-- Campo Correo -->
         <div class="profile-field">
-          <div class="profile-field-label">Correo</div>
+          <div class="profile-field-label">{{ field_labels.email }}</div>
           <div class="profile-field-value">{{ user.email }}</div>
         </div>
 
+        <!-- Botones de acción -->
         <div class="profile-actions">
-          <a
-                  href="{% url 'auth:update_profile' %}"
-                  class="btn-update-profile"
-          >
-            Actualizar Perfil
+          <a href="{% url 'auth:update_profile' %}" 
+             class="btn-update-profile">
+            {{ update_button_text }}
           </a>
         </div>
       </div>

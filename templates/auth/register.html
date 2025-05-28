@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro - DermaIA</title>
+  <title>{{ page_title }} - {{ app_name }}</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
@@ -13,36 +13,27 @@
   <!-- Logo en el panel izquierdo -->
   <div class="logo-panel">
     <div class="logo-container">
-      <img src="{% static 'img/portada.png' %}" alt="DermaIA Logo" class="logo"/>
+      <img src="{% static 'img/portada.png' %}" alt="{{ app_name }} Logo" class="logo"/>
 
     </div>
   </div>
 
   <div class="auth-card">
-    <!-- Mensajes -->
-    {% if messages %}
-      <div class="messages">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">
-            <i class="fas fa-info-circle"></i>
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+    <!-- Sistema de mensajes/alertas -->
+    {% include "includes/messages.html" %}
 
     <!-- Formulario -->
     <form method="post" class="auth-form" id="registerForm">
       {% csrf_token %}
-      <h2>Registro</h2>
-      <h3>Ingrese sus datos del formulario para registrarse en el sistema</h3>
+      <h2>{{ page_title }}</h2>
+      <h3>{{ subtitle }}</h3>
 
       <!-- Nombre y Apellido en fila -->
       <div class="form-row">
         <div class="form-group">
-          <label for="{{ form.first_name.id_for_label }}">Nombres</label>
+          <label for="{{ form.first_name.id_for_label }}">{{ first_name_label }}</label>
           <input type="text" name="{{ form.first_name.html_name }}" id="{{ form.first_name.id_for_label }}"
-                 placeholder="Ingrese sus nombres" required
+                 placeholder="{{ first_name_placeholder }}" required
                  {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}/>
           {% if form.first_name.errors %}
             <div class="error-message">{{ form.first_name.errors.0 }}</div>
@@ -50,9 +41,9 @@
         </div>
 
         <div class="form-group">
-          <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
+          <label for="{{ form.last_name.id_for_label }}">{{ last_name_label }}</label>
           <input type="text" name="{{ form.last_name.html_name }}" id="{{ form.last_name.id_for_label }}"
-                 placeholder="Ingrese sus apellidos" required
+                 placeholder="{{ last_name_placeholder }}" required
                  {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}/>
           {% if form.last_name.errors %}
             <div class="error-message">{{ form.last_name.errors.0 }}</div>
@@ -61,9 +52,9 @@
       </div>
 
       <div class="form-group">
-        <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>
+        <label for="{{ form.email.id_for_label }}">{{ email_label }}</label>
         <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
-               placeholder="Ingrese su correo electrónico" required
+               placeholder="{{ email_placeholder }}" required
                {% if form.email.value %}value="{{ form.email.value }}"{% endif %}/>
         {% if form.email.errors %}
           <div class="error-message">{{ form.email.errors.0 }}</div>
@@ -71,27 +62,27 @@
       </div>
 
       <div class="form-group">
-        <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+        <label for="{{ form.password1.id_for_label }}">{{ password_label }}</label>
         <input type="password" name="{{ form.password1.html_name }}" id="{{ form.password1.id_for_label }}"
-               placeholder="Ingrese su contraseña" required/>
+               placeholder="{{ password_placeholder }}" required/>
         {% if form.password1.errors %}
           <div class="error-message">{{ form.password1.errors.0 }}</div>
         {% endif %}
       </div>
 
       <div class="form-group">
-        <label for="{{ form.password2.id_for_label }}">Confirmar Contraseña</label>
+        <label for="{{ form.password2.id_for_label }}">{{ confirm_password_label }}</label>
         <input type="password" name="{{ form.password2.html_name }}" id="{{ form.password2.id_for_label }}"
-               placeholder="Confirme su contraseña" required/>
+               placeholder="{{ confirm_password_placeholder }}" required/>
         {% if form.password2.errors %}
           <div class="error-message">{{ form.password2.errors.0 }}</div>
         {% endif %}
       </div>
 
-      <button type="submit" class="btn-auth">Registrarse</button>
+      <button type="submit" class="btn-auth">{{ register_button_text }}</button>
 
       <div class="auth-links">
-        <p>¿Ya tienes cuenta? <a href="{% url 'auth:login' %}">Inicia sesión</a></p>
+        <p>{{ login_text }} <a href="{% url 'auth:login' %}">{{ login_link_text }}</a></p>
       </div>
     </form>
   </div>

@@ -1,38 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}DermAI{% endblock %}</title>
-  <link rel="stylesheet" href="{% load static %}{% static 'css/styles.css' %}">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  {% block extra_css %}{% endblock %}
+    <!-- Meta tags básicos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Título dinámico de la página -->
+    <title>
+        {% block title %}
+            {{ page_title }} - {{ app_name }}
+        {% endblock %}
+    </title>
+
+    <!-- Estilos base -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+          rel="stylesheet">
+    
+    <!-- Estilos adicionales específicos de cada página -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-<div class="app-container">
-  {% include 'components/sidebar.html' %}
+    <div class="app-container">
+        <!-- Barra lateral de navegación -->
+        {% include 'components/sidebar.html' %}
 
-  <main class="main-content">
-    <!-- Bloque de mensajes/alertas -->
-    {% if messages %}
-      <div class="messages-container">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">
-            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-            {{ message }}
-            <button class="close-btn" onclick="this.parentElement.style.display='none'">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <!-- Sistema de mensajes/alertas -->
+             {% include "includes/messages.html" %}
 
-    {% block content %}
-    {% endblock %}
-  </main>
-</div>
+            <!-- Contenido específico de cada página -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 
-{% block extra_js %}{% endblock %}
+    <!-- Scripts adicionales específicos de cada página -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

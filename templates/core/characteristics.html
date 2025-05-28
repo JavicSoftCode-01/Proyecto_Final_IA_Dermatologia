@@ -1,92 +1,33 @@
 {% extends 'components/base.html' %}
 {% load static %}
 
-{% block title %}
-  Características - DermaIA
-{% endblock %}
-
+{# Estilos específicos de la página de características #}
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/characteristics.css' %}"/>
 {% endblock %}
 
 {% block content %}
+  {# Contenedor principal de características #}
   <div class="features-container">
-  <div class="features-header">
-    <h1 class="features-title">Características Principales</h1>
-    <p class="features-description">
-      Descubre las funcionalidades avanzadas que DermaIA ofrece para mejorar el
-      diagnóstico y tratamiento de afecciones dermatológicas con tecnología de
-      inteligencia artificial.
-    </p>
-  </div>
-
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">
-        <i class="fas fa-user-shield"></i>
-      </div>
-      <div class="feature-content">
-        <h2 class="feature-title">Gestión de Usuario Segura</h2>
-        <p class="feature-description">
-          Autenticación robusta y perfiles personalizables para mayor seguridad y
-          comodidad. Gestiona tu información médica con total confidencialidad y
-          control de acceso.
-        </p>
-      </div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <i class="fas fa-cloud-upload-alt"></i>
-      </div>
-      <div class="feature-content">
-        <h2 class="feature-title">Carga Fácil de Imágenes</h2>
-        <p class="feature-description">
-          Sube tus imágenes dermatológicas en diversos formatos con nuestra
-          interfaz intuitiva. Compatible con múltiples dispositivos y optimización
-          automática de calidad.
-        </p>
-      </div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <i class="fas fa-brain"></i>
-      </div>
-      <div class="feature-content">
-        <h2 class="feature-title">Análisis IA Avanzado</h2>
-        <p class="feature-description">
-          Detección precisa de afecciones utilizando algoritmos de aprendizaje
-          profundo. Resultados rápidos y confiables para apoyar diagnósticos
-          médicos profesionales.
-        </p>
-      </div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <i class="fas fa-chart-line"></i>
-      </div>
-      <div class="feature-content">
-        <h2 class="feature-title">Reportes Detallados</h2>
-        <p class="feature-description">
-          Genera reportes completos con análisis visual, recomendaciones y
-          seguimiento. Exporta resultados en múltiples formatos para compartir con
-          profesionales.
-        </p>
-      </div>
+    {# Encabezado de la sección #}
+    <div class="features-header">
+      <h1 class="features-title">{{ main_title }}</h1>
+      <p class="features-description">{{ main_description }}</p>
     </div>
 
-    <!-- Tarjeta 5: Historial Médico -->
-    <div class="feature-card">
-      <div class="feature-icon">
-        <i class="fas fa-history"></i>
-      </div>
-      <div class="feature-content">
-        <h2 class="feature-title">Historial Médico</h2>
-        <p class="feature-description">
-          Mantén un registro completo de todos los análisis y evolución del
-          paciente. Acceso rápido al historial para seguimiento y comparativas
-          temporales.
-        </p>
-      </div>
+    {# Grid de tarjetas de características #}
+    <div class="features-grid">
+      {% for feature in features %}
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="{{ feature.icon }}"></i>
+          </div>
+          <div class="feature-content">
+            <h2 class="feature-title">{{ feature.title }}</h2>
+            <p class="feature-description">{{ feature.description }}</p>
+          </div>
+        </div>
+      {% endfor %}
     </div>
   </div>
 {% endblock %}

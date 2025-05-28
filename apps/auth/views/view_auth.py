@@ -50,6 +50,29 @@ class RegisterUserView(FormView):
   form_class = CustomUserCreationForm
   success_url = reverse_lazy('auth:login')
 
+  def get_context_data(self, **kwargs):
+    """Obtiene el contexto para la plantilla"""
+    context = super().get_context_data(**kwargs)
+    context.update({
+      'page_title': 'Registro',
+      'app_name': 'DermaIA',
+      'subtitle': 'Ingrese sus datos del formulario para registrarse en el sistema',
+      'first_name_label': 'Nombres',
+      'first_name_placeholder': 'Ingrese sus nombres',
+      'last_name_label': 'Apellidos',
+      'last_name_placeholder': 'Ingrese sus apellidos',
+      'email_label': 'Correo Electrónico',
+      'email_placeholder': 'Ingrese su correo electrónico',
+      'password_label': 'Contraseña',
+      'password_placeholder': 'Ingrese su contraseña',
+      'confirm_password_label': 'Confirmar Contraseña',
+      'confirm_password_placeholder': 'Confirme su contraseña',
+      'register_button_text': 'Registrarse',
+      'login_text': '¿Ya tienes cuenta?',
+      'login_link_text': 'Inicia sesión'
+    })
+    return context
+
   def form_valid(self, form):
     """Procesa el formulario válido y registra al usuario"""
     user = form.save()
@@ -88,6 +111,22 @@ class LoginUserView(FormView):
   template_name = 'auth/login.html'
   form_class = CustomAuthenticationForm
   success_url = reverse_lazy('core:home')
+
+  def get_context_data(self, **kwargs):
+    """Obtiene el contexto para la plantilla"""
+    context = super().get_context_data(**kwargs)
+    context.update({
+      'page_title': 'Iniciar Sesión',
+      'app_name': 'DermaIA',
+      'subtitle': 'Ingrese sus credenciales para acceder al sistema',
+      'email_label': 'Correo Electrónico',
+      'password_label': 'Contraseña',
+      'forgot_password_text': '¿Olvidó su contraseña?',
+      'login_button_text': 'Iniciar Sesión',
+      'register_text': '¿No tiene una cuenta?',
+      'register_link_text': 'Regístrese'
+    })
+    return context
 
   def form_valid(self, form):
     """Procesa el inicio de sesión exitoso"""
@@ -192,6 +231,22 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
   form_class = CustomSetPasswordForm
   template_name = 'auth/reset_password/password_reset_confirm.html'
   success_url = reverse_lazy('auth:password_reset_complete')
+
+  def get_context_data(self, **kwargs):
+    """Obtiene el contexto para la plantilla"""
+    context = super().get_context_data(**kwargs)
+    context.update({
+      'page_title': 'Cambiar Contraseña',
+      'app_name': 'DermaIA',
+      'title': 'Establecer una nueva contraseña',
+      'subtitle': 'Crea una nueva contraseña. Asegúrate de que sea diferente a las anteriores por seguridad.',
+      'new_password_label': 'Nueva contraseña',
+      'new_password_placeholder': 'Ingrese su nueva contraseña',
+      'confirm_password_label': 'Confirmar nueva contraseña',
+      'confirm_password_placeholder': 'Confirme su nueva contraseña',
+      'submit_button_text': 'Actualizar contraseña'
+    })
+    return context
 
   def form_valid(self, form):
     """Procesa el formulario válido de cambio de contraseña"""

@@ -1,343 +1,39 @@
-{#{% extends 'components/base.html' %}#}
-{#{% load static %}#}
-{#{% block title %}Actualización de perfil{% endblock %}#}
-{#{% block extra_css %}#}
-{#  <link rel="stylesheet" href="{% static 'css/profile.css' %}"/>#}
-{#{% endblock %}#}
-{#{% block content %}#}
-{#  <div class="profile-update-container">#}
-{#    <div class="profile-update-card">#}
-{#      <h2>Actualización de perfil</h2>#}
-{##}
-{#      <form method="post" enctype="multipart/form-data" class="auth-form">#}
-{#        {% csrf_token %}#}
-{##}
-{#        <!-- Sección de foto de perfil -->#}
-{#        <div class="profile-header">#}
-{#          <div class="profile-photo-section">#}
-{#            <div class="profile-picture-container">#}
-{#              {% if user.profile_picture %}#}
-{#                <img id="profile-preview" src="{{ user.profile_picture.url }}" alt="Foto de perfil"#}
-{#                     class="profile-picture"/>#}
-{#              {% else %}#}
-{#                <img id="profile-preview" src="{% static 'img/avatar.jpg' %}" alt="Foto de perfil predeterminada"#}
-{#                     class="profile-picture"/>#}
-{#              {% endif %}#}
-{#            </div>#}
-{#            <input type="file" name="profile_picture" id="id_profile_picture" class="hidden-file-input"/>#}
-{#            <button type="button" class="btn-secondary" id="uploadButton">Cambiar foto</button>#}
-{#          </div>#}
-{#        </div>#}
-{##}
-{#        <div class="form-content">#}
-{#          <!-- Nombres y Apellidos -->#}
-{#          <div class="form-row">#}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.first_name.id_for_label }}">Nombres</label>#}
-{#              {{ form.first_name }}#}
-{#              {% if form.first_name.errors %}#}
-{#                <div class="error-message">{{ form.first_name.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{##}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.last_name.id_for_label }}">Apellidos</label>#}
-{#              {{ form.last_name }}#}
-{#              {% if form.last_name.errors %}#}
-{#                <div class="error-message">{{ form.last_name.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{#          </div>#}
-{##}
-{#          <!-- Email y Cédula -->#}
-{#          <div class="form-row">#}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>#}
-{#              {{ form.email }}#}
-{#              {% if form.email.errors %}#}
-{#                <div class="error-message">{{ form.email.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{##}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.dni.id_for_label }}">Cédula</label>#}
-{#              {{ form.dni }}#}
-{#              {% if form.dni.errors %}#}
-{#                <div class="error-message">{{ form.dni.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{#          </div>#}
-{##}
-{#          <!-- Dirección y Ciudad -->#}
-{#          <div class="form-row">#}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.address.id_for_label }}">Dirección</label>#}
-{#              {{ form.address }}#}
-{#              {% if form.address.errors %}#}
-{#                <div class="error-message">{{ form.address.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{##}
-{#            <div class="form-group">#}
-{#              <label for="{{ form.city.id_for_label }}">Ciudad</label>#}
-{#              {{ form.city }}#}
-{#              {% if form.city.errors %}#}
-{#                <div class="error-message">{{ form.city.errors.0 }}</div>#}
-{#              {% endif %}#}
-{#            </div>#}
-{#          </div>#}
-{##}
-{#          <!-- Teléfono -->#}
-{#          <div class="form-group">#}
-{#            <label for="{{ form.phone.id_for_label }}">Teléfono</label>#}
-{#            {{ form.phone }}#}
-{#            {% if form.phone.errors %}#}
-{#              <div class="error-message">{{ form.phone.errors.0 }}</div>#}
-{#            {% endif %}#}
-{#          </div>#}
-{##}
-{#          <div class="form-actions">#}
-{#            <button type="submit" class="btn-auth">Guardar cambios</button>#}
-{#            <a href="{% url 'auth:view_profile' %}" class="btn-secondary">Cancelar</a>#}
-{#          </div>#}
-{#        </div>#}
-{#      </form>#}
-{#    </div>#}
-{#  </div>#}
-{##}
-{#  <script>#}
-{#    document.addEventListener("DOMContentLoaded", function () {#}
-{#      // Elementos del formulario#}
-{#      const profileInput = document.getElementById("id_profile_picture");#}
-{#      const previewImg = document.getElementById("profile-preview");#}
-{#      const uploadButton = document.getElementById("uploadButton");#}
-{#      const firstNameInput = document.getElementById("{{ form.first_name.id_for_label }}");#}
-{#      const lastNameInput = document.getElementById("{{ form.last_name.id_for_label }}");#}
-{#      const dniInput = document.getElementById("{{ form.dni.id_for_label }}");#}
-{#      const emailInput = document.getElementById("{{ form.email.id_for_label }}");#}
-{#      const addressInput = document.getElementById("{{ form.address.id_for_label }}");#}
-{#      const cityInput = document.getElementById("{{ form.city.id_for_label }}");#}
-{#      const phoneInput = document.getElementById("{{ form.phone.id_for_label }}");#}
-{##}
-{#      // Manejo de la foto de perfil#}
-{#      uploadButton.addEventListener("click", function () {#}
-{#        profileInput.click();#}
-{#      });#}
-{##}
-{#      profileInput.addEventListener("change", function () {#}
-{#        if (this.files && this.files[0]) {#}
-{#          const error = validateProfilePicture(this.files[0]);#}
-{#          if (error) {#}
-{#            createErrorMessage(this, error);#}
-{#            this.value = '';#}
-{#          } else {#}
-{#            removeErrorMessage(this);#}
-{#            const reader = new FileReader();#}
-{#            reader.onload = function (e) {#}
-{#              previewImg.src = e.target.result;#}
-{#            };#}
-{#            reader.readAsDataURL(this.files[0]);#}
-{#          }#}
-{#        }#}
-{#      });#}
-{##}
-{#      // Funciones de validación#}
-{#      function createErrorMessage(input, message, isWarning = false) {#}
-{#        removeErrorMessage(input);#}
-{#        const errorDiv = document.createElement('div');#}
-{#        errorDiv.className = isWarning ? 'warning-message' : 'error-message';#}
-{#        errorDiv.textContent = message;#}
-{#        input.parentNode.appendChild(errorDiv);#}
-{#        // Removido: No agregamos clases de error al input#}
-{#      }#}
-{##}
-{#      function removeErrorMessage(input) {#}
-{#        const errorMsg = input.parentNode.querySelector('.error-message');#}
-{#        const warningMsg = input.parentNode.querySelector('.warning-message');#}
-{#        if (errorMsg) errorMsg.remove();#}
-{#        if (warningMsg) warningMsg.remove();#}
-{#        // Removido: No removemos clases del input#}
-{#      }#}
-{##}
-{#      function validateEmail(value) {#}
-{#        const trimmedValue = value.trim();#}
-{#        if (!trimmedValue) return "El campo está vacío, por favor rellénelo.";#}
-{#        if (trimmedValue.length > 50) return "El correo electrónico no puede tener más de 50 caracteres.";#}
-{#        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedValue)) return "Ingrese un correo electrónico válido.";#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      function validateFullName(value) {#}
-{#        const trimmedValue = value.trim();#}
-{#        if (!trimmedValue) return "El campo está vacío, por favor rellénelo.";#}
-{#        if (trimmedValue.length < 3) return "El nombre debe tener al menos 3 caracteres.";#}
-{#        if (trimmedValue.length > 50) return "El nombre no puede tener más de 50 caracteres.";#}
-{#        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(trimmedValue)) return "Solo puede contener letras y espacios.";#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      function validateDni(value) {#}
-{#        const trimmedValue = value.trim();#}
-{#        if (trimmedValue.length !== 10) return "La cédula debe tener 10 dígitos.";#}
-{#        if (!/^\d+$/.test(trimmedValue)) return "La cédula debe contener solo números.";#}
-{##}
-{#        const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];#}
-{#        let total = 0;#}
-{#        for (let i = 0; i < 9; i++) {#}
-{#          let valor = parseInt(trimmedValue[i]) * coef[i];#}
-{#          total += valor > 9 ? valor - 9 : valor;#}
-{#        }#}
-{#        const digitoVerificador = ((Math.ceil(total / 10) * 10) - total);#}
-{#        if (digitoVerificador !== parseInt(trimmedValue[9])) return "La cédula no es válida.";#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      function validateAddressAndCity(value) {#}
-{#        if (!value) return null;#}
-{#        const trimmedValue = value.trim();#}
-{#        if (trimmedValue.length > 255) return "Máximo 255 caracteres.";#}
-{#        if (trimmedValue.length < 5) return "Debe tener al menos 5 caracteres.";#}
-{#        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9,.\s-]+$/.test(trimmedValue)) return "Formato de dirección inválido.";#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      function validatePhone(value) {#}
-{#        if (!value) return null;#}
-{#        const trimmedValue = value.trim();#}
-{#        if (!/^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/.test(trimmedValue)) {#}
-{#          return "Formato válido: 0995336523 o +593 99 533 6523";#}
-{#        }#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      function validateProfilePicture(file) {#}
-{#        if (!file) return null;#}
-{#        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];#}
-{#        if (!validTypes.includes(file.type)) return "Solo se permiten imágenes JPG o PNG.";#}
-{#        if (file.size > 5242880) return "La imagen no debe exceder 5MB.";#}
-{#        return null;#}
-{#      }#}
-{##}
-{#      // Función para agregar validación a un campo#}
-{#      function setupValidation(input, validatorFn, optional = false) {#}
-{#        if (!input) return;#}
-{##}
-{#        input.addEventListener('blur', function () {#}
-{#          const error = validatorFn(this.value);#}
-{#          if (error && (!optional || this.value.trim())) {#}
-{#            createErrorMessage(this, error);#}
-{#          } else if (optional && !this.value.trim()) {#}
-{#            createErrorMessage(this, "El campo esta vacio ( opcional rellenarlo )", true);#}
-{#          } else {#}
-{#            removeErrorMessage(this);#}
-{#          }#}
-{#        });#}
-{##}
-{#        input.addEventListener('input', function () {#}
-{#          // Verificamos si hay mensajes de error o advertencia#}
-{#          const hasErrorMessage = this.parentNode.querySelector('.error-message');#}
-{#          const hasWarningMessage = this.parentNode.querySelector('.warning-message');#}
-{##}
-{#          if (hasErrorMessage || hasWarningMessage) {#}
-{#            const error = validatorFn(this.value);#}
-{#            if (!error) {#}
-{#              removeErrorMessage(this);#}
-{#            }#}
-{#          }#}
-{#        });#}
-{#      }#}
-{##}
-{#      // Configurar validaciones#}
-{#      setupValidation(firstNameInput, validateFullName);#}
-{#      setupValidation(lastNameInput, validateFullName);#}
-{#      setupValidation(emailInput, validateEmail);#}
-{#      setupValidation(dniInput, validateDni, true);#}
-{#      setupValidation(addressInput, validateAddressAndCity, true);#}
-{#      setupValidation(cityInput, validateAddressAndCity, true);#}
-{#      setupValidation(phoneInput, validatePhone, true);#}
-{##}
-{#      // Validación del formulario completo#}
-{#      const form = document.querySelector('form');#}
-{#      form.addEventListener('submit', function (e) {#}
-{#        let hasErrors = false;#}
-{##}
-{#        // Validar campos obligatorios#}
-{#        [#}
-{#          {input: firstNameInput, validator: validateFullName},#}
-{#          {input: lastNameInput, validator: validateFullName},#}
-{#          {input: emailInput, validator: validateEmail}#}
-{#        ].forEach(({input, validator}) => {#}
-{#          const error = validator(input.value);#}
-{#          if (error) {#}
-{#            createErrorMessage(input, error);#}
-{#            hasErrors = true;#}
-{#          }#}
-{#        });#}
-{##}
-{#        // Validar campos opcionales si tienen contenido#}
-{#        [#}
-{#          {input: dniInput, validator: validateDni},#}
-{#          {input: addressInput, validator: validateAddressAndCity},#}
-{#          {input: cityInput, validator: validateAddressAndCity},#}
-{#          {input: phoneInput, validator: validatePhone}#}
-{#        ].forEach(({input, validator}) => {#}
-{#          if (input.value.trim()) {#}
-{#            const error = validator(input.value);#}
-{#            if (error) {#}
-{#              createErrorMessage(input, error);#}
-{#              hasErrors = true;#}
-{#            }#}
-{#          }#}
-{#        });#}
-{##}
-{#        if (hasErrors) {#}
-{#          e.preventDefault();#}
-{#          const firstError = document.querySelector('.error-message');#}
-{#          if (firstError) {#}
-{#            firstError.scrollIntoView({behavior: 'smooth', block: 'center'});#}
-{#          }#}
-{#        }#}
-{#      });#}
-{#    });#}
-{#  </script>#}
-{#{% endblock %}#}
+{% extends 'components/base.html' %}
+{% load static %}
 
-{% extends 'components/base.html' %} {% load static %} {% block title %}
-  Actualización de perfil {% endblock %} {% block extra_css %}
+<!-- Estilos adicionales -->
+{% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/profile.css' %}"/>
-{% endblock %} {% block content %}
-  <div class="profile-container">
-    <h1 class="page-title">Actualización de perfil</h1>
+{% endblock %}
 
+{% block content %}
+  <div class="profile-container">
+    <h1 class="page-title">{{ title }}</h1>
+
+    <!-- Formulario de actualización -->
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
 
       <!-- Sección de foto de perfil -->
       <div class="update-photo-section">
-        <div class="photo-label">Foto de perfil</div>
+        <div class="photo-label">{{ photo_section.title }}</div>
         <div class="update-avatar-container">
           {% if user.profile_picture %}
-            <img
-                    id="profile-preview"
-                    src="{{ user.profile_picture.url }}"
-                    alt="Foto de perfil"
-            />
+            <img id="profile-preview"
+                 src="{{ user.profile_picture.url }}"
+                 alt="{{ photo_section.alt_text }}"/>
           {% else %}
-            <img
-                    id="profile-preview"
-                    src="{% static 'img/avatar.jpg' %}"
-                    alt="Foto de perfil predeterminada"
-            />
+            <img id="profile-preview"
+                 src="{% static 'img/avatar.jpg' %}"
+                 alt="{{ photo_section.alt_text_default }}"/>
           {% endif %}
         </div>
 
         <div class="file-selector">
-          <input
-                  type="file"
-                  name="profile_picture"
-                  id="id_profile_picture"
-                  class="form-control"
-          />
+          <input type="file"
+                 name="profile_picture"
+                 id="id_profile_picture"
+                 class="form-control"/>
         </div>
       </div>
 
@@ -345,78 +41,83 @@
       <div class="update-form-grid">
         <!-- Columna izquierda -->
         <div class="update-form-column">
-
+          <!-- Campo Nombres -->
           <div class="update-form-group">
-            <label for="{{ form.first_name.id_for_label }}">Nombres</label>
+            <label for="{{ form.first_name.id_for_label }}">{{ form_labels.first_name }}</label>
             {{ form.first_name }}
             {% if form.first_name.errors %}
               <div class="error-message">{{ form.first_name.errors.0 }}</div>
             {% endif %}
           </div>
 
+          <!-- Campo Cédula -->
           <div class="update-form-group">
-            <label for="{{ form.dni.id_for_label }}">Cédula</label>
+            <label for="{{ form.dni.id_for_label }}">{{ form_labels.dni }}</label>
             {{ form.dni }}
             {% if form.dni.errors %}
               <div class="error-message">{{ form.dni.errors.0 }}</div>
             {% endif %}
           </div>
 
+          <!-- Campo Dirección -->
           <div class="update-form-group">
-            <label for="{{ form.address.id_for_label }}">Dirección</label>
+            <label for="{{ form.address.id_for_label }}">{{ form_labels.address }}</label>
             {{ form.address }}
             {% if form.address.errors %}
               <div class="error-message">{{ form.address.errors.0 }}</div>
             {% endif %}
           </div>
 
+          <!-- Campo Ciudad -->
           <div class="update-form-group">
-            <label for="{{ form.city.id_for_label }}">Ciudad</label>
+            <label for="{{ form.city.id_for_label }}">{{ form_labels.city }}</label>
             {{ form.city }}
             {% if form.city.errors %}
               <div class="error-message">{{ form.city.errors.0 }}</div>
             {% endif %}
           </div>
-
         </div>
-
 
         <!-- Columna derecha -->
         <div class="update-form-column">
+          <!-- Campo Apellidos -->
           <div class="update-form-group">
-            <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
-            {{ form.last_name }} {% if form.last_name.errors %}
-            <div class="error-message">{{ form.last_name.errors.0 }}</div>
-          {% endif %}
+            <label for="{{ form.last_name.id_for_label }}">{{ form_labels.last_name }}</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+              <div class="error-message">{{ form.last_name.errors.0 }}</div>
+            {% endif %}
           </div>
 
+          <!-- Campo Teléfono -->
           <div class="update-form-group">
-            <label for="{{ form.phone.id_for_label }}">Teléfono</label>
+            <label for="{{ form.phone.id_for_label }}">{{ form_labels.phone }}</label>
             {{ form.phone }}
             {% if form.phone.errors %}
               <div class="error-message">{{ form.phone.errors.0 }}</div>
             {% endif %}
           </div>
 
+          <!-- Campo Correo Electrónico -->
           <div class="update-form-group">
-            <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>
-            {{ form.email }} {% if form.email.errors %}
-            <div class="error-message">{{ form.email.errors.0 }}</div>
-          {% endif %}
+            <label for="{{ form.email.id_for_label }}">{{ form_labels.email }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="error-message">{{ form.email.errors.0 }}</div>
+            {% endif %}
           </div>
-
         </div>
 
         <!-- Botones de acción -->
         <div class="update-form-actions">
-          <button type="submit" class="btn-update">Actualizar</button>
-          <a href="{% url 'auth:view_profile' %}" class="btn-cancel">
-            Cancelar
-          </a>
+          <button type="submit" class="btn-update">{{ buttons.update }}</button>
+          <a href="{% url 'auth:view_profile' %}" class="btn-cancel">{{ buttons.cancel }}</a>
         </div>
+      </div>
     </form>
   </div>
 
+  <!-- Scripts de validación -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       // Elementos del archivo de perfil
@@ -748,5 +449,4 @@
       }
     });
   </script>
-
 {% endblock %}

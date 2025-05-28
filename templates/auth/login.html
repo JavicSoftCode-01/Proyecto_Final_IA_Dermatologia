@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Iniciar Sesión - DermaIA</title>
+  <!-- Título dinámico desde el contexto -->
+  <title>{{ page_title }} - {{ app_name }}</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/auth.css' %}"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
@@ -13,29 +14,19 @@
   <!-- Logo en el panel izquierdo -->
   <div class="logo-panel">
     <div class="logo-container">
-      <img src="{% static 'img/portada.png' %}" alt="DermaIA Logo" class="logo">
+      <img src="{% static 'img/portada.png' %}" alt="{{ app_name }} Logo" class="logo">
     </div>
   </div>
 
   <div class="auth-card">
-    <!-- Mensajes -->
-    {% if messages %}
-      <div class="messages">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">
-            <i class="fas fa-info-circle"></i>
-            {{ message }}
-            <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">×</button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+    <!-- Sistema de mensajes/alertas -->
+    {% include "includes/messages.html" %}
 
     <!-- Formulario -->
     <form method="post" class="auth-form">
       {% csrf_token %}
-      <h2>Iniciar Sesión</h2>
-      <h3>Ingrese sus credenciales para acceder al sistema</h3>
+      <h2>{{ page_title }}</h2>
+      <h3>{{ subtitle }}</h3>
 
       <!-- Mostrar errores no relacionados con campos específicos -->
       {% if form.non_field_errors %}
@@ -47,7 +38,7 @@
       {% endif %}
 
       <div class="form-group">
-        <label for="{{ form.username.id_for_label }}">Correo Electrónico</label>
+        <label for="{{ form.username.id_for_label }}">{{ email_label }}</label>
         {{ form.username }}
         {% if form.username.errors %}
           <div class="error-message">
@@ -59,7 +50,7 @@
       </div>
 
       <div class="form-group">
-        <label for="{{ form.password.id_for_label }}">Contraseña</label>
+        <label for="{{ form.password.id_for_label }}">{{ password_label }}</label>
         {{ form.password }}
         {% if form.password.errors %}
           <div class="error-message">
@@ -71,13 +62,13 @@
       </div>
 
       <div class="forgot-password">
-        <a href="{% url 'auth:password_reset' %}">¿Olvidó su contraseña?</a>
+        <a href="{% url 'auth:password_reset' %}">{{ forgot_password_text }}</a>
       </div>
 
-      <button type="submit" class="btn-auth">Iniciar Sesión</button>
+      <button type="submit" class="btn-auth">{{ login_button_text }}</button>
 
       <div class="auth-links">
-        <p>¿No tiene una cuenta? <a href="{% url 'auth:register' %}">Regístrese</a></p>
+        <p>{{ register_text }} <a href="{% url 'auth:register' %}">{{ register_link_text }}</a></p>
       </div>
     </form>
   </div>

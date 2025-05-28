@@ -1,87 +1,103 @@
+{% load static %}
+
 <div class="sidebar">
-  <!-- Logo -->
-  <div class="sidebar-header">
-    <div class="logo">
-      <div class="logo-icon">
-        {% load static %}
-        <img
-                src="{% static 'img/icon.png' %}"
-                alt="DermaIA Logo"
-                class="logo-image"
-        />
-      </div>
-      <span class="logo-text">DermaIA</span>
-    </div>
-  </div>
-
-  <!-- Navegación principal -->
-  <nav class="sidebar-nav">
-    <ul class="nav-list">
-      <li class="nav-item {% if current_page == 'home' %}active{% endif %}">
-        <a href="{% url 'core:home' %}" class="nav-link">
-          <i class="fas fa-home"></i>
-          <span>Home</span>
-        </a>
-      </li>
-      <li class="nav-item {% if current_page == 'characteristics' %}active{% endif %}">
-        <a href="{% url 'core:characteristics' %}" class="nav-link">
-          <i class="fas fa-th-large"></i>
-          <span>Características</span>
-        </a>
-      </li>
-      <li class="nav-item {% if current_page == 'analysis' %}active{% endif %}">
-        <a href="{% url 'dermatology:upload_image' %}" class="nav-link">
-          <i class="fas fa-chart-line"></i>
-          <span>Análisis de imágenes</span>
-        </a>
-      </li>
-      <li class="nav-item {% if current_page == 'reports' %}active{% endif %}">
-        <a href="{% url 'dermatology:report_list' %}" class="nav-link">
-          <i class="fas fa-file-alt"></i>
-          <span>Reportes</span>
-        </a>
-      </li>
-      <li class="nav-item {% if current_page == 'patients' %}active{% endif %}">
-        <a href="#" class="nav-link">
-          <i class="fas fa-users"></i>
-          <span>Paciente</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
-
-  <!-- Sección inferior -->
-  <div class="sidebar-footer">
-    <div class="nav-item {% if current_page == 'profile' %}active{% endif %}">
-      <a href="{% url 'auth:view_profile' %}" class="nav-link">
-        <i class="fas fa-user"></i>
-        <span>Perfil</span>
-      </a>
-    </div>
-    <div class="nav-item">
-      <a href="{% url 'auth:logout' %}" class="nav-link">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Cerrar sesión</span>
-      </a>
+    <!-- Encabezado del sidebar con logo -->
+    <div class="sidebar-header">
+        <div class="logo">
+            <div class="logo-icon">
+                <img src="{% static 'img/icon.png' %}"
+                     alt="{{ app_name }} Logo"
+                     class="logo-image"/>
+            </div>
+            <span class="logo-text">{{ app_name }}</span>
+        </div>
     </div>
 
-    <!-- Usuario -->
-    <div class="user-info">
-      <div class="user-avatar">
-        {% if user.profile_picture %}
-          <img class="profile-picture" src="{{ user.profile_picture.url }}" alt="Foto de perfil"/>
-        {% else %}
-          <img class="profile-picture" src="{% static 'img/avatar.jpg' %}" alt="Foto de perfil predeterminada"/>
-        {% endif %}
-      </div>
-      <div class="user-details">
-        {% if user.is_authenticated %}
-          <span class="user-name">
-          Dr. {{ user.first_name|default:"Usuario" }} {{ user.last_name }}
-        </span>
-          <span class="user-email">{{ user.email }}</span>
-          {% if user.profile.phone %} {% endif %} {% endif %}
-      </div>
+    <!-- Menú de navegación principal -->
+    <nav class="sidebar-nav">
+        <ul class="nav-list">
+            <!-- Item Home -->
+            <li class="nav-item {% if current_page == 'home' %}active{% endif %}">
+                <a href="{% url 'core:home' %}" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+            </li>
+
+            <!-- Item Características -->
+            <li class="nav-item {% if current_page == 'characteristics' %}active{% endif %}">
+                <a href="{% url 'core:characteristics' %}" class="nav-link">
+                    <i class="fas fa-th-large"></i>
+                    <span>Características</span>
+                </a>
+            </li>
+
+            <!-- Item Análisis -->
+            <li class="nav-item {% if current_page == 'analysis' %}active{% endif %}">
+                <a href="{% url 'dermatology:upload_image' %}" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Análisis de imágenes</span>
+                </a>
+            </li>
+
+            <!-- Item Reportes -->
+            <li class="nav-item {% if current_page == 'reports' %}active{% endif %}">
+                <a href="{% url 'dermatology:report_list' %}" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reportes</span>
+                </a>
+            </li>
+
+            <!-- Item Pacientes -->
+            <li class="nav-item {% if current_page == 'patients' %}active{% endif %}">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Paciente</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Pie del sidebar -->
+    <div class="sidebar-footer">
+        <!-- Enlaces de perfil y cierre de sesión -->
+        <div class="nav-item {% if current_page == 'profile' %}active{% endif %}">
+            <a href="{% url 'auth:view_profile' %}" class="nav-link">
+                <i class="fas fa-user"></i>
+                <span>Perfil</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'auth:logout' %}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar sesión</span>
+            </a>
+        </div>
+
+        <!-- Información del usuario -->
+        <div class="user-info">
+            <!-- Avatar del usuario -->
+            <div class="user-avatar">
+                {% if user.profile_picture %}
+                    <img class="profile-picture" 
+                         src="{{ user.profile_picture.url }}" 
+                         alt="Foto de perfil"/>
+                {% else %}
+                    <img class="profile-picture" 
+                         src="{% static 'img/avatar.jpg' %}" 
+                         alt="Foto de perfil predeterminada"/>
+                {% endif %}
+            </div>
+
+            <!-- Detalles del usuario -->
+            <div class="user-details">
+                {% if user.is_authenticated %}
+                    <span class="user-name">
+                        Dr. {{ user.first_name|default:"Usuario" }} {{ user.last_name }}
+                    </span>
+                    <span class="user-email">{{ user.email }}</span>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  </div>
 </div>
