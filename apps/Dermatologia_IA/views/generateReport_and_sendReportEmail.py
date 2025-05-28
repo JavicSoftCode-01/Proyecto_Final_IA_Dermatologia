@@ -3,15 +3,13 @@
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.views import View
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
 
 from apps.Dermatologia_IA.utils.generateReport import generate_report
 from apps.Dermatologia_IA.utils.sendReportEmail import send_report_email
+from apps.auth.views.view_auth import CustomLoginRequiredMixin
 
 
-@method_decorator(login_required, name='dispatch')
-class GenerateReportView(View):
+class GenerateReportView(CustomLoginRequiredMixin, View):
   """
    generar y descargar el reporte PDF.
   """
@@ -30,8 +28,7 @@ class GenerateReportView(View):
       return redirect('dermatology:process_image', image_id=image_id)
 
 
-@method_decorator(login_required, name='dispatch')
-class SendReportEmailView(View):
+class SendReportEmailView(CustomLoginRequiredMixin, View):
   """
   enviar el reporte por email.
   """
