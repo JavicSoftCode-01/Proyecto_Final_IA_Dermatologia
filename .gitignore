@@ -3,3 +3,5 @@ Entrenamiento_IA
 .env
 media
 .qodo
+__pycache__
+migrations
