@@ -11,19 +11,6 @@
       <div class="underline-custom"></div>
     </div>
 
-    {% if messages %}
-      <div class="row justify-content-center">
-        <div class="col-md-8">
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    {% endif %}
-
     {% if reports %}
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
         {% for report in reports %}
@@ -42,11 +29,11 @@
                 <div class="patient-info flex-grow-1">
                   <div class="info-row">
                     <span class="info-label"><i class="fas fa-user me-1"></i>Nombre:</span>
-                    <span class="info-value">{{ report.first_name|default:"" }} {{ report.last_name|default:""|truncatechars:15 }}</span>
+                    <span class="info-value">{{ report.patient.first_name|default:"" }} {{ report.patient.last_name|default:""|truncatechars:15 }}</span>
                   </div>
                   <div class="info-row">
                     <span class="info-label"><i class="fas fa-id-card me-1"></i>DNI:</span>
-                    <span class="info-value">{{ report.dni|default:"N/A" }}</span>
+                    <span class="info-value">{{ report.patient.dni|default:"N/A" }}</span>
                   </div>
                   {% comment %}
                 <div class="info-row">
@@ -60,18 +47,18 @@
                 {% endcomment %}
                   <div class="info-row">
                     <span class="info-label"><i class="fas fa-user-clock me-1"></i>Edad:</span>
-                    <span class="info-value">{{ report.age_approx|default:"N/A" }}</span>
+                    <span class="info-value">{{ report.patient.age_approx|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
                     <span class="info-label"><i class="fas fa-venus-mars me-1"></i>Sexo:</span>
-                    <span class="info-value">{{ report.get_sex_display|default:"N/A" }}</span>
+                    <span class="info-value">{{ report.patient.get_sex_display|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
                     <span class="info-label"><i class="fas fa-map-marker-alt me-1"></i>Localización:</span>
                     <span class="info-value">{{ report.get_anatom_site_general_display|default:"N/A" }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label"><i class="fas fa-calendar-alt me-1"></i>Fecha:</span>
+                    <span class="info-label"><i class="fas fa-calendar-alt me-1"></i>Fecha y Hora:</span>
                     <span class="info-value">{{ report.created_at|date:"d/m/Y H:i" }}</span>
                   </div>
                 </div>

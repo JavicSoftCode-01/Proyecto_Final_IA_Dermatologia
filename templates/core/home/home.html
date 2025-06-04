@@ -41,21 +41,21 @@
                 <strong>Reporte:</strong> {{ img.condition|default:"Pendiente" }}
               </div>
               <div class="report-patient">
-                <strong>Paciente:</strong> {{ img.first_name }} {{ img.last_name }}
+                <strong>Paciente:</strong> {{ img.patient.first_name }} {{ img.patient.last_name }}
               </div>
               <div class="report-details">
                 <div class="report-detail-item">
-                  <strong>Edad:</strong> {{ img.age_approx }}
+                  <strong>Edad:</strong> {{ img.patient.age_approx }}
                 </div>
                 <div class="report-detail-item">
-                  <strong>Sexo:</strong> {{ img.get_sex_display }}
+                  <strong>Sexo:</strong> {{ img.patient.get_sex_display }}
                 </div>
                 <div class="report-detail-item">
                   <strong>Localización:</strong> {{ img.get_anatom_site_general_display }}
                 </div>
               </div>
               <div class="report-date">
-                Análisis realizado el {{ img.uploaded_at|date:"d de F, Y H:i" }}
+                Análisis realizado el {{ img.created_at|date:"d de F, Y H:i" }}
               </div>
             </div>
 

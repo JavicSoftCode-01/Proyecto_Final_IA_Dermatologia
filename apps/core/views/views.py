@@ -30,6 +30,8 @@ class HomeView(CustomLoginRequiredMixin, TemplateView):
     """
     context = super().get_context_data(**kwargs)
     context.update({
+      'page_title': 'Inicio',
+      'app_name': 'DermaIA',
       'current_page': 'home',
       'hero_section': {
         'title': 'DermaIA: Inteligencia Artificial para Dermatología',
@@ -87,6 +89,8 @@ class CharacteristicsView(CustomLoginRequiredMixin, TemplateView):
     """
     context = super().get_context_data(**kwargs)
     context.update({
+      'page_title': 'Características',
+      'app_name': 'DermaIA',
       'current_page': 'characteristics',
       'main_title': 'Características Principales',
       'main_description': ('Descubre las funcionalidades avanzadas que DermaIA ofrece para mejorar el '

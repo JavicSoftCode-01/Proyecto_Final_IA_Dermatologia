@@ -20,8 +20,9 @@ def generate_report(image_id):
       HttpResponse: Respuesta con el PDF generado o None si hay un error.
   """
   try:
-    # Obtener la instancia de SkinImage
+    # Obtener la instancia de SkinImage (asegurándonos de que esté procesada)
     skin_image = SkinImage.objects.get(id=image_id, processed=True)
+    patient = skin_image.patient  # Obtenemos el paciente asociado
 
     # Crear una respuesta HttpResponse con tipo de contenido PDF
     response = HttpResponse(content_type='application/pdf')
@@ -54,16 +55,16 @@ def generate_report(image_id):
       Paragraph(f"<b>ID de Imagen:</b> {skin_image.id}", normal),
     ]
 
-    # Datos de paciente
-    if skin_image.first_name or skin_image.last_name:
-      nombre = f"{skin_image.first_name or ''} {skin_image.last_name or ''}".strip()
+    # Datos de paciente (ahora a través de patient)
+    if patient.first_name or patient.last_name:
+      nombre = f"{patient.first_name or ''} {patient.last_name or ''}".strip()
       story.append(Paragraph(f"<b>Nombre:</b> {nombre}", normal))
-    if skin_image.dni:
-      story.append(Paragraph(f"<b>DNI:</b> {skin_image.dni}", normal))
-    if skin_image.phone:
-      story.append(Paragraph(f"<b>Teléfono:</b> {skin_image.phone}", normal))
-    if skin_image.email:
-      story.append(Paragraph(f"<b>Correo Electrónico:</b> {skin_image.email}", normal))
+    if patient.dni:
+      story.append(Paragraph(f"<b>DNI:</b> {patient.dni}", normal))
+    if patient.phone:
+      story.append(Paragraph(f"<b>Teléfono:</b> {patient.phone}", normal))
+    if patient.email:
+      story.append(Paragraph(f"<b>Correo Electrónico:</b> {patient.email}", normal))
     if skin_image.uploaded_at:
       story.append(
         Paragraph(
@@ -71,13 +72,13 @@ def generate_report(image_id):
           normal,
         )
       )
-    if skin_image.age_approx is not None:
+    if patient.age_approx is not None:
       story.append(
-        Paragraph(f"<b>Edad Aproximada:</b> {skin_image.age_approx}", normal)
+        Paragraph(f"<b>Edad Aproximada:</b> {patient.age_approx}", normal)
       )
-    if skin_image.sex:
+    if patient.sex:
       story.append(
-        Paragraph(f"<b>Sexo:</b> {skin_image.get_sex_display()}", normal)
+        Paragraph(f"<b>Sexo:</b> {patient.get_sex_display()}", normal)
       )
     if skin_image.anatom_site_general:
       story.append(
@@ -124,13 +125,18 @@ def generate_report(image_id):
     story.append(Paragraph("Diagnóstico Preliminar (Basado en IA):", h2))
     story.append(
       Paragraph(
-        f"<b>Condición Sugerida:</b> {skin_image.condition or 'No determinada'}", normal
+        f"<b>Condición Sugerida:</b> {skin_image.condition or 'No determinada'}",
+        normal
       )
     )
     if skin_image.confidence is not None:
+      # Convertimos a porcentaje (si confidence está en [0,1], multiplicar por 100)
+      valor_conf = skin_image.confidence
+      # Si el usuario maneja ya valores en porcentaje, quitar *100
+      porcentaje = valor_conf * 100 if valor_conf <= 1 else valor_conf
       story.append(
         Paragraph(
-          f"<b>Confianza del Modelo:</b> {skin_image.confidence:.2f}%", normal
+          f"<b>Confianza del Modelo:</b> {porcentaje:.2f}%", normal
         )
       )
     story.append(Spacer(1, 0.2 * inch))

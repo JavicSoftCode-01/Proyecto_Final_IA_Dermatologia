@@ -1,45 +1,78 @@
-# core/Dermatologia_IA/forms/form_report_user_IA.py
+"""
+Formulario para el registro de imágenes dermatológicas y su asociación con pacientes.
+"""
+
 from django import forms
 
-from apps.Dermatologia_IA.models import SkinImage
+from apps.Dermatologia_IA.models import SkinImage, Patient
 
 
 class SkinImageForm(forms.ModelForm):
-  class Meta:
-    model = SkinImage
-    fields = [
-      'first_name', 'last_name', 'dni', 'phone', 'email',
-      'image', 'age_approx', 'sex', 'anatom_site_general'
-    ]
-    labels = {
-      'first_name': 'Nombre',
-      'last_name': 'Apellido',
-      'dni': 'DNI',
-      'phone': 'Teléfono',
-      'email': 'Correo Electrónico',
-      'image': 'Selecciona una imagen de la piel',
-      'age_approx': 'Edad Aproximada',
-      'sex': 'Sexo',
-      'anatom_site_general': 'Localización Anatómica',
-    }
-    widgets = {
-      'first_name': forms.TextInput(attrs={'class': 'form-control mb-2', 'placeholder': 'Nombre'}),
-      'last_name': forms.TextInput(attrs={'class': 'form-control mb-2', 'placeholder': 'Apellido'}),
-      'dni': forms.TextInput(attrs={'class': 'form-control mb-2', 'placeholder': 'DNI'}),
-      'phone': forms.TextInput(attrs={'class': 'form-control mb-2', 'placeholder': 'Teléfono'}),
-      'email': forms.EmailInput(attrs={'class': 'form-control mb-2', 'placeholder': 'Correo electrónico'}),
-      'image': forms.FileInput(attrs={'class': 'form-control mb-2', 'accept': 'image/*'}),
-      'age_approx': forms.NumberInput(attrs={'class': 'form-control mb-2', 'min': 0, 'max': 120}),
-      'sex': forms.Select(attrs={'class': 'form-select mb-2'}),
-      'anatom_site_general': forms.Select(attrs={'class': 'form-select mb-2'}),
-    }
-    help_texts = {
-      'first_name': 'Nombre completo del paciente.',
-      'last_name': 'Apellido del paciente.',
-      'dni': 'Documento de identidad.',
-      'phone': 'Número de teléfono de contacto.',
-      'email': 'Correo electrónico del paciente.',
-      'age_approx': 'Introduce la edad aproximada del paciente.',
-      'sex': 'Selecciona el sexo del paciente.',
-      'anatom_site_general': 'Selecciona la zona general donde se encuentra la lesión.',
-    }
+    """
+    Formulario para subir y asociar imágenes dermatológicas con pacientes.
+
+    Permite seleccionar un paciente existente y subir una imagen de la lesión
+    junto con su localización anatómica.
+    """
+
+    # Campo para selección de paciente existente
+    patient = forms.ModelChoiceField(
+        queryset=Patient.objects.all(),
+        required=False,
+        widget=forms.Select(
+            attrs={
+                'class': 'form-select mb-2',
+                'id': 'patient_select'
+            }
+        ),
+        label='Paciente',
+    )
+
+    class Meta:
+        model = SkinImage
+        fields = [
+            'image',
+            'anatom_site_general',
+        ]
+
+        labels = {
+            'image': 'Imagen de la lesión',
+            'anatom_site_general': 'Localización Anatómica',
+        }
+
+        widgets = {
+            'image': forms.FileInput(
+                attrs={
+                    'class': 'form-control mb-2',
+                    'accept': 'image/*',
+                    'id': 'fileInput'
+                }
+            ),
+            'anatom_site_general': forms.Select(
+                attrs={
+                    'class': 'form-select mb-2',
+                    'id': 'site_select'
+                }
+            ),
+        }
+
+    def clean_image(self):
+        """
+        Valida que la imagen subida sea de un formato aceptable
+        y tenga un tamaño razonable.
+        """
+        image = self.cleaned_data.get('image')
+        if image:
+            # Validar el formato
+            if not image.name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                raise forms.ValidationError(
+                    'El archivo debe ser una imagen en formato PNG, JPG o JPEG'
+                )
+
+            # Validar el tamaño (máximo 5MB)
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError(
+                    'La imagen no debe exceder los 5MB de tamaño'
+                )
+
+        return image

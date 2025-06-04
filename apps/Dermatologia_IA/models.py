@@ -1,67 +1,172 @@
-# core/Dermatologia_IA/models.py
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+from utils.validators import (
+  validate_full_name,
+  validate_dni,
+  validate_phone,
+  validate_email,
+  validate_profile_picture
+)
 
-class SkinImage(models.Model):
-  # Información del paciente
+
+class Patient(models.Model):
+  """
+  Modelo que representa a un paciente en el sistema de dermatología.
+
+  Este modelo almacena la información personal y demográfica básica
+  de los pacientes que serán atendidos en el sistema.
+  """
+
   first_name = models.CharField(
-    max_length=100,
-    help_text="Nombre del paciente"
+    max_length=50,
+    validators=[validate_full_name],
   )
+
   last_name = models.CharField(
-    max_length=100,
-    help_text="Apellido del paciente"
+    max_length=50,
+    validators=[validate_full_name],
   )
+
   dni = models.CharField(
-    max_length=20,
-    help_text="Documento de identidad del paciente"
+    'Cédula',
+    max_length=10,
+    unique=True,
+    validators=[validate_dni],
+    error_messages={
+      'unique': 'Ya existe un usuario con esta cédula.'
+    }
   )
+
   phone = models.CharField(
+    'Teléfono',
     max_length=20,
-    help_text="Teléfono de contacto"
+    unique=True,
+    validators=[validate_phone],
+    error_messages={
+      'unique': 'Ya existe un usuario con este número de teléfono.'
+    }
   )
+
   email = models.EmailField(
-    help_text="Correo electrónico"
+    'Correo electrónico',
+    unique=True,
+    max_length=50,
+    validators=[validate_email],
+    error_messages={
+      'unique': 'Ya existe un usuario con este correo electrónico.'
+    }
   )
 
-  # Imagen y metadatos clínicos
-  image = models.ImageField(upload_to='skin_images/')
-  uploaded_at = models.DateTimeField(auto_now_add=True)
-  processed = models.BooleanField(default=False)
-  condition = models.CharField(max_length=50, blank=True, null=True)
-  location = models.CharField(max_length=50, blank=True, null=True)
-  confidence = models.FloatField(blank=True, null=True)
-  gradcam_path = models.CharField(max_length=255, blank=True, null=True)
-  ai_report = models.TextField(blank=True, null=True)
-  ai_treatment = models.TextField(blank=True, null=True)
-
-  # Campos originales de metadatos
   age_approx = models.PositiveIntegerField(
-    blank=False,
-    null=False,
-    validators=[MinValueValidator(0), MaxValueValidator(120)],
-    help_text="Edad aproximada del paciente (0-120)."
+    validators=[
+      MinValueValidator(0, "La edad no puede ser negativa"),
+      MaxValueValidator(110, "La edad máxima permitida es 110 años")
+    ],
   )
 
   SEX_CHOICES = [
     ('female', 'Femenino'),
     ('male', 'Masculino'),
-    ('unknown', 'Desconocido/No especificado'),
   ]
+
   sex = models.CharField(
     max_length=10,
     choices=SEX_CHOICES,
-    blank=False,
-    null=False,
-    default='unknown',
-    help_text="Sexo del paciente."
   )
 
+  def get_full_name(self):
+    """Retorna el nombre completo del paciente"""
+    return f"{self.first_name} {self.last_name}"
+
+  def __str__(self):
+    """Representación en string del paciente"""
+    return f"{self.get_full_name()} (CI: {self.dni})"
+
+  class Meta:
+    verbose_name = 'Paciente'
+    verbose_name_plural = 'Pacientes'
+    ordering = ['last_name', 'first_name']
+
+
+class SkinImage(models.Model):
+  """
+  Modelo que representa una imagen dermatológica y su diagnóstico IA.
+
+  Almacena las imágenes de lesiones cutáneas junto con sus metadatos,
+  resultados del análisis de IA y ubicación anatómica.
+  """
+
+  # Relación con el paciente
+  patient = models.ForeignKey(
+    Patient,
+    on_delete=models.CASCADE,
+    related_name='consultas',
+  )
+
+  # Campos de imagen y timestamp
+  image = models.ImageField(
+    upload_to='skin_images/',
+    validators=[validate_profile_picture]
+  )
+
+  uploaded_at = models.DateTimeField(
+    auto_now_add=True,
+    blank=True,
+    null=True,
+  )
+
+  created_at = models.DateTimeField(
+    auto_now_add=True,
+    blank=True,
+    null=True,
+  )
+
+  # Campos de procesamiento y diagnóstico IA
+  processed = models.BooleanField(
+    default=False,
+    blank=True,
+    null=True,
+  )
+
+  condition = models.CharField(
+    max_length=50,
+    blank=True,
+    null=True,
+    help_text="Condición dermatológica detectada por la IA"
+  )
+
+  confidence = models.FloatField(
+    blank=True,
+    null=True,
+    validators=[
+      MinValueValidator(0.0, "La confianza no puede ser negativa"),
+      MaxValueValidator(1.0, "La confianza no puede ser mayor a 1")
+    ],
+  )
+
+  gradcam_path = models.CharField(
+    max_length=255,
+    blank=True,
+    null=True,
+    help_text="Ruta a la imagen de visualización GradCAM"
+  )
+
+  ai_report = models.TextField(
+    blank=True,
+    null=True,
+  )
+
+  ai_treatment = models.TextField(
+    blank=True,
+    null=True,
+  )
+
+  # Ubicación anatómica
   ANATOM_SITE_CHOICES = [
     ('abdomen', 'Abdomen'),
     ('acral', 'Acral (Palmas, Plantas, Dedos)'),
-    ('anterior torso', 'Torso Anterior'),
+    ('anterior_torso', 'Torso Anterior'),
     ('back', 'Espalda'),
     ('chest', 'Pecho'),
     ('ear', 'Oreja'),
@@ -69,30 +174,37 @@ class SkinImage(models.Model):
     ('foot', 'Pie'),
     ('genital', 'Genital'),
     ('hand', 'Mano'),
-    ('head/neck', 'Cabeza/Cuello'),
-    ('lateral torso', 'Torso Lateral'),
-    ('lower extremity', 'Extremidad Inferior'),
+    ('head_neck', 'Cabeza/Cuello'),
+    ('lateral_torso', 'Torso Lateral'),
+    ('lower_extremity', 'Extremidad Inferior'),
     ('neck', 'Cuello'),
-    ('oral/genital', 'Oral/Genital'),
-    ('palms/soles', 'Palmas/Plantas'),
-    ('posterior torso', 'Torso Posterior'),
+    ('oral_genital', 'Oral/Genital'),
+    ('palms_soles', 'Palmas/Plantas'),
+    ('posterior_torso', 'Torso Posterior'),
     ('scalp', 'Cuero Cabelludo'),
     ('trunk', 'Tronco (General)'),
+    ('upper_extremity', 'Extremidad Superior'),
     ('unknown', 'Desconocida/Otra'),
-    ('upper extremity', 'Extremidad Superior'),
   ]
+
   anatom_site_general = models.CharField(
     max_length=50,
     choices=ANATOM_SITE_CHOICES,
-    blank=False,
-    null=False,
-    default='unknown',
-    help_text="Localización anatómica general de la lesión."
+    default='Desconocida',
   )
 
+  def get_status(self):
+    """Retorna el estado actual del análisis de la imagen"""
+    if self.condition:
+      return self.condition
+    return 'Procesada' if self.processed else 'Pendiente'
+
   def __str__(self):
-    status = self.condition or ('Procesada' if self.processed else 'Pendiente')
-    age_str = f"Edad: {self.age_approx}" if self.age_approx is not None else "Edad: ?"
-    sex_str = f"Sexo: {self.get_sex_display()}" if self.sex else "Sexo: ?"
-    site_str = f"Locación: {self.get_anatom_site_general_display()}" if self.anatom_site_general else "Locación: ?"
-    return f"Imagen {self.id} ({status}) - {age_str}, {sex_str}, {site_str}"
+    """Representación en string de la consulta"""
+    return (f"Consulta de {self.patient.get_full_name()} - "
+            f"({self.get_status()})")
+
+  class Meta:
+    verbose_name = 'Imagen Dermatológica'
+    verbose_name_plural = 'Imágenes Dermatológicas'
+    ordering = ['-created_at']

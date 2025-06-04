@@ -50,7 +50,7 @@
 
             <!-- Item Pacientes -->
             <li class="nav-item {% if current_page == 'patients' %}active{% endif %}">
-                <a href="#" class="nav-link">
+                <a href="{% url 'dermatology:patient-list' %}" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span>Paciente</span>
                 </a>
@@ -79,12 +79,12 @@
             <!-- Avatar del usuario -->
             <div class="user-avatar">
                 {% if user.profile_picture %}
-                    <img class="profile-picture" 
-                         src="{{ user.profile_picture.url }}" 
+                    <img class="profile-picture"
+                         src="{{ user.profile_picture.url }}"
                          alt="Foto de perfil"/>
                 {% else %}
-                    <img class="profile-picture" 
-                         src="{% static 'img/avatar.jpg' %}" 
+                    <img class="profile-picture"
+                         src="{% static 'img/avatar.jpg' %}"
                          alt="Foto de perfil predeterminada"/>
                 {% endif %}
             </div>

@@ -1,0 +1,81 @@
+{% extends "components/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>{{ page_title }}</h1>
+      <p class="text-muted">{{ page_subtitle }}</p>
+    </div>
+
+    <!-- Barra de búsqueda y botones -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <form method="get" class="row g-3 align-items-center">
+          <div class="col-auto flex-grow-1">
+            <input type="text"
+                   name="dni"
+                   class="form-control"
+                   placeholder="{{ texts.search_placeholder }}"
+                   value="{{ request.GET.dni }}">
+          </div>
+          <div class="col-auto">
+            <button type="submit"
+                    class="btn {{ actions.search.button_class }}">
+              {{ actions.search.button_text }}
+            </button>
+          </div>
+          <div class="col-auto">
+            <a href="{% url actions.add.url_name %}"
+               class="btn {{ actions.add.button_class }}">
+              {{ actions.add.button_text }}
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tabla de pacientes -->
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th>{{ texts.table_headers.name }}</th>
+              <th>{{ texts.table_headers.lastname }}</th>
+              <th>{{ texts.table_headers.dni }}</th>
+              <th>{{ texts.table_headers.consultations }}</th>
+              <th>{{ texts.table_headers.actions }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for paciente in patients %}
+              <tr>
+                <td>{{ paciente.first_name }}</td>
+                <td>{{ paciente.last_name }}</td>
+                <td>{{ paciente.dni }}</td>
+                <td>{{ paciente.consultas.count }}</td>
+                <td>
+                  <a href="{% url 'dermatology:patient-update' paciente.pk %}"
+                     class="btn {{ actions.edit.button_class }}">
+                    {{ actions.edit.button_text }}
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center py-4">
+                  {{ texts.no_results }}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
