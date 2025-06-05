@@ -4,42 +4,29 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-  <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1>{{ page_title }}</h1>
-      <p class="text-muted">{{ page_subtitle }}</p>
-    </div>
+  <div class="container">
+    <div class="card p-4">
+      <h1 class="text-center mb-2">{{ page_title }}</h1>
+      <h5 class="text-center text-muted mb-4">{{ page_subtitle }}</h5>
 
-    <!-- Barra de búsqueda y botones -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <form method="get" class="row g-3 align-items-center">
-          <div class="col-auto flex-grow-1">
-            <input type="text"
-                   name="dni"
-                   class="form-control"
-                   placeholder="{{ texts.search_placeholder }}"
-                   value="{{ request.GET.dni }}">
-          </div>
-          <div class="col-auto">
-            <button type="submit"
-                    class="btn {{ actions.search.button_class }}">
-              {{ actions.search.button_text }}
-            </button>
-          </div>
-          <div class="col-auto">
-            <a href="{% url actions.add.url_name %}"
-               class="btn {{ actions.add.button_class }}">
-              {{ actions.add.button_text }}
-            </a>
-          </div>
-        </form>
+      <!-- Formulario de búsqueda -->
+      <form method="get" class="mb-4">
+        <div class="input-group">
+          <input type="text" name="dni" class="form-control" placeholder="{{ texts.search_placeholder }}"
+                 value="{{ request.GET.dni|default_if_none:'' }}">
+          <button type="submit" class="btn {{ actions.search.button_class }}">{{ actions.search.button_text }}</button>
+        </div>
+      </form>
+
+      <!-- Botón para agregar paciente -->
+      <div class="mb-3">
+        <a href="{% url 'dermatology:patient-create' %}" class="btn {{ actions.add.button_class }}">
+          {{ actions.add.button_text }}
+        </a>
       </div>
-    </div>
 
-    <!-- Tabla de pacientes -->
-    <div class="card">
-      <div class="card-body">
+      <!-- Tabla de pacientes -->
+      {% if patients %}
         <div class="table-responsive">
           <table class="table table-striped">
             <thead>
@@ -52,30 +39,129 @@
             </tr>
             </thead>
             <tbody>
-            {% for paciente in patients %}
+            {% for patient in patients %}
               <tr>
-                <td>{{ paciente.first_name }}</td>
-                <td>{{ paciente.last_name }}</td>
-                <td>{{ paciente.dni }}</td>
-                <td>{{ paciente.consultas.count }}</td>
+                <td>{{ patient.first_name }}</td>
+                <td>{{ patient.last_name }}</td>
+                <td>{{ patient.dni }}</td>
+                <td>{{ patient.consultas.count }}</td>
                 <td>
-                  <a href="{% url 'dermatology:patient-update' paciente.pk %}"
+                  <a href="{% url 'dermatology:patient-update' patient.pk %}"
                      class="btn {{ actions.edit.button_class }}">
                     {{ actions.edit.button_text }}
                   </a>
+                  <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                          data-bs-target="#patientModal{{ patient.id }}">
+                    Ver Detalles
+                  </button>
                 </td>
               </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="text-center py-4">
-                  {{ texts.no_results }}
-                </td>
-              </tr>
+
+              <!-- Modal para detalles del paciente -->
+              <div class="modal fade" id="patientModal{{ patient.id }}" tabindex="-1"
+                   aria-labelledby="patientModalLabel{{ patient.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="patientModalLabel{{ patient.id }}">
+                        Detalles de {{ patient.get_full_name }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row">
+                        <!-- Datos del paciente -->
+                        <div class="col-md-6">
+                          <h6>Información del Paciente</h6>
+                          <p><strong>Nombre:</strong> {{ patient.first_name }}</p>
+                          <p><strong>Apellido:</strong> {{ patient.last_name }}</p>
+                          <p><strong>Cédula:</strong> {{ patient.dni }}</p>
+                          <p><strong>Teléfono:</strong> {{ patient.phone|default:"No especificado" }}</p>
+                          <p><strong>Correo:</strong> {{ patient.email|default:"No especificado" }}</p>
+                          <p><strong>Edad:</strong> {{ patient.age_approx }} años</p>
+                          <p><strong>Sexo:</strong> {{ patient.get_sex_display }}</p>
+                        </div>
+                        <!-- Reportes del paciente -->
+                        <div class="col-md-6">
+                          <h6>Reportes</h6>
+                          {% if patient.consultas.exists %}
+                            <ul class="list-group">
+                              {% for consulta in patient.consultas.all %}
+                                <li class="list-group-item">
+                                  <a href="{% url 'dermatology:report_detail' consulta.id %}">
+                                    {{ consulta.condition|default:"Consulta pendiente" }} -
+                                    {{ consulta.created_at|date:"d/m/Y H:i" }}
+                                  </a>
+                                </li>
+                              {% endfor %}
+                            </ul>
+                          {% else %}
+                            <p class="text-muted">No hay reportes para este paciente.</p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             {% endfor %}
             </tbody>
           </table>
         </div>
-      </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+          <nav aria-label="Paginación" class="mt-4">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?page={{ page_obj.previous_page_number }}&dni={{ request.GET.dni|default_if_none:'' }}">{{ pagination.previous }}</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">{{ pagination.previous }}</span>
+                </li>
+              {% endif %}
+
+              {% for num in PAGINATION_RANGE %}
+                {% if page_obj.number == num %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                  </li>
+                {% elif num != '...' %}
+                  <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ num }}&dni={{ request.GET.dni|default_if_none:'' }}">{{ num }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">{{ num }}</span>
+                  </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?page={{ page_obj.next_page_number }}&dni={{ request.GET.dni|default_if_none:'' }}">{{ pagination.next }}</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">{{ pagination.next }}</span>
+                </li>
+              {% endif %}
+            </ul>
+            <p class="text-center text-muted">
+            </p>
+          </nav>
+        {% endif %}
+      {% else %}
+        <p class="text-center text-muted">{{ texts.no_results }}</p>
+      {% endif %}
     </div>
   </div>
 {% endblock %}
