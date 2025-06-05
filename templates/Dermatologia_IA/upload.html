@@ -60,9 +60,24 @@
 
       .patient-form {
           display: none;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 1.5rem;
+          background-color: #f8f9fa;
+          animation: slideDown 0.3s ease-out;
       }
 
-      /* Estilos adicionales para el select de pacientes mejorado */
+      @keyframes slideDown {
+          from {
+              opacity: 0;
+              transform: translateY(-10px);
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+
       .patient-select-container {
           position: relative;
       }
@@ -77,7 +92,6 @@
           box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
       }
 
-      /* Indicador visual de que se puede escribir */
       #patient_select:focus::after {
           content: '';
           position: absolute;
@@ -99,7 +113,6 @@
           }
       }
 
-      /* Estilo para las opciones del select */
       #patient_select option {
           padding: 8px 12px;
       }
@@ -109,7 +122,6 @@
           color: #6c757d;
       }
 
-      /* Estilo para el botón de nuevo paciente */
       #btn-add-new {
           transition: all 0.3s ease;
       }
@@ -119,33 +131,11 @@
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
 
-      /* Mejoras visuales para el formulario de paciente */
-      .patient-form {
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
-          padding: 1.5rem;
-          background-color: #f8f9fa;
-          animation: slideDown 0.3s ease-out;
-      }
-
-      @keyframes slideDown {
-          from {
-              opacity: 0;
-              transform: translateY(-10px);
-          }
-          to {
-              opacity: 1;
-              transform: translateY(0);
-          }
-      }
-
-      /* Indicador de campo readonly */
       input[readonly], select[disabled] {
           background-color: #e9ecef !important;
           cursor: not-allowed;
       }
 
-      /* Tooltip para indicar funcionalidad de escritura */
       .typing-hint {
           font-size: 0.75rem;
           color: #6c757d;
@@ -153,7 +143,6 @@
           font-style: italic;
       }
 
-      /* Estilo para mostrar cuando se está buscando */
       .searching-indicator {
           position: absolute;
           right: 10px;
@@ -184,14 +173,11 @@
       <form id="uploadForm" enctype="multipart/form-data" method="post">
         {% csrf_token %}
 
-        <!-- Patient Selection -->
-        <!-- Solo la sección del select de pacientes mejorada -->
         <div id="section-select-patient" class="mb-4">
           <label class="form-label">{{ upload_section.patient_search.label }}</label>
           <div class="patient-select-container">
-            {#            <select class="form-select" name="patient" id="patient_select">#}
             <select class="form-select" name="patient" id="patient_select" aria-label="Buscar paciente por cédula">
-              <option value="">Busque por cédula (solo números, máx. 10)</option>
+              <option value="">{{ upload_section.patient_search.select_placeholder }}</option>
               {% for patient in patients %}
                 <option value="{{ patient.id }}"
                         data-first="{{ patient.first_name }}"
@@ -205,9 +191,7 @@
                 </option>
               {% endfor %}
             </select>
-            <div class="typing-hint">
-              💡 Haga clic y escriba la cédula (solo números, máximo 10 dígitos)
-            </div>
+            <div class="typing-hint">{{ upload_section.patient_search.typing_hint }}</div>
           </div>
           <div class="mt-3">
             <button type="button" class="btn btn-success" id="btn-add-new">
@@ -216,7 +200,6 @@
           </div>
         </div>
 
-        <!-- Image Upload and Anatomical Location -->
         <div id="section-upload">
           <div class="mb-4">
             <label class="form-label">{{ upload_section.image_upload.title }}</label>
@@ -224,16 +207,8 @@
               <i class="bi bi-cloud-arrow-up fs-1"></i>
               <h4 class="mt-3">{{ upload_section.image_upload.instructions }}</h4>
               <p class="text-muted">{{ upload_section.image_upload.formats }}</p>
-              <input type="file"
-                     id="fileInput"
-                     name="image"
-                     accept="image/*"
-                     class="d-none"
-                     required>
-              <img id="imagePreview"
-                   class="image-preview"
-                   src="#"
-                   alt="{{ upload_section.image_upload.preview_alt }}"
+              <input type="file" id="fileInput" name="image" accept="image/*" class="d-none" required>
+              <img id="imagePreview" class="image-preview" src="#" alt="{{ upload_section.image_upload.preview_alt }}"
                    style="display:none;">
             </div>
             <div id="fileError" class="alert alert-danger mt-2" style="display:none;"></div>
@@ -241,10 +216,7 @@
 
           <div class="mb-4">
             <label class="form-label">{{ upload_section.location.label }}</label>
-            <select id="site_select"
-                    name="anatom_site_general"
-                    class="form-select"
-                    required>
+            <select id="site_select" name="anatom_site_general" class="form-select" required>
               <option value="">{{ upload_section.location.placeholder }}</option>
               {% for code, display in form.anatom_site_general.field.choices %}
                 <option value="{{ code }}">{{ display }}</option>
@@ -254,54 +226,56 @@
           </div>
         </div>
 
-        <!-- Patient Form -->
         <div id="section-patient-fields" class="patient-form">
           <h4 class="mb-3">{{ upload_section.new_patient.title }}</h4>
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label for="first_name" class="form-label">Nombre</label>
-              <input type="text" id="first_name" name="first_name" class="form-control mb-2" placeholder="Nombre">
+              <label for="first_name" class="form-label">{{ upload_section.new_patient.labels.first_name }}</label>
+              <input type="text" id="first_name" name="first_name" class="form-control mb-2"
+                     placeholder="{{ upload_section.new_patient.labels.first_name }}">
             </div>
             <div class="col-md-6 mb-3">
-              <label for="last_name" class="form-label">Apellido</label>
-              <input type="text" id="last_name" name="last_name" class="form-control mb-2" placeholder="Apellido">
+              <label for="last_name" class="form-label">{{ upload_section.new_patient.labels.last_name }}</label>
+              <input type="text" id="last_name" name="last_name" class="form-control mb-2"
+                     placeholder="{{ upload_section.new_patient.labels.last_name }}">
             </div>
           </div>
           <div class="row">
             <div class="col-md-4 mb-3">
-              <label for="dni" class="form-label">DNI</label>
-              <input type="text" id="dni" name="dni" class="form-control mb-2" placeholder="DNI">
+              <label for="dni" class="form-label">{{ upload_section.new_patient.labels.dni }}</label>
+              <input type="text" id="dni" name="dni" class="form-control mb-2"
+                     placeholder="{{ upload_section.new_patient.labels.dni }}">
             </div>
             <div class="col-md-4 mb-3">
-              <label for="phone" class="form-label">Teléfono</label>
-              <input type="text" id="phone" name="phone" class="form-control mb-2" placeholder="Teléfono">
+              <label for="phone" class="form-label">{{ upload_section.new_patient.labels.phone }}</label>
+              <input type="text" id="phone" name="phone" class="form-control mb-2"
+                     placeholder="{{ upload_section.new_patient.labels.phone }}">
             </div>
             <div class="col-md-4 mb-3">
-              <label for="email" class="form-label">Correo Electrónico</label>
-              <input type="email" id="email" name="email" class="form-control mb-2" placeholder="Correo electrónico">
+              <label for="email" class="form-label">{{ upload_section.new_patient.labels.email }}</label>
+              <input type="email" id="email" name="email" class="form-control mb-2"
+                     placeholder="{{ upload_section.new_patient.labels.email }}">
             </div>
           </div>
           <div class="row mb-3">
             <div class="col-md-4">
-              <label for="age_approx" class="form-label">Edad Aproximada</label>
+              <label for="age_approx" class="form-label">{{ upload_section.new_patient.labels.age_approx }}</label>
               <input type="number" id="age_approx" name="age_approx" class="form-control mb-2" min="0" max="120">
             </div>
             <div class="col-md-4">
-              <label for="sex" class="form-label">Sexo</label>
+              <label for="sex" class="form-label">{{ upload_section.new_patient.labels.sex }}</label>
               <select id="sex" name="sex" class="form-select mb-2">
-                <option value="">-- Seleccionar --</option>
-                <option value="female">Femenino</option>
-                <option value="male">Masculino</option>
-                <option value="unknown">Desconocido</option>
+                <option value="">{{ upload_section.new_patient.sex_placeholder }}</option>
+                {% for value, display_name in sex_choices %}
+                  <option value="{{ value }}">{{ display_name }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>
         </div>
 
-        <!-- Error Messages -->
         <div id="errorAlert" class="alert alert-danger" style="display:none;"></div>
 
-        <!-- Submit Button -->
         <div class="d-grid gap-2 mt-4">
           <button type="submit" class="btn {{ buttons.submit.class }}" id="analyzeBtn">
             {{ buttons.submit.text }}
@@ -311,11 +285,10 @@
     </div>
   </div>
 
-  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay" style="display:none;">
     <div class="loading-container">
       <div class="spinner-border text-light" role="status">
-        <span class="visually-hidden">Cargando...</span>
+        <span class="visually-hidden">{{ loading.spinner_alt }}</span>
       </div>
       <div class="loading-text">
         <p>{{ loading.message }}</p>
@@ -326,6 +299,34 @@
 
   {% block extra_js %}
     <script>
+      // Pasar textos de JS desde el contexto de Django
+      const JS_TEXTS = {
+        searchingPrefix: "{{ js_texts.searching_prefix|escapejs }}",
+        searchPlaceholderDefault: "{{ js_texts.search_placeholder_default|escapejs }}",
+        errorSearchingPatients: "{{ js_texts.error_searching_patients|escapejs }}",
+        validation: {
+          emptyField: "{{ js_texts.validation_errors.empty_field|escapejs }}",
+          nameMinLength: "{{ js_texts.validation_errors.name_min_length|escapejs }}",
+          nameMaxLength: "{{ js_texts.validation_errors.name_max_length|escapejs }}",
+          nameRegex: "{{ js_texts.validation_errors.name_regex|escapejs }}",
+          dniExactLength: "{{ js_texts.validation_errors.dni_exact_length|escapejs }}",
+          dniNumeric: "{{ js_texts.validation_errors.dni_numeric|escapejs }}",
+          dniInvalid: "{{ js_texts.validation_errors.dni_invalid|escapejs }}",
+          emailMaxLength: "{{ js_texts.validation_errors.email_max_length|escapejs }}",
+          emailInvalid: "{{ js_texts.validation_errors.email_invalid|escapejs }}",
+          phoneInvalidFormat: "{{ js_texts.validation_errors.phone_invalid_format|escapejs }}",
+          ageInvalid: "{{ js_texts.validation_errors.age_invalid|escapejs }}",
+          imageRequired: "{{ js_texts.validation_errors.image_required|escapejs }}",
+          imageInvalidType: "{{ js_texts.validation_errors.image_invalid_type|escapejs }}",
+          imageMaxSize: "{{ js_texts.validation_errors.image_max_size|escapejs }}",
+          siteRequired: "{{ js_texts.validation_errors.site_required|escapejs }}"
+        },
+        generalErrors: {
+          formErrors: "{{ error_messages_general.form_errors|escapejs }}",
+          serverError: "{{ error_messages_general.server_error|escapejs }}"
+        }
+      };
+
       document.addEventListener('DOMContentLoaded', function () {
         const patientSelect = document.getElementById('patient_select');
         const btnAddNew = document.getElementById('btn-add-new');
@@ -337,8 +338,8 @@
         const uploadForm = document.getElementById('uploadForm');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const errorAlert = document.getElementById('errorAlert');
-        const fileError = document.getElementById('fileError');
-        const siteError = document.getElementById('siteError');
+        // const fileError = document.getElementById('fileError'); // Ya no se usa directamente, se usa createErrorMessage
+        // const siteError = document.getElementById('siteError'); // Ya no se usa directamente
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const firstNameInput = document.getElementById('first_name');
@@ -349,110 +350,83 @@
         const ageInput = document.getElementById('age_approx');
         const sexSelect = document.getElementById('sex');
 
-        // Store initial patient options
         const initialOptions = Array.from(patientSelect.options).map(option => ({
-          value: option.value,
-          text: option.textContent,
-          first: option.dataset.first,
-          last: option.dataset.last,
-          dni: option.dataset.dni,
-          phone: option.dataset.phone,
-          email: option.dataset.email,
-          age: option.dataset.age,
-          sex: option.dataset.sex
+          value: option.value, text: option.textContent,
+          first: option.dataset.first, last: option.dataset.last, dni: option.dataset.dni,
+          phone: option.dataset.phone, email: option.dataset.email, age: option.dataset.age, sex: option.dataset.sex
         }));
 
-        let currentPatients = [...initialOptions]; // Keep track of current patients
+        let currentPatients = [...initialOptions];
         let searchTimeout = null;
         let isTyping = false;
         let typingValue = '';
-        let lastSelectedValue = ''; // Track the last selected patient
+        let lastSelectedValue = '';
 
-        // Function to update patient options
         function updatePatientOptions(patients, selectedValue = '') {
-          patientSelect.innerHTML = '<option value="">Busque por cédula (solo números, máx. 10)</option>';
+          patientSelect.innerHTML = `<option value="">${JS_TEXTS.searchPlaceholderDefault}</option>`;
           patients.forEach(patient => {
-            if (patient.value) { // Skip placeholder option
+            if (patient.value) {
               const option = document.createElement('option');
               option.value = patient.value;
               option.textContent = patient.text;
-              option.dataset.first = patient.first;
-              option.dataset.last = patient.last;
-              option.dataset.dni = patient.dni;
-              option.dataset.phone = patient.phone;
-              option.dataset.email = patient.email;
-              option.dataset.age = patient.age;
-              option.dataset.sex = patient.sex;
+              Object.keys(patient).forEach(key => {
+                if (key !== 'value' && key !== 'text' && patient[key] !== undefined) {
+                  option.dataset[key] = patient[key];
+                }
+              });
               if (patient.value === selectedValue) option.selected = true;
               patientSelect.appendChild(option);
             }
           });
         }
 
-        // Function to restore initial options (sorted by most recent)
         function restoreInitialOptions(selectedValue = '') {
-          currentPatients = [...initialOptions].sort((a, b) => b.value - a.value); // Sort by ID descending (most recent first)
+          currentPatients = [...initialOptions].sort((a, b) => (b.value && a.value) ? parseInt(b.value) - parseInt(a.value) : 0);
           updatePatientOptions(currentPatients, selectedValue);
         }
 
-        // Convert server response to our format
         function convertServerDataToOptions(serverPatients) {
           return serverPatients.map(patient => ({
             value: patient.id.toString(),
             text: `${patient.dni} - ${patient.first_name} ${patient.last_name}`,
-            first: patient.first_name,
-            last: patient.last_name,
-            dni: patient.dni,
-            phone: patient.phone,
-            email: patient.email,
-            age: patient.age_approx,
-            sex: patient.sex
+            first: patient.first_name, last: patient.last_name, dni: patient.dni,
+            phone: patient.phone, email: patient.email, age: patient.age_approx, sex: patient.sex
           }));
         }
 
-        // Enhanced patient search with typing support
         function searchPatients(query) {
-          if (searchTimeout) {
-            clearTimeout(searchTimeout);
-          }
-
+          if (searchTimeout) clearTimeout(searchTimeout);
           searchTimeout = setTimeout(() => {
             const currentSelected = patientSelect.value;
-
             if (!query.trim()) {
               restoreInitialOptions(currentSelected);
-              patientSelect.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+              patientSelect.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
               return;
             }
-
-            fetch(`/dermatology/search-patients/?dni=${encodeURIComponent(query)}`)
+            // Usar la URL nombrada para search_patients
+            fetch(`{% url 'dermatology:search_patients' %}?dni=${encodeURIComponent(query)}`)
               .then(res => res.json())
               .then(data => {
                 const newPatients = convertServerDataToOptions(data.patients);
-
-                // Include the selected patient in the list if it exists
                 if (currentSelected) {
                   const selectedOption = initialOptions.find(p => p.value === currentSelected);
                   if (selectedOption && !newPatients.find(p => p.value === currentSelected)) {
                     newPatients.unshift(selectedOption);
                   }
                 }
-
                 currentPatients = newPatients;
                 updatePatientOptions(currentPatients, currentSelected);
-                patientSelect.options[0].textContent = `Buscando: ${query}`;
+                patientSelect.options[0].textContent = `${JS_TEXTS.searchingPrefix} ${query}`;
               })
               .catch(err => {
-                console.error('Error searching patients:', err);
-                errorAlert.textContent = 'Error al buscar pacientes: ' + err.message;
+                console.error(JS_TEXTS.errorSearchingPatients, err);
+                errorAlert.textContent = `${JS_TEXTS.errorSearchingPatients} ${err.message}`;
                 errorAlert.style.display = 'block';
               });
-          }, 300); // 300ms delay for better UX
+          }, 300);
         }
 
-        // Make the select editable for typing
         patientSelect.addEventListener('keydown', function (e) {
-          // Only allow numbers, backspace, delete, and control keys
           if (e.key.length === 1 && !/^[0-9]$/.test(e.key)) {
             e.preventDefault();
             return;
@@ -461,59 +435,39 @@
             e.preventDefault();
             return;
           }
-
-          // Handle typing
           if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') {
             isTyping = true;
-            if (e.key === 'Backspace') {
-              typingValue = typingValue.slice(0, -1);
-            } else if (e.key === 'Delete') {
-              typingValue = '';
-            } else if (e.key.length === 1) {
-              typingValue += e.key;
-            }
-
-            // Update the placeholder to show what's being typed
+            if (e.key === 'Backspace') typingValue = typingValue.slice(0, -1);
+            else if (e.key === 'Delete') typingValue = '';
+            else if (e.key.length === 1) typingValue += e.key;
             const placeholder = this.options[0];
-            placeholder.textContent = typingValue ? `Buscando: ${typingValue}` : 'Busque por cédula (solo números, máx. 10)';
-
-            // Trigger search
+            placeholder.textContent = typingValue ? `${JS_TEXTS.searchingPrefix} ${typingValue}` : JS_TEXTS.searchPlaceholderDefault;
             searchPatients(typingValue);
-
-            // Prevent default select behavior
             e.preventDefault();
           } else if (e.key === 'Enter') {
             e.preventDefault();
-            // If there's only one option besides placeholder, select it
             if (this.options.length === 2) {
               this.selectedIndex = 1;
               this.dispatchEvent(new Event('change'));
-              // Reset typing state
               isTyping = false;
               typingValue = '';
-              this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+              this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
               restoreInitialOptions(this.value);
             }
           } else if (e.key === 'Escape') {
-            // Reset search
             isTyping = false;
             typingValue = '';
-            this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+            this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
             restoreInitialOptions(this.value);
           } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-            // Allow dropdown navigation
-            if (!isTyping) {
-              restoreInitialOptions(this.value);
-            }
+            if (!isTyping) restoreInitialOptions(this.value);
           }
         });
 
-        // Handle regular selection
         patientSelect.addEventListener('change', function () {
           const selected = this.selectedOptions[0];
-          lastSelectedValue = this.value; // Store the selected value
+          lastSelectedValue = this.value;
           if (selected && selected.value) {
-            // Patient selected - show form with data
             sectionPatientFields.style.display = 'block';
             firstNameInput.value = selected.dataset.first;
             lastNameInput.value = selected.dataset.last;
@@ -522,59 +476,45 @@
             emailInput.value = selected.dataset.email;
             ageInput.value = selected.dataset.age;
             sexSelect.value = selected.dataset.sex;
-
-            // Make fields readonly
             [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect]
               .forEach(el => {
                 el.setAttribute('readonly', true);
                 el.disabled = true;
                 removeErrorMessage(el);
               });
-
-            // Reset typing state
             isTyping = false;
             typingValue = '';
-            this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
-            updatePatientOptions(currentPatients, this.value); // Keep current options with selected value
+            this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
+            updatePatientOptions(currentPatients, this.value);
           } else {
-            // No patient selected - hide form
             sectionPatientFields.style.display = 'none';
             isTyping = false;
             typingValue = '';
-            this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+            this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
             restoreInitialOptions();
           }
         });
 
-        // Handle focus - show all patients if not typing
         patientSelect.addEventListener('focus', function () {
-          if (!isTyping) {
-            restoreInitialOptions(lastSelectedValue); // Show all patients, preserve selection
-          } else if (typingValue) {
-            this.options[0].textContent = `Buscando: ${typingValue}`;
-          }
+          if (!isTyping) restoreInitialOptions(lastSelectedValue);
+          else if (typingValue) this.options[0].textContent = `${JS_TEXTS.searchingPrefix} ${typingValue}`;
         });
-
-        // Handle click - show all patients if not typing
         patientSelect.addEventListener('click', function () {
           if (!isTyping && !typingValue) {
-            restoreInitialOptions(lastSelectedValue); // Show all patients, preserve selection
-            this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+            restoreInitialOptions(lastSelectedValue);
+            this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
           }
         });
-
-        // Handle blur - maintain typing state or reset
         patientSelect.addEventListener('blur', function () {
           if (!this.value && !typingValue) {
             isTyping = false;
-            this.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+            this.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
             restoreInitialOptions();
           } else if (typingValue) {
-            this.options[0].textContent = `Buscando: ${typingValue}`;
+            this.options[0].textContent = `${JS_TEXTS.searchingPrefix} ${typingValue}`;
           }
         });
 
-        // Clear form for new patient
         btnAddNew.addEventListener('click', function () {
           sectionPatientFields.style.display = 'block';
           [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect]
@@ -584,53 +524,47 @@
               el.disabled = false;
               removeErrorMessage(el);
             });
-
-          // Clear patient selection and reset typing state
           patientSelect.value = '';
           lastSelectedValue = '';
           isTyping = false;
           typingValue = '';
-          patientSelect.options[0].textContent = 'Busque por cédula (solo números, máx. 10)';
+          patientSelect.options[0].textContent = JS_TEXTS.searchPlaceholderDefault;
           restoreInitialOptions();
         });
 
-        // Initialize with sorted patients (most recent first)
         restoreInitialOptions();
 
-        // Rest of the existing code for validation, image handling, and form submission remains unchanged
         function createErrorMessage(input, message, isWarning = false) {
           removeErrorMessage(input);
           const errorDiv = document.createElement('div');
           errorDiv.className = isWarning ? 'warning-message' : 'error-message';
           errorDiv.textContent = message;
-          input.parentNode.appendChild(errorDiv);
+          const parent = input.id === 'fileInput' ? input.closest('.upload-area').parentNode : input.parentNode;
+          parent.appendChild(errorDiv);
           input.classList.add(isWarning ? 'warning' : 'error');
         }
 
         function removeErrorMessage(input) {
-          const errorMsg = input.parentNode.querySelector('.error-message, .warning-message');
+          const parent = input.id === 'fileInput' ? input.closest('.upload-area').parentNode : input.parentNode;
+          const errorMsg = parent.querySelector('.error-message, .warning-message');
           if (errorMsg) errorMsg.remove();
           input.classList.remove('error', 'warning');
         }
 
         function validateFullName(value) {
           const trimmedValue = value.trim();
-          if (!trimmedValue) return "El campo está vacío, por favor rellénelo.";
-          if (trimmedValue.length < 3) return "El nombre o apellido debe tener al menos 3 caracteres.";
-          if (trimmedValue.length > 50) return "El nombre o apellido no puede tener más de 50 caracteres.";
-          const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-          if (!nameRegex.test(trimmedValue)) return "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.";
+          if (!trimmedValue) return JS_TEXTS.validation.emptyField;
+          if (trimmedValue.length < 3) return JS_TEXTS.validation.nameMinLength;
+          if (trimmedValue.length > 50) return JS_TEXTS.validation.nameMaxLength;
+          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(trimmedValue)) return JS_TEXTS.validation.nameRegex;
           return null;
         }
 
         function validateDni(value) {
           const trimmedValue = value.trim();
-          if (!trimmedValue) return {message: "El campo está vacío, por favor rellénelo.", isWarning: false};
-          if (trimmedValue.length !== 10) return {
-            message: "La cédula debe contener exactamente 10 dígitos.",
-            isWarning: false
-          };
-          if (!/^\d+$/.test(trimmedValue)) return {message: "La cédula debe contener solo números.", isWarning: false};
+          if (!trimmedValue) return {message: JS_TEXTS.validation.emptyField, isWarning: false};
+          if (trimmedValue.length !== 10) return {message: JS_TEXTS.validation.dniExactLength, isWarning: false};
+          if (!/^\d+$/.test(trimmedValue)) return {message: JS_TEXTS.validation.dniNumeric, isWarning: false};
           const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
           let total = 0;
           for (let i = 0; i < 9; i++) {
@@ -640,7 +574,7 @@
           }
           const digitoVerificador = (total % 10) === 0 ? 0 : 10 - (total % 10);
           if (digitoVerificador !== parseInt(trimmedValue[9])) return {
-            message: "La cédula ingresada no es válida.",
+            message: JS_TEXTS.validation.dniInvalid,
             isWarning: false
           };
           return null;
@@ -648,33 +582,31 @@
 
         function validateEmail(value) {
           const trimmedValue = value.trim();
-          if (!trimmedValue) return "El campo está vacío, por favor rellénelo.";
-          if (trimmedValue.length > 254) return "El correo electrónico no puede tener más de 254 caracteres.";
-          const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-          if (!emailRegex.test(trimmedValue)) return "Ingrese un correo electrónico válido.";
+          if (!trimmedValue) return JS_TEXTS.validation.emptyField;
+          if (trimmedValue.length > 254) return JS_TEXTS.validation.emailMaxLength;
+          if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedValue)) return JS_TEXTS.validation.emailInvalid;
           return null;
         }
 
         function validatePhone(value) {
           const trimmedValue = value.trim();
-          if (!trimmedValue) return "El campo está vacío, por favor rellénelo.";
-          if (!/^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/.test(trimmedValue)) return "Ingrese un número válido (formato: +593 99 999 9999 o 0999999999)";
+          if (!trimmedValue) return JS_TEXTS.validation.emptyField;
+          if (!/^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/.test(trimmedValue)) return JS_TEXTS.validation.phoneInvalidFormat;
           return null;
         }
 
         function validateAge(value) {
-          if (!value) return "El campo está vacío, por favor rellénelo.";
+          if (!value) return JS_TEXTS.validation.emptyField;
           const age = parseInt(value);
-          if (isNaN(age) || age < 0 || age > 120) return "Ingrese una edad válida entre 0 y 120 años.";
+          if (isNaN(age) || age < 0 || age > 120) return JS_TEXTS.validation.ageInvalid;
           return null;
         }
 
         function validateImage(file) {
-          if (!file) return "Por favor seleccione una imagen para analizar.";
+          if (!file) return JS_TEXTS.validation.imageRequired;
           const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-          if (!validTypes.includes(file.type)) return "El archivo debe ser una imagen (JPG, JPEG o PNG).";
-          const maxSize = 5 * 1024 * 1024; // 5MB
-          if (file.size > maxSize) return "La imagen no debe exceder los 5MB.";
+          if (!validTypes.includes(file.type)) return JS_TEXTS.validation.imageInvalidType;
+          if (file.size > 5 * 1024 * 1024) return JS_TEXTS.validation.imageMaxSize;
           return null;
         }
 
@@ -695,9 +627,8 @@
           if (e.dataTransfer.files.length) {
             const file = e.dataTransfer.files[0];
             const error = validateImage(file);
-            if (error) {
-              createErrorMessage(fileInput, error);
-            } else {
+            if (error) createErrorMessage(fileInput, error);
+            else {
               removeErrorMessage(fileInput);
               fileInput.files = e.dataTransfer.files;
               previewImage(file);
@@ -709,9 +640,8 @@
           if (fileInput.files.length) {
             const file = fileInput.files[0];
             const error = validateImage(file);
-            if (error) {
-              createErrorMessage(fileInput, error);
-            } else {
+            if (error) createErrorMessage(fileInput, error);
+            else {
               removeErrorMessage(fileInput);
               previewImage(file);
             }
@@ -730,43 +660,46 @@
         uploadForm.addEventListener('submit', function (e) {
           e.preventDefault();
           let hasErrors = false;
-
           errorAlert.style.display = 'none';
+          errorAlert.textContent = ''; // Limpiar errores previos
 
-          if (!patientSelect.value) {
+          // Limpiar todos los mensajes de error de campos individuales
+          [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect, fileInput, siteSelect].forEach(removeErrorMessage);
+
+
+          if (!patientSelect.value) { // Solo validar campos de nuevo paciente si no se seleccionó uno existente
             const firstNameError = validateFullName(firstNameInput.value);
             if (firstNameError) {
               createErrorMessage(firstNameInput, firstNameError);
               hasErrors = true;
             }
-
             const lastNameError = validateFullName(lastNameInput.value);
             if (lastNameError) {
               createErrorMessage(lastNameInput, lastNameError);
               hasErrors = true;
             }
-
             const dniResult = validateDni(dniInput.value);
             if (dniResult) {
               createErrorMessage(dniInput, dniResult.message, dniResult.isWarning);
               if (!dniResult.isWarning) hasErrors = true;
             }
-
             const phoneError = validatePhone(phoneInput.value);
             if (phoneError) {
               createErrorMessage(phoneInput, phoneError);
               hasErrors = true;
             }
-
             const emailError = validateEmail(emailInput.value);
             if (emailError) {
               createErrorMessage(emailInput, emailError);
               hasErrors = true;
             }
-
             const ageError = validateAge(ageInput.value);
             if (ageError) {
               createErrorMessage(ageInput, ageError);
+              hasErrors = true;
+            }
+            if (!sexSelect.value) {
+              createErrorMessage(sexSelect, JS_TEXTS.validation.emptyField);
               hasErrors = true;
             }
           }
@@ -776,13 +709,16 @@
             createErrorMessage(fileInput, imageError);
             hasErrors = true;
           }
-
           if (!siteSelect.value) {
-            createErrorMessage(siteSelect, "Por favor seleccione la localización anatómica.");
+            createErrorMessage(siteSelect, JS_TEXTS.validation.siteRequired);
             hasErrors = true;
           }
 
-          if (hasErrors) return;
+          if (hasErrors) {
+            errorAlert.textContent = JS_TEXTS.generalErrors.formErrors;
+            errorAlert.style.display = 'block';
+            return;
+          }
 
           loadingOverlay.style.display = 'flex';
           const formData = new FormData();
@@ -798,37 +734,53 @@
             formData.append('age_approx', ageInput.value);
             formData.append('sex', sexSelect.value);
           }
-
           formData.append('image', fileInput.files[0]);
           formData.append('anatom_site_general', siteSelect.value);
-          formData.append('csrfmiddlewaretoken', csrfToken);
+          // CSRF token ya no se añade aquí, se envía con el form.
 
-          fetch("/dermatology/upload/", {
+          fetch("{% url 'dermatology:upload_image' %}", {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {'X-CSRFToken': csrfToken}
           })
             .then(res => {
               if (!res.ok) {
-                if (res.headers.get('content-type')?.includes('application/json')) {
-                  return res.json().then(data => {
-                    throw new Error(data.error || 'Error desconocido');
-                  });
-                }
-                throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+                return res.json().then(data => {
+                  const errorDetail = data.errors || {general: `Error: ${res.status}`};
+                  throw {status: res.status, data: errorDetail};
+                });
               }
               return res.json();
             })
             .then(data => {
               if (data.success && data.redirect_url) {
                 window.location.href = data.redirect_url;
-              } else {
-                throw new Error(data.error || 'Error desconocido');
+              } else { // Esto no debería ocurrir si la respuesta fue ok y success true
+                throw {data: data.errors || {general: JS_TEXTS.generalErrors.serverError}};
               }
             })
-            .catch(err => {
-              errorAlert.textContent = err.message;
-              errorAlert.style.display = 'block';
+            .catch(errObj => {
               loadingOverlay.style.display = 'none';
+              let errorMessage = JS_TEXTS.generalErrors.serverError;
+              if (errObj && errObj.data) {
+                // Mostrar errores específicos de campos si están disponibles
+                Object.keys(errObj.data).forEach(key => {
+                  const field = document.getElementById(key) || (key === 'image' ? fileInput : null) || (key === 'anatom_site_general' ? siteSelect : null);
+                  const message = Array.isArray(errObj.data[key]) ? errObj.data[key].join(', ') : errObj.data[key];
+                  if (field) {
+                    createErrorMessage(field, message);
+                  } else if (key === 'general' || key === '__all__') {
+                    errorMessage = message;
+                  } else {
+                    // Si hay un error no asociado a un campo específico, añadirlo al error general
+                    errorMessage += ` ${key}: ${message}`;
+                  }
+                });
+              } else if (errObj && errObj.message) {
+                errorMessage = errObj.message;
+              }
+              errorAlert.textContent = errorMessage;
+              errorAlert.style.display = 'block';
             });
         });
       });
