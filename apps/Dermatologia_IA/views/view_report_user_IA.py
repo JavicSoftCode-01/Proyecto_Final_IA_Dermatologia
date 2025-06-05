@@ -424,6 +424,7 @@ class UploadImageView(CustomLoginRequiredMixin, View):
     initial_patients = Patient.objects.all().order_by('-id')[:5]
     # initial_patients = Patient.objects.all()[:5]
     context = {
+      'app_name': 'DermaIA',
       'page_title': 'Nuevo Análisis Dermatológico',
       'subtitle': 'Suba una imagen para análisis con IA',
       'form': SkinImageForm(),
@@ -787,9 +788,72 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
   model = SkinImage
   template_name = 'Dermatologia_IA/report_list.html'
   context_object_name = 'reports'
+  paginate_by = 20  # si quieres paginar (opcional)
 
   def get_queryset(self):
-    return SkinImage.objects.filter(processed=True)
+    return SkinImage.objects.filter(processed=True).order_by('-created_at')
+
+  def get_context_data(self, **kwargs):
+    # Primero obtenemos el contexto base de ListView
+    context = super().get_context_data(**kwargs)
+
+    # 1) Variables generales de la página
+    context['app_name'] = 'DermaIA'
+    context['page_title'] = 'Listado de Reportes'
+    context['header_title'] = 'Mis Reportes Procesados'
+
+    # 2) Clases de iconos (por ejemplo, usando Bootstrap Icons, FontAwesome, etc.)
+    context['icon_classes'] = {
+      'analysis': 'bi bi-search',  # icono para el análisis
+      'patient': 'bi bi-person',  # icono para paciente
+      'dni': 'bi bi-credit-card',  # icono para DNI
+      'age': 'bi bi-calendar',  # icono para edad
+      'sex': 'bi bi-gender-ambiguous',  # icono para sexo
+      'location': 'bi bi-geo-alt',  # icono para ubicación
+      'datetime': 'bi bi-clock',  # icono para fecha/hora
+      'view_detail': 'bi bi-eye',  # icono ver detalle
+      'generate_pdf': 'bi bi-file-earmark-pdf',  # icono PDF
+      'send_email': 'bi bi-envelope',  # icono enviar email
+    }
+
+    # 3) Etiquetas que se usan dentro de cada "card" (tarjeta) para mostrar datos
+    context['card_labels'] = {
+      'report_id_prefix': 'Reporte #',
+      'default_condition': 'Sin diagnóstico',
+      'patient_name': 'Paciente:',
+      'patient_dni': 'DNI:',
+      'patient_age': 'Edad:',
+      'patient_sex': 'Sexo:',
+      'lesion_location': 'Ubicación:',
+      'date_time': 'Fecha/Hora:',
+      'default_na': 'N/A',
+    }
+
+    # 4) Textos para botones (ver detalle, generar PDF, enviar email, etc.)
+    context['button_texts'] = {
+      'view_detail': 'Ver detalle',
+      'generate_pdf': 'Generar PDF',
+      'send_email': 'Enviar email',
+    }
+
+    # 5) Textos de paginación (si usas paginación)
+    context['pagination_texts'] = {
+      'first': 'Primera',
+      'previous': 'Anterior',
+      'next': 'Siguiente',
+      'last': 'Última',
+    }
+
+    # 6) Estado “vacío” (cuando no hay reportes que mostrar)
+    context['empty_state'] = {
+      'icon_class': 'bi bi-inbox',  # icono que aparezca en pantalla vacía
+      'title': 'No hay reportes',
+      'message': 'Todavía no has procesado ninguna imagen.',
+      'upload_button_icon': 'bi bi-upload',  # icono para botón subir imagen
+      'upload_button_text': 'Subir imagen',
+    }
+
+    return context
 
 
 class ReportDetailView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):

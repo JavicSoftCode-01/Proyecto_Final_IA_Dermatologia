@@ -1,4 +1,4 @@
-# core/Dermatologia_IA/utils/generateReport.py
+# apps/Dermatologia_IA/utils/generateReport.py
 import os
 
 from django.conf import settings
