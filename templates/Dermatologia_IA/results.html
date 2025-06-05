@@ -55,7 +55,8 @@
                 {% if skin_image.image and skin_image.image.url %}
                   <img src="{{ skin_image.image.url }}" class="img-fluid rounded" alt="{{ sections.images.original }}">
                 {% else %}
-                  <p class="text-muted">{{ messages.no_image }}</p>
+                  <p class="text-muted">{{ messages_template.no_image }}</p>
+                  {# Asumiendo que tienes messages_template en el contexto #}
                 {% endif %}
               </div>
 
@@ -64,9 +65,9 @@
                   <img src="{% get_media_prefix %}{{ skin_image.gradcam_path }}" class="img-fluid rounded"
                        alt="{{ sections.images.heatmap }}">
                 {% else %}
-                  <div class="text-muted">{{ messages.no_heatmap }}</div>
-                  <!-- Debug: Show if gradcam_path is None -->
-                  <small>gradcam_path is None</small>
+                  <div class="text-muted">{{ messages_template.no_heatmap }}</div>
+                  {# Asumiendo que tienes messages_template en el contexto #}
+                  {# <small>gradcam_path is None</small> #}
                 {% endif %}
               </div>
             </div>
@@ -116,6 +117,7 @@
             </div>
           </div>
 
+          {# ESTA ES LA SECCIÓN MODIFICADA #}
           {% if show_actions %}
             <div class="mt-4 d-flex justify-content-between flex-wrap gap-2">
               <div>
@@ -124,7 +126,8 @@
                   <i class="bi {{ buttons.download.icon }}"></i> {{ buttons.download.text }}
                 </a>
                 <button type="button" class="btn {{ buttons.email.class }}" data-bs-toggle="modal"
-                        data-bs-target="#emailModal">
+                        data-bs-target="#emailModal{{ skin_image.id }}">
+                  {# Asegúrate que el ID del modal sea único si hay varios en una lista #}
                   <i class="bi {{ buttons.email.icon }}"></i> {{ buttons.email.text }}
                 </button>
               </div>
@@ -132,12 +135,21 @@
                 <i class="bi {{ buttons.new.icon }}"></i> {{ buttons.new.text }}
               </a>
             </div>
-
-            {% include "includes/sendEmail.html" with skin_image=skin_image %}
+            {# Asegúrate que el ID del modal sea único si esta plantilla se usa en un bucle. #}
+            {# Si results.html es solo para un skin_image, entonces #emailModal es suficiente. #}
+            {# Si es para una lista, el ID del modal debe ser #emailModal{{ skin_image.id }} #}
+            {% include "includes/sendEmail.html" with skin_image=skin_image modal_id_suffix=skin_image.id %}
+          {% else %}
+            <div class="mt-4 text-center">
+              <p class="text-muted"><i>Las acciones adicionales no están disponibles en esta vista.</i></p>
+              <a href="{% url 'dermatology:report_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> Volver a Mis Reportes
+              </a>
+            </div>
           {% endif %}
         {% else %}
           <div class="text-muted">
-            {{ messages.processing }}
+            {{ messages_template.processing }} {# Asumiendo que tienes messages_template en el contexto #}
             <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary btn-sm ms-2">
               {{ buttons.new.text }}
             </a>
