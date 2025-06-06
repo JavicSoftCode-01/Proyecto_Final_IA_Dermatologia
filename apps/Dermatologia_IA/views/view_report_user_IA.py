@@ -13,7 +13,7 @@ import tensorflow as tf
 from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
@@ -171,9 +171,9 @@ class PatientListView(CustomLoginRequiredMixin, ListView):
     """Prepara el contexto con textos y configuración de la interfaz."""
     context = super().get_context_data(**kwargs)
     context.update({
+      'app_name': 'DermaIA',
       'page_title': 'Gestión de Pacientes',
       'page_subtitle': 'Lista de pacientes registrados en el sistema',
-      'app_name': 'DermaIA',
       'current_section': 'patients',
       'texts': {
         'search_placeholder': 'Buscar por número de cédula',
@@ -316,103 +316,12 @@ class PatientUpdateView(CustomLoginRequiredMixin, PatientFormMixin, UpdateView):
 
 # ------------------ VISTA DE SUBIDA / IMAGE UPLOAD ------------------
 
-# class UploadImageView(CustomLoginRequiredMixin, View):
-#   """Vista para subir imágenes y asociarlas con pacientes."""
-#   template_name = 'Dermatologia_IA/upload.html'
-#
-#   def get(self, request):
-#     """Maneja la solicitud GET mostrando el formulario de carga."""
-#     context = {
-#       'page_title': 'Nuevo Análisis Dermatológico',
-#       'subtitle': 'Suba una imagen para análisis con IA',
-#       'form': SkinImageForm(),
-#       'upload_section': {
-#         'title': 'Análisis Dermatológico con IA',
-#         'patient_search': {
-#           'label': 'Buscar paciente por cédula',
-#           'placeholder': 'Ingrese el número de cédula',
-#           'button_text': 'Buscar',
-#           'no_results': 'No se encontró ningún paciente con esa cédula'
-#         },
-#         'new_patient': {
-#           'button_text': 'Registrar Nuevo Paciente',
-#           'title': 'Datos del Nuevo Paciente'
-#         },
-#         'image_upload': {
-#           'title': 'Subir Imagen',
-#           'instructions': 'Arrastra una imagen aquí o haz clic para seleccionar',
-#           'formats': 'Formatos aceptados: JPG, PNG, JPEG',
-#           'preview_alt': 'Vista previa de la imagen'
-#         },
-#         'location': {
-#           'label': 'Localización Anatómica',
-#           'placeholder': 'Seleccione la zona del cuerpo'
-#         }
-#       },
-#       'buttons': {
-#         'submit': {
-#           'text': 'Analizar Imagen',
-#           'class': 'btn-primary btn-lg'
-#         }
-#       },
-#       'loading': {
-#         'message': 'Analizando su imagen...',
-#         'submessage': 'Este proceso puede tardar unos segundos'
-#       }
-#     }
-#
-#     # Si hay una búsqueda por DNI, filtrar pacientes
-#     dni_query = request.GET.get('dni', '').strip()
-#     if dni_query:
-#       pacientes = Patient.objects.filter(dni__icontains=dni_query)
-#       context['patients'] = pacientes
-#       if not pacientes.exists():
-#         messages.info(request, context['upload_section']['patient_search']['no_results'])
-#
-#     return render(request, self.template_name, context)
-#
-#   def post(self, request):
-#     """Maneja la solicitud POST procesando la imagen y datos del paciente."""
-#     try:
-#       # Validar si es paciente existente o nuevo
-#       patient_id = request.POST.get('patient')
-#
-#       if patient_id:
-#         patient = get_object_or_404(Patient, id=patient_id)
-#       else:
-#         # Crear nuevo paciente
-#         patient_form = PatientForm(request.POST)
-#         if not patient_form.is_valid():
-#           return JsonResponse({
-#             'success': False,
-#             'errors': patient_form.errors
-#           })
-#         patient = patient_form.save()
-#
-#       # Procesar la imagen
-#       form = SkinImageForm(request.POST, request.FILES)
-#       if not form.is_valid():
-#         return JsonResponse({
-#           'success': False,
-#           'errors': form.errors
-#         })
-#
-#       skin_image = form.save(commit=False)
-#       skin_image.patient = patient
-#       skin_image.processed = False
-#       skin_image.save()
-#
-#       return JsonResponse({
-#         'success': True,
-#         'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
-#       })
-#
-#     except Exception as e:
-#       logger.error(f"Error en carga de imagen: {str(e)}")
-#       return JsonResponse({
-#         'success': False,
-#         'errors': {'general': 'Error al procesar la solicitud.'}
-#       })
+SEX_CHOICES_FOR_CONTEXT = [
+  ('female', 'Femenino'),
+  ('male', 'Masculino'),
+  ('unknown', 'Desconocido'),
+]
+
 
 class UploadImageView(CustomLoginRequiredMixin, View):
   """Vista para subir imágenes y asociarlas con pacientes."""
@@ -420,47 +329,85 @@ class UploadImageView(CustomLoginRequiredMixin, View):
 
   def get(self, request):
     """Maneja la solicitud GET mostrando el formulario de carga."""
-    # Load up to 5 patients initially
-    initial_patients = Patient.objects.all().order_by('-id')[:5]
-    # initial_patients = Patient.objects.all()[:5]
+    initial_patients = Patient.objects.all().order_by('-id')[:10]  # Aumentado a 10 para mejor UX inicial
+    skin_image_form = SkinImageForm()
+
     context = {
       'app_name': 'DermaIA',
       'page_title': 'Nuevo Análisis Dermatológico',
-      'subtitle': 'Suba una imagen para análisis con IA',
-      'form': SkinImageForm(),
+      'form': skin_image_form,  # Pasar el formulario para acceder a sus campos (ej. choices)
+      'patients': initial_patients,
       'upload_section': {
         'title': 'Análisis Dermatológico con IA',
         'patient_search': {
-          'label': 'Seleccionar paciente por cédula',
-          'placeholder': 'Busque por cédula',
-          'no_results': 'No se encontró ningún paciente con esa cédula'
+          'label': 'Seleccionar paciente existente o registrar uno nuevo',
+          'select_placeholder': 'Busque por cédula (solo números, máx. 10) o seleccione "Nuevo Paciente"',
+          'typing_hint': '💡 Haga clic y escriba la cédula (solo números, máximo 10 dígitos)',
+          'no_results': 'No se encontró ningún paciente con esa cédula.',
         },
         'new_patient': {
           'button_text': 'Registrar Nuevo Paciente',
-          'title': 'Datos del Nuevo Paciente'
+          'title': 'Datos del Nuevo Paciente',
+          'labels': {
+            'first_name': 'Nombre',
+            'last_name': 'Apellido',
+            'dni': 'DNI',
+            'phone': 'Teléfono',
+            'email': 'Correo Electrónico',
+            'age_approx': 'Edad Aproximada',
+            'sex': 'Sexo',
+          },
+          'sex_placeholder': '-- Seleccionar Sexo --',
         },
         'image_upload': {
-          'title': 'Subir Imagen',
+          'title': 'Subir Imagen de la Piel',
           'instructions': 'Arrastra una imagen aquí o haz clic para seleccionar',
-          'formats': 'Formatos aceptados: JPG, PNG, JPEG',
-          'preview_alt': 'Vista previa de la imagen'
+          'formats': 'Formatos aceptados: JPG, PNG, JPEG. Tamaño máximo: 5MB.',
+          'preview_alt': 'Vista previa de la imagen',
         },
         'location': {
-          'label': 'Localización Anatómica',
-          'placeholder': 'Seleccione la zona del cuerpo'
+          'label': 'Localización Anatómica de la Lesión',
+          'placeholder': 'Seleccione la zona del cuerpo',
         }
       },
       'buttons': {
         'submit': {
           'text': 'Analizar Imagen',
-          'class': 'btn-primary btn-lg'
+          'class': 'btn-primary btn-lg',
         }
       },
       'loading': {
         'message': 'Analizando su imagen...',
-        'submessage': 'Este proceso puede tardar unos segundos'
+        'submessage': 'Este proceso puede tardar unos segundos.',
+        'spinner_alt': 'Cargando...',
       },
-      'patients': initial_patients  # Pass initial patients
+      'error_messages_general': {
+        'form_errors': 'Por favor, corrija los errores en el formulario.',
+        'server_error': 'Ocurrió un error en el servidor. Intente de nuevo.',
+      },
+      'sex_choices': SEX_CHOICES_FOR_CONTEXT,  # Para el select de sexo del nuevo paciente
+      'js_texts': {  # Textos para JavaScript
+        'searching_prefix': 'Buscando:',
+        'search_placeholder_default': 'Busque por cédula (solo números, máx. 10)',
+        'error_searching_patients': 'Error al buscar pacientes:',
+        'validation_errors': {
+          'empty_field': "El campo está vacío, por favor rellénelo.",
+          'name_min_length': "El nombre o apellido debe tener al menos 3 caracteres.",
+          'name_max_length': "El nombre o apellido no puede tener más de 50 caracteres.",
+          'name_regex': "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.",
+          'dni_exact_length': "La cédula debe contener exactamente 10 dígitos.",
+          'dni_numeric': "La cédula debe contener solo números.",
+          'dni_invalid': "La cédula ingresada no es válida.",
+          'email_max_length': "El correo electrónico no puede tener más de 254 caracteres.",
+          'email_invalid': "Ingrese un correo electrónico válido.",
+          'phone_invalid_format': "Ingrese un número válido (formato: +593 99 999 9999 o 0999999999)",
+          'age_invalid': "Ingrese una edad válida entre 0 y 120 años.",
+          'image_required': "Por favor seleccione una imagen para analizar.",
+          'image_invalid_type': "El archivo debe ser una imagen (JPG, JPEG o PNG).",
+          'image_max_size': "La imagen no debe exceder los 5MB.",
+          'site_required': "Por favor seleccione la localización anatómica."
+        }
+      }
     }
     return render(request, self.template_name, context)
 
@@ -468,41 +415,60 @@ class UploadImageView(CustomLoginRequiredMixin, View):
     """Maneja la solicitud POST procesando la imagen y datos del paciente."""
     try:
       patient_id = request.POST.get('patient')
+      patient = None
 
       if patient_id:
-        patient = get_object_or_404(Patient, id=patient_id)
+        try:
+          patient = Patient.objects.get(id=patient_id)
+        except Patient.DoesNotExist:
+          return JsonResponse({'success': False, 'errors': {'patient': ['Paciente seleccionado no válido.']}},
+                              status=400)
       else:
-        patient_form = PatientForm(request.POST)
-        if not patient_form.is_valid():
-          return JsonResponse({
-            'success': False,
-            'errors': patient_form.errors
-          })
-        patient = patient_form.save()
+        # Crear nuevo paciente
+        patient_form_data = {
+          'first_name': request.POST.get('first_name'),
+          'last_name': request.POST.get('last_name'),
+          'dni': request.POST.get('dni'),
+          'phone': request.POST.get('phone'),
+          'email': request.POST.get('email'),
+          'age_approx': request.POST.get('age_approx'),
+          'sex': request.POST.get('sex'),
+          'user': request.user  # Asociar al usuario actual si es necesario
+        }
+        patient_form = PatientForm(patient_form_data)
+        if patient_form.is_valid():
+          patient = patient_form.save()
+        else:
+          # Devuelve errores específicos del formulario de paciente
+          return JsonResponse({'success': False, 'errors': patient_form.errors}, status=400)
 
-      form = SkinImageForm(request.POST, request.FILES)
-      if not form.is_valid():
+      # Procesar la imagen
+      image_form_data = {
+        'anatom_site_general': request.POST.get('anatom_site_general')
+      }
+      # El campo 'image' se maneja con request.FILES
+      skin_image_form = SkinImageForm(image_form_data, request.FILES)
+
+      if skin_image_form.is_valid():
+        skin_image = skin_image_form.save(commit=False)
+        skin_image.patient = patient
+        skin_image.processed = False  # O el estado inicial que corresponda
+        # skin_image.user = request.user # Si SkinImage tiene una relación con User
+        skin_image.save()
         return JsonResponse({
-          'success': False,
-          'errors': form.errors
+          'success': True,
+          'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
         })
-
-      skin_image = form.save(commit=False)
-      skin_image.patient = patient
-      skin_image.processed = False
-      skin_image.save()
-
-      return JsonResponse({
-        'success': True,
-        'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})
-      })
+      else:
+        # Devuelve errores específicos del formulario de imagen
+        return JsonResponse({'success': False, 'errors': skin_image_form.errors}, status=400)
 
     except Exception as e:
       logger.error(f"Error en carga de imagen: {str(e)}")
       return JsonResponse({
         'success': False,
-        'errors': {'general': 'Error al procesar la solicitud.'}
-      })
+        'errors': {'general': ['Error interno al procesar la solicitud. Intente más tarde.']}
+      }, status=500)
 
 
 class SearchPatientsView(CustomLoginRequiredMixin, View):
@@ -542,6 +508,7 @@ class ResultsViewMixin:
   def get_base_context(self):
     """Retorna el contexto base para el template results.html"""
     return {
+      'app_name': 'DermaIA',
       'page_title': 'Análisis Dermatológico',
       'sections': {
         'patient_info': {
@@ -788,71 +755,59 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
   model = SkinImage
   template_name = 'Dermatologia_IA/report_list.html'
   context_object_name = 'reports'
-  paginate_by = 20  # si quieres paginar (opcional)
+  paginate_by = 10
 
   def get_queryset(self):
-    return SkinImage.objects.filter(processed=True).order_by('-created_at')
+    return SkinImage.objects.filter(processed=True).select_related('patient').order_by('-created_at')
 
   def get_context_data(self, **kwargs):
-    # Primero obtenemos el contexto base de ListView
     context = super().get_context_data(**kwargs)
-
-    # 1) Variables generales de la página
-    context['app_name'] = 'DermaIA'
-    context['page_title'] = 'Listado de Reportes'
-    context['header_title'] = 'Mis Reportes Procesados'
-
-    # 2) Clases de iconos (por ejemplo, usando Bootstrap Icons, FontAwesome, etc.)
-    context['icon_classes'] = {
-      'analysis': 'bi bi-search',  # icono para el análisis
-      'patient': 'bi bi-person',  # icono para paciente
-      'dni': 'bi bi-credit-card',  # icono para DNI
-      'age': 'bi bi-calendar',  # icono para edad
-      'sex': 'bi bi-gender-ambiguous',  # icono para sexo
-      'location': 'bi bi-geo-alt',  # icono para ubicación
-      'datetime': 'bi bi-clock',  # icono para fecha/hora
-      'view_detail': 'bi bi-eye',  # icono ver detalle
-      'generate_pdf': 'bi bi-file-earmark-pdf',  # icono PDF
-      'send_email': 'bi bi-envelope',  # icono enviar email
-    }
-
-    # 3) Etiquetas que se usan dentro de cada "card" (tarjeta) para mostrar datos
-    context['card_labels'] = {
-      'report_id_prefix': 'Reporte #',
-      'default_condition': 'Sin diagnóstico',
-      'patient_name': 'Paciente:',
-      'patient_dni': 'DNI:',
-      'patient_age': 'Edad:',
-      'patient_sex': 'Sexo:',
-      'lesion_location': 'Ubicación:',
-      'date_time': 'Fecha/Hora:',
-      'default_na': 'N/A',
-    }
-
-    # 4) Textos para botones (ver detalle, generar PDF, enviar email, etc.)
-    context['button_texts'] = {
-      'view_detail': 'Ver detalle',
-      'generate_pdf': 'Generar PDF',
-      'send_email': 'Enviar email',
-    }
-
-    # 5) Textos de paginación (si usas paginación)
-    context['pagination_texts'] = {
-      'first': 'Primera',
-      'previous': 'Anterior',
-      'next': 'Siguiente',
-      'last': 'Última',
-    }
-
-    # 6) Estado “vacío” (cuando no hay reportes que mostrar)
-    context['empty_state'] = {
-      'icon_class': 'bi bi-inbox',  # icono que aparezca en pantalla vacía
-      'title': 'No hay reportes',
-      'message': 'Todavía no has procesado ninguna imagen.',
-      'upload_button_icon': 'bi bi-upload',  # icono para botón subir imagen
-      'upload_button_text': 'Subir imagen',
-    }
-
+    context.update({
+      'app_name': 'DermaIA',
+      'page_title': 'Mis Reportes',
+      'header_title': 'Mis Reportes de Análisis',
+      'card_labels': {
+        'report_id_prefix': 'Reporte ID',
+        'default_condition': 'Sin condición especificada',
+        'patient_name': 'Nombre:',
+        'patient_dni': 'DNI:',
+        'patient_age': 'Edad:',
+        'patient_sex': 'Sexo:',
+        'lesion_location': 'Localización:',
+        'date_time': 'Fecha y Hora:',
+        'default_na': 'N/A',
+      },
+      'button_texts': {
+        'view_detail': 'Ver Detalle',
+        'generate_pdf': 'PDF',
+        'send_email': 'Enviar por Email',
+      },
+      'icon_classes': {
+        'view_detail': 'fas fa-eye',
+        'generate_pdf': 'fas fa-file-pdf',
+        'send_email': 'fas fa-envelope',
+        'analysis': 'fas fa-microscope',
+        'patient': 'fas fa-user',
+        'dni': 'fas fa-id-card',
+        'age': 'fas fa-user-clock',
+        'sex': 'fas fa-venus-mars',
+        'location': 'fas fa-map-marker-alt',
+        'datetime': 'fas fa-calendar-alt',
+      },
+      'empty_state': {
+        'icon_class': 'fas fa-folder-open empty-icon mb-3',
+        'title': 'No hay reportes disponibles',
+        'message': '¡Comienza a analizar imágenes para ver tus resultados aquí!',
+        'upload_button_text': 'Cargar nueva imagen',
+        'upload_button_icon': 'fas fa-upload',
+      },
+      'pagination_texts': {
+        'first': '« Primera',
+        'previous': 'Anterior',
+        'next': 'Siguiente',
+        'last': 'Última »',
+      }
+    })
     return context
 
 
