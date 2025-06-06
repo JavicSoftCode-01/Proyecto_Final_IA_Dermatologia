@@ -97,6 +97,7 @@
 </div>
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 <style>
 .error-message {
   color: #dc3545;
@@ -117,6 +118,16 @@
 .form-control.warning {
   border-color: #ffc107;
 }
+
+.btn[disabled] {
+  cursor: not-allowed !important;
+  opacity: 0.7;
+  pointer-events: auto;
+  position: relative;
+}
+.btn[disabled] .fa-lock {
+  margin-right: 6px;
+}
 </style>
 {% endblock %}
 
@@ -132,6 +143,67 @@ document.addEventListener('DOMContentLoaded', function() {
   const ageInput = document.getElementById('{{ form.age_approx.id_for_label }}');
   const sexSelect = document.getElementById('{{ form.sex.id_for_label }}');
   const form = document.querySelector('form');
+  const updateBtn = form.querySelector('button[type="submit"], .btn-auth, .btn-primary, .btn-success');
+  const updateBtnText = '{{ buttons.submit.text }}';
+
+  // Guardar valores iniciales de los campos
+  const initialValues = {};
+  [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
+    if (input) {
+      initialValues[input.name] = (input.value || '').trim();
+    }
+  });
+
+  // Icono de candado y tooltip
+  function setLockIconAndTooltip(show) {
+    if (!updateBtn) return;
+    if (show) {
+      updateBtn.innerHTML = '<i class="fa fa-lock"></i> ' + updateBtnText;
+      updateBtn.setAttribute('title', 'SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO');
+    } else {
+      updateBtn.innerHTML = updateBtnText;
+      updateBtn.removeAttribute('title');
+    }
+  }
+
+  function isFormChanged() {
+    let changed = false;
+    [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
+      if (input) {
+        const current = (input.value || '').trim();
+        if (current !== initialValues[input.name]) {
+          changed = true;
+        }
+      }
+    });
+    return changed;
+  }
+
+  function checkFormChangeAndToggleBtn() {
+    if (isFormChanged()) {
+      updateBtn.disabled = false;
+      setLockIconAndTooltip(false);
+    } else {
+      updateBtn.disabled = true;
+      setLockIconAndTooltip(true);
+    }
+  }
+
+  // Deshabilitar el botón al cargar y poner candado
+  if (updateBtn) {
+    updateBtn.disabled = true;
+    setLockIconAndTooltip(true);
+  }
+
+  // Detectar cambios en los campos
+  [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
+    if (input) {
+      input.addEventListener('input', function(e) {
+        checkFormChangeAndToggleBtn();
+      });
+      input.addEventListener('blur', checkFormChangeAndToggleBtn);
+    }
+  });
 
   // Función para crear mensajes de error
   function createErrorMessage(input, message, isWarning = false) {

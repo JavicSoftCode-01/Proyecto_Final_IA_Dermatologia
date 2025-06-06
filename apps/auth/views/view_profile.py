@@ -69,54 +69,69 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
   success_url = reverse_lazy('auth:view_profile')
 
   def get_context_data(self, **kwargs):
-    """Añade textos y mensajes al contexto de la plantilla"""
-    logger.info('UpdateProfileView', 'Cargando formulario de actualización de perfil.')
-    try:
-      context = super().get_context_data(**kwargs)
-      context.update({
-        'page_title': 'Actualización de perfil',
-        'title': 'Actualización de perfil',
-        'photo_section': {
-          'title': 'Foto de perfil',
-          'alt_text': 'Foto de perfil',
-          'alt_text_default': 'Foto de perfil predeterminada'
-        },
-        'form_labels': {
-          'first_name': 'Nombres',
-          'last_name': 'Apellidos',
-          'dni': 'Cédula',
-          'email': 'Correo Electrónico',
-          'address': 'Dirección',
-          'city': 'Ciudad',
-          'phone': 'Teléfono'
-        },
-        'buttons': {
-          'update': 'Actualizar',
-          'cancel': 'Cancelar'
-        }
-      })
-      logger.success('UpdateProfileView', 'Formulario de actualización de perfil cargado correctamente.')
-      return context
-    except Exception as e:
-      logger.error('UpdateProfileView', f'Error al cargar formulario de perfil: {str(e)}')
-      messages.error(self.request, 'No se pudo cargar el formulario de perfil. Intente de nuevo.')
-      return {}
+        logger.info('UpdateProfileView', 'Cargando formulario de actualización de perfil.')
+        try:
+            context = super().get_context_data(**kwargs)
+            user = self.get_object()
+            # Evitar errores si user es None o AnonymousUser
+            if user and hasattr(user, 'first_name'):
+                logger.info('UpdateProfileView', (
+                    f"Datos actuales del usuario (ANTES de editar): "
+                    f"Nombres={getattr(user, 'first_name', '')}, Apellidos={getattr(user, 'last_name', '')}, "
+                    f"DNI={getattr(user, 'dni', '')}, Email={getattr(user, 'email', '')}, "
+                    f"Dirección={getattr(user, 'address', '')}, Ciudad={getattr(user, 'city', '')}, Tel={getattr(user, 'phone', '')}"
+                ))
+            context.update({
+                'page_title': 'Actualización de perfil',
+                'title': 'Actualización de perfil',
+                'photo_section': {
+                    'title': 'Foto de perfil',
+                    'alt_text': 'Foto de perfil',
+                    'alt_text_default': 'Foto de perfil predeterminada'
+                },
+                'form_labels': {
+                    'first_name': 'Nombres',
+                    'last_name': 'Apellidos',
+                    'dni': 'Cédula',
+                    'email': 'Correo Electrónico',
+                    'address': 'Dirección',
+                    'city': 'Ciudad',
+                    'phone': 'Teléfono'
+                },
+                'buttons': {
+                    'update': 'Actualizar',
+                    'cancel': 'Cancelar'
+                }
+            })
+            logger.success('UpdateProfileView', 'Formulario de actualización de perfil cargado correctamente.')
+            return context
+        except Exception as e:
+            logger.error('UpdateProfileView', f'Error al cargar formulario de perfil: {str(e)}')
+            messages.error(self.request, 'No se pudo cargar el formulario de perfil. Intente de nuevo.')
+            return {}
 
   def form_valid(self, form):
-    """Procesa el formulario válido y muestra mensaje de éxito"""
-    logger.info('UpdateProfileView', 'Intentando actualizar perfil de usuario.')
-    try:
-      response = super().form_valid(form)
-      logger.success('UpdateProfileView', 'Perfil actualizado correctamente.')
-      messages.success(
-        self.request,
-        'Tu perfil ha sido actualizado correctamente.'
-      )
-      return response
-    except Exception as e:
-      logger.error('UpdateProfileView', f'Error al actualizar perfil: {str(e)}')
-      messages.error(self.request, 'No se pudo actualizar el perfil. Intente de nuevo.')
-      return super().form_invalid(form)
+        logger.info('UpdateProfileView', 'Intentando actualizar perfil de usuario.')
+        try:
+            user = self.get_object()
+            if user and hasattr(user, 'first_name'):
+                logger.success('UpdateProfileView', (
+                    f"Datos nuevos del usuario (DESPUÉS de editar): "
+                    f"Nombres={form.cleaned_data.get('first_name', '')}, Apellidos={form.cleaned_data.get('last_name', '')}, "
+                    f"DNI={form.cleaned_data.get('dni', '')}, Email={form.cleaned_data.get('email', '')}, "
+                    f"Dirección={form.cleaned_data.get('address', '')}, Ciudad={form.cleaned_data.get('city', '')}, Tel={form.cleaned_data.get('phone', '')}"
+                ))
+            response = super().form_valid(form)
+            logger.success('UpdateProfileView', 'Perfil actualizado correctamente.')
+            messages.success(
+                self.request,
+                'Tu perfil ha sido actualizado correctamente.'
+            )
+            return response
+        except Exception as e:
+            logger.error('UpdateProfileView', f'Error al actualizar perfil: {str(e)}')
+            messages.error(self.request, 'No se pudo actualizar el perfil. Intente de nuevo.')
+            return super().form_invalid(form)
 
   def form_invalid(self, form):
     """Maneja errores en el formulario"""

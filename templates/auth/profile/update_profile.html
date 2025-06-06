@@ -4,6 +4,18 @@
 <!-- Estilos adicionales -->
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/profile.css' %}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    .btn-update[disabled] {
+      cursor: not-allowed !important;
+      opacity: 0.7;
+      pointer-events: auto;
+      position: relative;
+    }
+    .btn-update[disabled] .fa-lock {
+      margin-right: 6px;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -449,4 +461,88 @@
       }
     });
   </script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Elementos del archivo de perfil
+  const profileInput = document.getElementById("{{ form.profile_picture.id_for_label }}");
+  const previewImg = document.getElementById("profile-preview");
+  const fileStatus = document.querySelector(".file-status");
+  const fileButton = document.querySelector(".file-button");
+
+  // Elementos de los campos del formulario
+  const firstNameInput = document.getElementById("{{ form.first_name.id_for_label }}");
+  const lastNameInput = document.getElementById("{{ form.last_name.id_for_label }}");
+  const dniInput = document.getElementById("{{ form.dni.id_for_label }}");
+  const emailInput = document.getElementById("{{ form.email.id_for_label }}");
+  const addressInput = document.getElementById("{{ form.address.id_for_label }}");
+  const cityInput = document.getElementById("{{ form.city.id_for_label }}");
+  const phoneInput = document.getElementById("{{ form.phone.id_for_label }}");
+
+  const form = document.querySelector('form');
+  const updateBtn = form.querySelector('button[type="submit"], .btn-update, .btn-auth, .btn-primary, .btn-success');
+  const updateBtnText = '{{ buttons.update }}';
+
+  // Guardar valores iniciales de los campos
+  const initialValues = {};
+  [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function(input) {
+    if (input) {
+      initialValues[input.name] = (input.value || '').trim();
+    }
+  });
+
+  // Icono de candado y tooltip
+  function setLockIconAndTooltip(show) {
+    if (!updateBtn) return;
+    if (show) {
+      updateBtn.innerHTML = '<i class="fa fa-lock"></i> ' + updateBtnText;
+      updateBtn.setAttribute('title', 'SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO');
+    } else {
+      updateBtn.innerHTML = updateBtnText;
+      updateBtn.removeAttribute('title');
+    }
+  }
+
+  function isFormChanged() {
+    let changed = false;
+    [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function(input) {
+      if (input) {
+        const current = (input.value || '').trim();
+        if (current !== initialValues[input.name]) {
+          changed = true;
+        }
+      }
+    });
+    return changed;
+  }
+
+  function checkFormChangeAndToggleBtn() {
+    if (isFormChanged()) {
+      updateBtn.disabled = false;
+      setLockIconAndTooltip(false);
+    } else {
+      updateBtn.disabled = true;
+      setLockIconAndTooltip(true);
+    }
+  }
+
+  // Deshabilitar el botón al cargar y poner candado
+  if (updateBtn) {
+    updateBtn.disabled = true;
+    setLockIconAndTooltip(true);
+  }
+
+  // Detectar cambios en los campos
+  [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function(input) {
+    if (input) {
+      input.addEventListener('input', function(e) {
+        checkFormChangeAndToggleBtn();
+      });
+      input.addEventListener('blur', checkFormChangeAndToggleBtn);
+    }
+  });
+});
+</script>
 {% endblock %}
