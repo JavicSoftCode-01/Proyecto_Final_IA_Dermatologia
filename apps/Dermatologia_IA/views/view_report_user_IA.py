@@ -331,26 +331,33 @@ class PatientUpdateView(CustomLoginRequiredMixin, PatientFormMixin, UpdateView):
   success_url = reverse_lazy('dermatology:patient-list')
 
   def get_context_data(self, **kwargs):
-    """Añade el contexto específico para la actualización de pacientes."""
-    context = super().get_context_data(**kwargs)
-    patient = self.get_object()
-    form_context = self.get_base_context('Actualización de Paciente')
-    form_context.update({
-      'subtitle': f'Editando información de {patient.get_full_name()}',
-      'buttons': {
-        'submit': {
-          'text': 'Guardar Cambios',
-          'class': 'btn-primary btn-lg'
-        },
-        'cancel': {
-          'text': 'Cancelar',
-          'class': 'btn-secondary',
-          'url': reverse_lazy('dermatology:patient-list')
-        }
-      }
-    })
-    context.update(form_context)
-    return context
+        context = super().get_context_data(**kwargs)
+        patient = self.get_object()
+        # Mostrar todos los campos y valores actuales en logs
+        sex_display = dict(Patient.SEX_CHOICES).get(patient.sex, patient.sex)
+        logger.info('PatientUpdateView', (
+            f"Datos actuales del paciente (ANTES de editar): "
+            f"DNI= {patient.dni}, Tel= {patient.phone}, Email= {patient.email}, "
+            f"Nombres= {patient.first_name}, Apellidos= {patient.last_name}, "
+            f"Edad= {patient.age_approx}, Sexo= {sex_display}"
+        ))
+        form_context = self.get_base_context('Actualización de Paciente')
+        form_context.update({
+            'subtitle': f'Editando información de {patient.get_full_name()}',
+            'buttons': {
+                'submit': {
+                    'text': 'Guardar Cambios',
+                    'class': 'btn-primary btn-lg'
+                },
+                'cancel': {
+                    'text': 'Cancelar',
+                    'class': 'btn-secondary',
+                    'url': reverse_lazy('dermatology:patient-list')
+                }
+            }
+        })
+        context.update(form_context)
+        return context
 
   def form_invalid(self, form):
         # Mostrar mensajes de error de validación de unicidad
@@ -368,10 +375,14 @@ class PatientUpdateView(CustomLoginRequiredMixin, PatientFormMixin, UpdateView):
         last_name = form.cleaned_data.get('last_name')
         age_approx = form.cleaned_data.get('age_approx')
         sex = form.cleaned_data.get('sex')
-        # Obtener el display del sexo
         sex_display = dict(Patient.SEX_CHOICES).get(sex, sex)
-        
-        # Validar unicidad de campos
+        # Mostrar valores nuevos en logs
+        logger.info('PatientUpdateView', (
+            f"Datos nuevos del paciente (DESPUÉS de editar): "
+            f"DNI={dni}, Tel={phone}, Email={email}, "
+            f"Nombres={first_name}, Apellidos={last_name}, "
+            f"Edad={age_approx}, Sexo={sex_display}"
+        ))
         errors = {}
         instance_id = self.object.id if self.object else None
         if Patient.objects.filter(dni=dni).exclude(id=instance_id).exists():
