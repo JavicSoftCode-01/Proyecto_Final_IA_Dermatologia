@@ -1,3 +1,5 @@
+# apps\Dermatologia_IA\forms\form_report_user_IA.py
+
 """
 Formulario para el registro de imágenes dermatológicas y su asociación con pacientes.
 """

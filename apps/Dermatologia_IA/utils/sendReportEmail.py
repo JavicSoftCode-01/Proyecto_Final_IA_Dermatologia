@@ -1,8 +1,11 @@
+# apps\Dermatologia_IA\utils\sendReportEmail.py
+
 """
-Módulo para el envío de reportes por correo electrónico.
-Maneja la generación y envío de reportes PDF de análisis dermatológicos.
-"""
-import logging
+  Módulo para enviar reportes por email en la aplicación Dermatología IA.
+  Este módulo contiene la función `send_report_email` que envía un reporte PDF
+    de un análisis dermatológico a la dirección de email del paciente.
+    Utiliza la función `generate_report` para generar el PDF y envía el email
+    utilizando la clase `EmailMessage` de Django."""
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,50 +13,10 @@ from django.core.mail import EmailMessage
 
 from apps.Dermatologia_IA.models import SkinImage
 from .generateReport import generate_report
+from utils.logger import logger
 
-logger = logging.getLogger(__name__)
 
-
-class EmailReportSender:
-  """
-  Clase encargada de preparar y enviar reportes por correo electrónico.
-  Implementa la lógica de composición y envío de emails con reportes adjuntos.
-  """
-
-  @staticmethod
-  def _get_pdf_filename(content_disposition):
-    """Extrae el nombre del archivo PDF del Content-Disposition"""
-    if not content_disposition or 'filename=' not in content_disposition:
-      return "reporte_dermatologico.pdf"
-
-    try:
-      parts = content_disposition.split('filename=')
-      return parts[1].strip('"').strip("'")
-    except IndexError:
-      return "reporte_dermatologico.pdf"
-
-  @staticmethod
-  def _prepare_email_content(patient, image_id):
-    """Prepara el asunto y cuerpo del correo"""
-    first_name = patient.first_name or ''
-    last_name = patient.last_name or ''
-    dni = patient.dni or ''
-
-    subject = f'Reporte de Análisis Dermatológico Preliminar - ID {image_id}'
-    body = (
-      f"Estimado/a {first_name} {last_name},\n"
-      f"DNI: {dni}\n\n"
-      f"Adjunto encontrará el reporte preliminar de su análisis "
-      f"dermatológico basado en IA (ID: {image_id}).\n\n"
-      "Este es un análisis preliminar generado por inteligencia "
-      "artificial y debe ser validado por un profesional médico.\n\n"
-      "Saludos cordiales,\n"
-      "Derma IA"
-    )
-    return subject, body
-
-  @classmethod
-  def send_report(cls, image_id, email_address):
+def send_report_email(image_id, email_address):
     """
     Envía un reporte PDF por email al usuario.
 
@@ -67,47 +30,60 @@ class EmailReportSender:
     Raises:
         ValidationError: Si los datos proporcionados son inválidos
     """
+    logger.info('send_report_email', f'Intentando enviar reporte ID {image_id} a {email_address}')
     try:
-      # Validar que la imagen existe y está procesada
-      skin_image = SkinImage.objects.get(id=image_id, processed=True)
+        # Validar que la imagen existe y está procesada
+        skin_image = SkinImage.objects.get(id=image_id, processed=True)
 
-      # Generar el PDF
-      pdf_response = generate_report(image_id)
-      if not pdf_response:
-        logger.error(f"Fallo en la generación del PDF para email (ID: {image_id})")
-        return False
+        # Generar el PDF
+        pdf_response = generate_report(image_id)
+        if not pdf_response:
+            logger.error('send_report_email', f'Fallo en la generación del PDF para email (ID: {image_id})')
+            return False
 
-      # Preparar el contenido del email
-      subject, body = cls._prepare_email_content(skin_image.patient, image_id)
+        # Preparar el asunto y cuerpo del correo
+        nombre = skin_image.patient.get_full_name() if hasattr(skin_image.patient, 'get_full_name') else ''
+        dni = skin_image.patient.dni or ''
+        subject = f'Reporte de Análisis Dermatológico Preliminar - ID {image_id}'
+        body = (
+            f"Estimado/a {nombre},\n"
+            f"DNI: {dni}\n\n"
+            f"Adjunto encontrará el reporte preliminar de su análisis "
+            f"dermatológico basado en IA (ID: {image_id}).\n\n"
+            "Este es un análisis preliminar generado por inteligencia "
+            "artificial y debe ser validado por un profesional médico.\n\n"
+            "Saludos cordiales,\n"
+            "Derma IA"
+        )
 
-      # Configurar y enviar el email
-      email = EmailMessage(
-        subject=subject,
-        body=body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[email_address]
-      )
+        # Configurar y enviar el email
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email_address]
+        )
 
-      # Adjuntar el PDF
-      filename = cls._get_pdf_filename(pdf_response.get('Content-Disposition'))
-      email.attach(filename, pdf_response.content, 'application/pdf')
+        # Extraer el nombre del archivo PDF
+        content_disposition = pdf_response.get('Content-Disposition')
+        if not content_disposition or 'filename=' not in content_disposition:
+            filename = "reporte_dermatologico.pdf"
+        else:
+            try:
+                parts = content_disposition.split('filename=')
+                filename = parts[1].strip('"').strip("'")
+            except IndexError:
+                filename = "reporte_dermatologico.pdf"
+        email.attach(filename, pdf_response.content, 'application/pdf')
 
-      email.send()
-      logger.info(f"Email enviado exitosamente a {email_address} para reporte ID {image_id}")
-      return True
+        email.send()
+        logger.info('send_report_email', f'Email enviado exitosamente a {email_address} para reporte ID {image_id}')
+        return True
 
     except SkinImage.DoesNotExist:
-      logger.error(f"No se encontró la imagen con ID {image_id} o no está procesada")
-      raise ValidationError("El reporte solicitado no existe o no está listo")
+        logger.error('send_report_email', f'No se encontró la imagen con ID {image_id} o no está procesada')
+        raise ValidationError("El reporte solicitado no existe o no está listo")
 
     except Exception as e:
-      logger.error(f"Error al enviar email para reporte ID {image_id}: {str(e)}")
-      return False
-
-
-def send_report_email(image_id, email_address):
-  """
-  Función de conveniencia para enviar reportes por email.
-  Mantiene la interfaz existente para compatibilidad.
-  """
-  return EmailReportSender.send_report(image_id, email_address)
+        logger.error('send_report_email', f'Error al enviar email para reporte ID {image_id}: {str(e)}')
+        return False

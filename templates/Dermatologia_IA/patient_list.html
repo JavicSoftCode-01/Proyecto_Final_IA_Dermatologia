@@ -12,8 +12,8 @@
       <!-- Formulario de búsqueda -->
       <form method="get" class="mb-4">
         <div class="input-group">
-          <input type="text" name="dni" class="form-control" placeholder="{{ texts.search_placeholder }}"
-                 value="{{ request.GET.dni|default_if_none:'' }}">
+      <input type="text" name="dni" class="form-control" placeholder="{{ texts.search_placeholder }}" maxlength="10"
+             value="{{ request.GET.dni|default_if_none:'' }}" >
           <button type="submit" class="btn {{ actions.search.button_class }}">{{ actions.search.button_text }}</button>
         </div>
       </form>

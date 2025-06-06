@@ -25,6 +25,7 @@ from apps.auth.forms.form_auth import (
   CustomSetPasswordForm,
   CustomUserCreationForm
 )
+from utils.logger import logger
 
 User = get_user_model()
 
@@ -39,8 +40,10 @@ class CustomLoginRequiredMixin(LoginRequiredMixin):
 
   def handle_no_permission(self, request=None):
     """Maneja el caso cuando el usuario no tiene permiso para acceder"""
-    request = request or self.request
-    messages.error(request, "Iniciar sesión para acceder.")
+    if request is None:
+      request = getattr(self, 'request', None)
+    if request is not None:
+      messages.error(request, "Iniciar sesión para acceder.")
     return super().handle_no_permission()
 
 
@@ -75,9 +78,16 @@ class RegisterUserView(FormView):
 
   def form_valid(self, form):
     """Procesa el formulario válido y registra al usuario"""
-    user = form.save()
-    self._show_success_message(user)
-    return super().form_valid(form)
+    logger.info('RegisterUserView', 'Intentando registrar nuevo usuario.')
+    try:
+      user = form.save()
+      self._show_success_message(user)
+      logger.success('RegisterUserView', f'Usuario registrado exitosamente: {user.get_full_name()}')
+      return super().form_valid(form)
+    except Exception as e:
+      logger.error('RegisterUserView', f'Error al registrar usuario: {str(e)}')
+      messages.error(self.request, 'No se pudo completar el registro. Por favor intente de nuevo.')
+      return super().form_invalid(form)
 
   def form_invalid(self, form):
     """Maneja errores en el formulario"""
@@ -85,25 +95,16 @@ class RegisterUserView(FormView):
     messages.error(self.request, "Por favor, corrija los errores en el formulario.")
     return super().form_invalid(form)
 
-  def dispatch(self, request, *args, **kwargs):
-    """Redirige usuarios autenticados a la página principal"""
-    if request.user.is_authenticated:
-      return redirect('core:home')
-    return super().dispatch(request, *args, **kwargs)
+  def _log_registration_errors(self, form):
+    """Registra errores de registro para depuración"""
+    logger.warning('RegisterUserView', f'Errores de validación en registro: {form.errors}')
 
   def _show_success_message(self, user):
     """Muestra mensaje de éxito al registrar usuario"""
     messages.success(
       self.request,
-      f'¡Registro exitoso Dr. {user.first_name} {user.last_name}! '
-      'Por favor inicie sesión con sus credenciales.'
+      f'¡Registro exitoso Dr. {user.get_full_name()}! Por favor inicie sesión con sus credenciales.'
     )
-
-  def _log_registration_errors(self, form):
-    """Registra errores de registro para depuración"""
-    print("=== ERRORES DE REGISTRO ===")
-    print(form.errors)
-    print("===========================")
 
 
 class LoginUserView(FormView):
@@ -130,33 +131,35 @@ class LoginUserView(FormView):
 
   def form_valid(self, form):
     """Procesa el inicio de sesión exitoso"""
-    user = form.get_user()
-    if user is not None:
-      return self._handle_successful_login(user)
-    return self._handle_failed_login()
+    logger.info('LoginUserView', 'Intentando iniciar sesión.')
+    try:
+      user = form.get_user()
+      if user is not None:
+        return self._handle_successful_login(user)
+      return self._handle_failed_login()
+    except Exception as e:
+      logger.error('LoginUserView', f'Error en inicio de sesión: {str(e)}')
+      messages.error(self.request, 'No se pudo iniciar sesión. Intente de nuevo.')
+      return self.form_invalid(form)
 
   def form_invalid(self, form):
     """Maneja errores en el formulario de login"""
     messages.error(self.request, "Por favor, corrija los errores en el formulario.")
     return super().form_invalid(form)
 
-  def dispatch(self, request, *args, **kwargs):
-    """Redirige usuarios ya autenticados"""
-    if request.user.is_authenticated:
-      return redirect('core:home')
-    return super().dispatch(request, *args, **kwargs)
-
   def _handle_successful_login(self, user):
     """Procesa el login exitoso y redirige apropiadamente"""
     login(self.request, user)
+    logger.success('LoginUserView', f'Login exitoso para usuario: {user.get_full_name()}')
     messages.success(
       self.request,
-      f'¡Bienvenido Dr. {user.first_name} {user.last_name}!'
+      f'¡Bienvenido Dr. {user.get_full_name()}!'
     )
     return redirect(self.request.GET.get('next') or 'core:home')
 
   def _handle_failed_login(self):
     """Maneja el caso de login fallido"""
+    logger.warning('LoginUserView', 'Intento de login fallido.')
     messages.error(
       self.request,
       "Credenciales inválidas. Por favor, verifique su correo y contraseña."
@@ -169,13 +172,20 @@ class LogoutUserView(View):
 
   def get(self, request):
     """Procesa la solicitud de cierre de sesión"""
-    user_name = f"{request.user.first_name} {request.user.last_name}"
-    logout(request)
-    messages.success(
-      request,
-      f'Sesión cerrada correctamente. ¡Hasta luego Dr. {user_name}!'
-    )
-    return redirect('auth:login')
+    logger.info('LogoutUserView', 'Intentando cerrar sesión.')
+    try:
+      user_name = request.user.get_full_name()
+      logout(request)
+      logger.success('LogoutUserView', f'Sesión cerrada correctamente para: {user_name}')
+      messages.success(
+        request,
+        f'Sesión cerrada correctamente. ¡Hasta luego Dr. {user_name}!'
+      )
+      return redirect('auth:login')
+    except Exception as e:
+      logger.error('LogoutUserView', f'Error al cerrar sesión: {str(e)}')
+      messages.error(request, 'No se pudo cerrar la sesión. Intente de nuevo.')
+      return redirect('core:home')
 
 
 class PasswordResetRequestView(FormView):
@@ -183,35 +193,72 @@ class PasswordResetRequestView(FormView):
   template_name = 'auth/reset_password/password_reset.html'
   form_class = PasswordResetForm
 
-  def form_valid(self, form):
-    """Procesa la solicitud de restablecimiento de contraseña"""
-    email = form.cleaned_data['email']
-    users = User.objects.filter(email=email)
+  def get_context_data(self, **kwargs):
+    """Obtiene el contexto para la plantilla"""
+    context = super().get_context_data(**kwargs)
+    context.update({
+      'page_title': 'Restablecer Contraseña',
+      'app_name': 'DermaIA',
+    })
+    return context
 
-    if users.exists():
-      self._send_reset_email(users.first())
-      messages.success(
-        self.request,
-        "Se ha enviado un correo con las instrucciones para restablecer tu contraseña."
-      )
-    return redirect("auth:login")
+  def form_valid(self, form):
+        logger.info('PasswordResetRequestView', 'Solicitud de restablecimiento de contraseña iniciada.')
+        email = form.cleaned_data['email']
+        try:
+            users = User.objects.filter(email=email)
+            if not users.exists():
+                logger.warning('PasswordResetRequestView', f'No existe usuario con el email: {email}')
+                messages.warning(self.request, 'No existe usuario registrado con ese correo.')
+                return super().form_invalid(form)
+            for user in users:
+                try:
+                    context = self._get_email_context(user)
+                    subject = 'Restablecimiento de contraseña en DermaIA'
+                    email_body = render_to_string('auth/reset_password/email_resetPS/password_reset_email.html', context)
+                    email_message = EmailMultiAlternatives(
+                        subject,
+                        email_body,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [user.email]
+                    )
+                    email_message.attach_alternative(email_body, "text/html")
+                    email_message.send()
+                    logger.success('PasswordResetRequestView', f'Correo de restablecimiento enviado a: {user.email}')
+                except Exception as e:
+                    logger.error('PasswordResetRequestView', f'Error enviando correo: {str(e)}')
+                    messages.error(self.request, 'No se pudo enviar el correo de restablecimiento. Verifique que su correo esté registrado y vuelva a intentarlo.')
+                    return super().form_invalid(form)
+            messages.success(self.request, 'Si el correo está registrado, se ha enviado un email con instrucciones para restablecer su contraseña.')
+            # Redirige correctamente usando reverse_lazy
+            from django.urls import reverse
+            return redirect(reverse('auth:login'))
+        except Exception as e:
+            logger.error('PasswordResetRequestView', f'Error al solicitar restablecimiento: {str(e)}')
+            messages.error(self.request, 'No se pudo procesar la solicitud. Intente más tarde.')
+            from django.urls import reverse
+            return redirect(reverse('auth:login'))
 
   def _send_reset_email(self, user):
     """Envía el correo de restablecimiento de contraseña"""
-    context = self._get_email_context(user)
-    email_content = render_to_string(
-      "auth/reset_password/password_reset_email.html",
-      context
-    )
-
-    email = EmailMultiAlternatives(
-      "Restablecimiento de contraseña - DermaIA",
-      email_content,
-      settings.DEFAULT_FROM_EMAIL,
-      [user.email]
-    )
-    email.attach_alternative(email_content, "text/html")
-    email.send()
+    try:
+      context = self._get_email_context(user)
+      email_content = render_to_string(
+        "auth/reset_password/password_reset_email.html",
+        context
+      )
+      email = EmailMultiAlternatives(
+        "Restablecimiento de contraseña - DermaIA",
+        email_content,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email]
+      )
+      email.attach_alternative(email_content, "text/html")
+      email.send()
+      logger.success('PasswordResetRequestView', f'Correo enviado correctamente a: {user.email}')
+    except Exception as e:
+      logger.error('PasswordResetRequestView', f'Error enviando correo: {str(e)}')
+      raise
 
   def _get_email_context(self, user):
     """Prepara el contexto para la plantilla del correo"""
@@ -250,8 +297,16 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
   def form_valid(self, form):
     """Procesa el formulario válido de cambio de contraseña"""
-    messages.success(
-      self.request,
-      "Tu contraseña ha sido actualizada correctamente."
-    )
-    return super().form_valid(form)
+    logger.info('CustomPasswordResetConfirmView', 'Intentando actualizar contraseña.')
+    try:
+      response = super().form_valid(form)
+      logger.success('CustomPasswordResetConfirmView', 'Contraseña actualizada correctamente.')
+      messages.success(
+        self.request,
+        "Tu contraseña ha sido actualizada correctamente."
+      )
+      return response
+    except Exception as e:
+      logger.error('CustomPasswordResetConfirmView', f'Error al actualizar contraseña: {str(e)}')
+      messages.error(self.request, 'No se pudo actualizar la contraseña. Intente de nuevo.')
+      return super().form_invalid(form)

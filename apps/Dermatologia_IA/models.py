@@ -1,3 +1,12 @@
+# apps\Dermatologia_IA\models.py
+
+"""
+Modelo de datos para la aplicación Dermatología IA.
+Este módulo define los modelos `Patient` y `SkinImage` que representan
+pacientes y sus imágenes dermatológicas, respectivamente.
+Incluye validaciones personalizadas para los campos de entrada.
+"""
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 

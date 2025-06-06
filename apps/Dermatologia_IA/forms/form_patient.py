@@ -1,3 +1,5 @@
+# apps\Dermatologia_IA\forms\form_patient.py
+
 """
 Formulario para la gestión de pacientes en el sistema de dermatología.
 """

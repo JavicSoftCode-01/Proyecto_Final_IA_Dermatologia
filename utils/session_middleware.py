@@ -1,3 +1,11 @@
+# utils\session_middleware.py
+
+"""
+    Middleware para manejar el tiempo de sesión de los usuarios.
+    Este middleware verifica la actividad del usuario y cierra la sesión
+        si ha estado inactivo por más tiempo del permitido.
+        """
+
 from django.contrib.auth import logout
 from django.utils import timezone
 from datetime import timedelta

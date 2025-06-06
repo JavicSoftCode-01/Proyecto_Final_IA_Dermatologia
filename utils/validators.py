@@ -1,3 +1,13 @@
+# utils\validators.py
+
+"""
+Módulo de validadores personalizados para la aplicación.
+Este módulo contiene funciones de validación para campos comunes como   
+correo electrónico, nombres, cédulas, direcciones y números telefónicos.
+Incluye validaciones específicas para el formato y contenido de cada campo,
+así como la eliminación de espacios en blanco innecesarios.
+"""
+
 import re
 
 from django.core.exceptions import ValidationError

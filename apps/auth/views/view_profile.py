@@ -12,6 +12,7 @@ from django.views.generic import TemplateView, UpdateView
 
 from apps.auth.forms.form_updateProfile import ProfileUpdateForm
 from apps.auth.views.view_auth import CustomLoginRequiredMixin
+from utils.logger import logger
 
 User = get_user_model()
 
@@ -25,29 +26,36 @@ class ProfileView(CustomLoginRequiredMixin, TemplateView):
 
   def get_context_data(self, **kwargs):
     """Añade el usuario actual y textos al contexto de la plantilla"""
-    context = super().get_context_data(**kwargs)
-    context.update({
-      'page_title': 'Mi Perfil',
-      'app_name': 'DermaIA',
-      'title': 'Perfil de usuario',
-      'photo_label': 'Foto de perfil',
-      'field_labels': {
-        'names': 'Nombres',
-        'last_names': 'Apellidos',
-        'dni': 'DNI',
-        'address': 'Dirección',
-        'city': 'Ciudad',
-        'phone': 'Teléfono',
-        'email': 'Correo'
-      },
-      'default_messages': {
-        'not_specified': 'No especificado',
-        'not_specified_f': 'No especificada'
-      },
-      'update_button_text': 'Actualizar Perfil',
-      'user': self.request.user
-    })
-    return context
+    logger.info('ProfileView', 'Cargando datos de perfil de usuario.')
+    try:
+      context = super().get_context_data(**kwargs)
+      context.update({
+        'page_title': 'Mi Perfil',
+        'app_name': 'DermaIA',
+        'title': 'Perfil de usuario',
+        'photo_label': 'Foto de perfil',
+        'field_labels': {
+          'names': 'Nombres',
+          'last_names': 'Apellidos',
+          'dni': 'DNI',
+          'address': 'Dirección',
+          'city': 'Ciudad',
+          'phone': 'Teléfono',
+          'email': 'Correo'
+        },
+        'default_messages': {
+          'not_specified': 'No especificado',
+          'not_specified_f': 'No especificada'
+        },
+        'update_button_text': 'Actualizar Perfil',
+        'user': self.request.user
+      })
+      logger.success('ProfileView', 'Datos de perfil cargados correctamente.')
+      return context
+    except Exception as e:
+      logger.error('ProfileView', f'Error al cargar datos de perfil: {str(e)}')
+      messages.error(self.request, 'No se pudo cargar el perfil. Intente de nuevo.')
+      return {}
 
 
 class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
@@ -62,41 +70,57 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
 
   def get_context_data(self, **kwargs):
     """Añade textos y mensajes al contexto de la plantilla"""
-    context = super().get_context_data(**kwargs)
-    context.update({
-      'page_title': 'Actualización de perfil',
-      'title': 'Actualización de perfil',
-      'photo_section': {
-        'title': 'Foto de perfil',
-        'alt_text': 'Foto de perfil',
-        'alt_text_default': 'Foto de perfil predeterminada'
-      },
-      'form_labels': {
-        'first_name': 'Nombres',
-        'last_name': 'Apellidos',
-        'dni': 'Cédula',
-        'email': 'Correo Electrónico',
-        'address': 'Dirección',
-        'city': 'Ciudad',
-        'phone': 'Teléfono'
-      },
-      'buttons': {
-        'update': 'Actualizar',
-        'cancel': 'Cancelar'
-      }
-    })
-    return context
+    logger.info('UpdateProfileView', 'Cargando formulario de actualización de perfil.')
+    try:
+      context = super().get_context_data(**kwargs)
+      context.update({
+        'page_title': 'Actualización de perfil',
+        'title': 'Actualización de perfil',
+        'photo_section': {
+          'title': 'Foto de perfil',
+          'alt_text': 'Foto de perfil',
+          'alt_text_default': 'Foto de perfil predeterminada'
+        },
+        'form_labels': {
+          'first_name': 'Nombres',
+          'last_name': 'Apellidos',
+          'dni': 'Cédula',
+          'email': 'Correo Electrónico',
+          'address': 'Dirección',
+          'city': 'Ciudad',
+          'phone': 'Teléfono'
+        },
+        'buttons': {
+          'update': 'Actualizar',
+          'cancel': 'Cancelar'
+        }
+      })
+      logger.success('UpdateProfileView', 'Formulario de actualización de perfil cargado correctamente.')
+      return context
+    except Exception as e:
+      logger.error('UpdateProfileView', f'Error al cargar formulario de perfil: {str(e)}')
+      messages.error(self.request, 'No se pudo cargar el formulario de perfil. Intente de nuevo.')
+      return {}
 
   def form_valid(self, form):
     """Procesa el formulario válido y muestra mensaje de éxito"""
-    messages.success(
-      self.request,
-      'Tu perfil ha sido actualizado correctamente.'
-    )
-    return super().form_valid(form)
+    logger.info('UpdateProfileView', 'Intentando actualizar perfil de usuario.')
+    try:
+      response = super().form_valid(form)
+      logger.success('UpdateProfileView', 'Perfil actualizado correctamente.')
+      messages.success(
+        self.request,
+        'Tu perfil ha sido actualizado correctamente.'
+      )
+      return response
+    except Exception as e:
+      logger.error('UpdateProfileView', f'Error al actualizar perfil: {str(e)}')
+      messages.error(self.request, 'No se pudo actualizar el perfil. Intente de nuevo.')
+      return super().form_invalid(form)
 
   def form_invalid(self, form):
     """Maneja errores en el formulario"""
+    logger.warning('UpdateProfileView', f'Errores de validación en actualización de perfil: {form.errors}')
     messages.error(
       self.request,
       'Por favor, corrige los errores en el formulario.'
@@ -104,5 +128,14 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
     return super().form_invalid(form)
 
   def get_object(self, queryset=None):
-    """Retorna el usuario actual para la edición"""
-    return self.request.user
+        """Retorna el usuario actual para la edición"""
+        logger.info('UpdateProfileView', 'Obteniendo usuario autenticado para edición de perfil.')
+        try:
+            user = self.request.user
+            nombre = user.get_full_name() if callable(getattr(user, 'get_full_name', None)) else str(user)
+            logger.success('UpdateProfileView', f'Usuario obtenido: {nombre}')
+            return user
+        except Exception as e:
+            logger.error('UpdateProfileView', f'Error al obtener usuario: {str(e)}')
+            messages.error(self.request, 'No se pudo obtener el usuario. Intente de nuevo.')
+            return None
