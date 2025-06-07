@@ -86,10 +86,11 @@ class CustomF1Score(tf.keras.metrics.Metric):
 # Registrar la métrica personalizada (redundante con el decorador, pero por seguridad)
 get_custom_objects().update({'CustomF1Score': CustomF1Score})
 
+
 # --- Configuración de Rutas y Carga del Modelo ---
 
-RESULTS_DIR = os.path.join(settings.BASE_DIR, 'Entrenamiento_IA', 'RESULTADOS_DEL_MODELO_ENTRENADO')
-MODEL_FILENAME = 'Modelo_IA_Entrenada.keras'
+RESULTS_DIR = os.path.join(settings.BASE_DIR, 'IA', 'Dermatological_AI_Model', 'checkpoints')
+MODEL_FILENAME = 'MODELO_IA_DERMATOLOGICO.keras'
 MODEL_PATH = os.path.join(RESULTS_DIR, MODEL_FILENAME)
 
 # Lista de clases (25 clases como en tu entrenamiento)
@@ -155,6 +156,104 @@ gemini_model = None
 if GEMINI_API_KEY:
   genai.configure(api_key=GEMINI_API_KEY)
   gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
+
+# --- Clase AIProcessor ---
+
+class AIProcessor:
+  @staticmethod
+  def preprocess_image_for_model(image_path):
+    try:
+      img = cv2.imread(image_path)
+      if img is None:
+        raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
+      img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+      img_resized = cv2.resize(img_rgb, (224, 224))
+      img_preprocessed = preprocess_input(img_resized)  # Usando MobileNetV2 preprocess_input
+      img_array = np.expand_dims(img_preprocessed, axis=0)
+      return img_array, img_rgb
+    except Exception as e:
+      traceback.print_exc()
+      return None, None
+
+  @staticmethod
+  def calculate_gradcam_image_only(img_array, model, pred_index):
+        try:
+            # Find the last convolutional layer directly
+            last_conv_layer = None
+            last_conv_layer_name = None
+            for layer in reversed(model.layers):
+                if hasattr(tf.keras.layers, 'Conv2D') and isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
+                    last_conv_layer = layer
+                    last_conv_layer_name = layer.name
+                    break
+            if not last_conv_layer:
+                raise ValueError("No se encontró ninguna capa convolucional en el modelo")
+
+            logger.debug('AIProcessor', f"Model inputs for Grad-CAM: {model.inputs}")
+
+            # Si el modelo espera una sola entrada, pasar el array directamente
+            if isinstance(model.input, (tf.Tensor, tf.compat.v1.Tensor)):
+                input_tensor = img_array
+            else:
+                # Si el modelo espera múltiples entradas, empaquetar en lista
+                input_tensor = [img_array]
+
+            grad_model = tf.keras.Model(
+                inputs=model.input,
+                outputs=[last_conv_layer.output, model.output]
+            )
+
+            with tf.GradientTape() as tape:
+                conv_outputs, predictions = grad_model(input_tensor, training=False)
+                loss = predictions[:, pred_index]
+
+            grads = tape.gradient(loss, conv_outputs)
+            if grads is None:
+                raise ValueError("No se pudieron calcular los gradientes")
+
+            logger.debug('AIProcessor', f"conv_outputs shape: {getattr(conv_outputs, 'shape', None)}")
+            logger.debug('AIProcessor', f"grads shape: {getattr(grads, 'shape', None)}")
+
+            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+            logger.debug('AIProcessor', f"pooled_grads shape: {getattr(pooled_grads, 'shape', None)}")
+
+            # Broadcast pooled_grads to match conv_outputs shape
+            conv_outputs = conv_outputs[0]  # Remove batch dimension
+            pooled_grads = pooled_grads
+            heatmap = tf.reduce_mean(conv_outputs * pooled_grads, axis=-1)
+
+            heatmap = tf.maximum(heatmap, 0)
+            max_val = tf.reduce_max(heatmap)
+            if max_val == 0:
+                return None, last_conv_layer_name
+            heatmap = heatmap / max_val
+
+            heatmap_np = heatmap.numpy()
+            return heatmap_np, last_conv_layer_name
+
+        except Exception as e:
+            traceback.print_exc()
+            logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
+            return None, None
+
+  @staticmethod
+  def generate_ai_content(condition):
+    default_report = f"Descripción no disponible para {condition}. Consulte a un dermatólogo."
+    default_treatment = f"Tratamiento no disponible para {condition}. Busque atención médica."
+    if not gemini_model:
+      return default_report, default_treatment
+    try:
+      report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas."
+      treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados."
+      config = genai.types.GenerationConfig(max_output_tokens=150, temperature=0.7)
+      report_response = gemini_model.generate_content(report_prompt, generation_config=config)
+      treatment_response = gemini_model.generate_content(treatment_prompt, generation_config=config)
+      ai_report = report_response.text.strip() if hasattr(report_response, 'text') else default_report
+      ai_treatment = treatment_response.text.strip() if hasattr(treatment_response, 'text') else default_treatment
+      return ai_report[:500], ai_treatment[:500]
+    except Exception:
+      return default_report, default_treatment
 
 
 # ------------------ VISTAS DE PACIENTE ------------------
@@ -710,104 +809,7 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
         return context
 
 
-# --- Clase AIProcessor ---
-
-class AIProcessor:
-  @staticmethod
-  def preprocess_image_for_model(image_path):
-    try:
-      img = cv2.imread(image_path)
-      if img is None:
-        raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
-      img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-      img_resized = cv2.resize(img_rgb, (224, 224))
-      img_preprocessed = preprocess_input(img_resized)  # Usando MobileNetV2 preprocess_input
-      img_array = np.expand_dims(img_preprocessed, axis=0)
-      return img_array, img_rgb
-    except Exception as e:
-      traceback.print_exc()
-      return None, None
-
-  @staticmethod
-  def calculate_gradcam_image_only(img_array, model, pred_index):
-        try:
-            # Find the last convolutional layer directly
-            last_conv_layer = None
-            last_conv_layer_name = None
-            for layer in reversed(model.layers):
-                if hasattr(tf.keras.layers, 'Conv2D') and isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
-                    last_conv_layer = layer
-                    last_conv_layer_name = layer.name
-                    break
-            if not last_conv_layer:
-                raise ValueError("No se encontró ninguna capa convolucional en el modelo")
-
-            logger.debug('AIProcessor', f"Model inputs for Grad-CAM: {model.inputs}")
-
-            # Si el modelo espera una sola entrada, pasar el array directamente
-            if isinstance(model.input, (tf.Tensor, tf.compat.v1.Tensor)):
-                input_tensor = img_array
-            else:
-                # Si el modelo espera múltiples entradas, empaquetar en lista
-                input_tensor = [img_array]
-
-            grad_model = tf.keras.Model(
-                inputs=model.input,
-                outputs=[last_conv_layer.output, model.output]
-            )
-
-            with tf.GradientTape() as tape:
-                conv_outputs, predictions = grad_model(input_tensor, training=False)
-                loss = predictions[:, pred_index]
-
-            grads = tape.gradient(loss, conv_outputs)
-            if grads is None:
-                raise ValueError("No se pudieron calcular los gradientes")
-
-            logger.debug('AIProcessor', f"conv_outputs shape: {getattr(conv_outputs, 'shape', None)}")
-            logger.debug('AIProcessor', f"grads shape: {getattr(grads, 'shape', None)}")
-
-            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-            logger.debug('AIProcessor', f"pooled_grads shape: {getattr(pooled_grads, 'shape', None)}")
-
-            # Broadcast pooled_grads to match conv_outputs shape
-            conv_outputs = conv_outputs[0]  # Remove batch dimension
-            pooled_grads = pooled_grads
-            heatmap = tf.reduce_mean(conv_outputs * pooled_grads, axis=-1)
-
-            heatmap = tf.maximum(heatmap, 0)
-            max_val = tf.reduce_max(heatmap)
-            if max_val == 0:
-                return None, last_conv_layer_name
-            heatmap = heatmap / max_val
-
-            heatmap_np = heatmap.numpy()
-            return heatmap_np, last_conv_layer_name
-
-        except Exception as e:
-            traceback.print_exc()
-            logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
-            return None, None
-
-  @staticmethod
-  def generate_ai_content(condition):
-    default_report = f"Descripción no disponible para {condition}. Consulte a un dermatólogo."
-    default_treatment = f"Tratamiento no disponible para {condition}. Busque atención médica."
-    if not gemini_model:
-      return default_report, default_treatment
-    try:
-      report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas."
-      treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados."
-      config = genai.types.GenerationConfig(max_output_tokens=150, temperature=0.7)
-      report_response = gemini_model.generate_content(report_prompt, generation_config=config)
-      treatment_response = gemini_model.generate_content(treatment_prompt, generation_config=config)
-      ai_report = report_response.text.strip() if hasattr(report_response, 'text') else default_report
-      ai_treatment = treatment_response.text.strip() if hasattr(treatment_response, 'text') else default_treatment
-      return ai_report[:500], ai_treatment[:500]
-    except Exception:
-      return default_report, default_treatment
-
-
+# ------------------ VISTAS DE REPORTES ------------------
 class ReportListView(CustomLoginRequiredMixin, ListView):
   model = SkinImage
   template_name = 'Dermatologia_IA/report_list.html'
