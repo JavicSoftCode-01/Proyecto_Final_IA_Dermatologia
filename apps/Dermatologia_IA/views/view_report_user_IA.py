@@ -263,7 +263,7 @@ class PatientListView(CustomLoginRequiredMixin, ListView):
   model = Patient
   template_name = 'Dermatologia_IA/patient_list.html'
   context_object_name = 'patients'
-  paginate_by = 20
+  paginate_by = 10
 
   def get_queryset(self):
         """Filtra los pacientes por DNI si se proporciona en la búsqueda."""

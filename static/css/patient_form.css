@@ -1,0 +1,430 @@
+/* Estilos para formularios de pacientes */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.patient-form-container {
+    padding: 0;
+    max-width: 12000px;
+    margin: 0 auto;
+    background-color: #f8f9fa;
+}
+
+.patient-form-header {
+    background: white;
+    color: white;
+    padding: 32px 40px;
+    margin: 0;
+    text-align: left;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+.patient-form-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #000000;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.patient-form-header .subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin: 12px 0 0 0;
+    font-weight: 400;
+    color: #000000;
+}
+
+.patient-form-content {
+    background: white;
+    padding: 20px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* Secciones del formulario */
+.form-section {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.form-section:last-of-type {
+    margin-bottom: 32px;
+}
+
+.form-row {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 0;
+}
+
+.form-row.two-cols {
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-row.three-cols {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #4b5563;
+    margin-bottom: 8px;
+    font-size: 14px;
+    letter-spacing: 0.025em;
+}
+
+/* Estilos para inputs */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+    box-sizing: border-box;
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+.form-control.error,
+input.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.form-control.warning,
+input.warning {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+}
+
+/* Select personalizado */
+.form-select,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 48px;
+    appearance: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.form-select:focus,
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Mensajes de error y advertencia */
+.error-message {
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+}
+
+.error-message::before {
+    content: "⚠";
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.warning-message {
+    color: #f59e0b;
+    font-size: 13px;
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+}
+
+.warning-message::before {
+    content: "⚠";
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Botones de acción */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 2px solid #e5e7eb;
+}
+
+.btn-cancel {
+    background: #f1f3f5;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 16px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.btn-cancel:hover {
+    background: #e5e7eb;
+    color: #374151;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-submit {
+    background: #3b82f6;
+    color: white;
+    border: 1px solid #3b82f6;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    position: relative;
+    min-width: 160px;
+    text-align: center;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-submit:disabled {
+    background: #9ca3af;
+    border-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-submit[disabled] {
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    pointer-events: auto;
+    position: relative;
+}
+
+.btn-submit:disabled .fa-lock {
+    margin-right: 8px;
+}
+
+/* Tooltip mejorado para botón deshabilitado */
+.btn-submit[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    max-width: 280px;
+    text-align: center;
+    line-height: 1.4;
+    font-weight: 400;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-submit[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1f2937;
+    z-index: 1001;
+}
+
+/* Alertas personalizadas */
+.alert {
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #0d9668;
+    border-left: 4px solid #10b981;
+}
+
+.alert-error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-left: 4px solid #ef4444;
+}
+
+.alert i {
+    margin-right: 12px;
+    font-size: 16px;
+}
+
+/* Estilos para títulos de sección */
+.form-section h3 {
+    color: #000000;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.form-section h3 i {
+    margin-right: 8px;
+}
+
+/* Asterisco requerido */
+.required-asterisk {
+    color: #ef4444;
+}
+
+/* Iconos en botones */
+.btn-cancel i,
+.btn-submit i {
+    margin-right: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .patient-form-container {
+        max-width: 95%;
+        margin: 20px auto;
+    }
+    
+    .patient-form-content {
+        padding: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .patient-form-header {
+        padding: 24px 20px;
+    }
+    
+    .patient-form-header h2 {
+        font-size: 24px;
+    }
+    
+    .patient-form-content {
+        padding: 24px 20px;
+    }
+    
+    .form-section {
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .form-row.two-cols,
+    .form-row.three-cols {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+    
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+        text-align: center;
+        padding: 16px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .patient-form-container {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .patient-form-header {
+        padding: 20px 16px;
+    }
+    
+    .patient-form-header h2 {
+        font-size: 20px;
+    }
+    
+    .patient-form-content {
+        padding: 20px 16px;
+    }
+    
+    .form-section {
+        padding: 16px;
+    }
+    
+    .form-control,
+    .form-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    select {
+        font-size: 16px; /* Previene zoom en iOS */
+        padding: 14px 16px;
+    }
+}
