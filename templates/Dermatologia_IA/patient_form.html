@@ -1,454 +1,129 @@
 {% extends "components/base.html" %}
 {% load static %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/patient_form.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="card">
-    <div class="card-header bg-primary text-white">
-      <h2 class="mb-0">{{ page_title }}</h2>
+  <div class="patient-form-container">
+    <!-- Header con gradiente -->
+    <div class="patient-form-header">
+      <h2>{{ page_title }}</h2>
       {% if subtitle %}
-        <p class="mb-0 mt-1 text-white-50">{{ subtitle }}</p>
+        <p class="subtitle">{{ subtitle }}</p>
       {% endif %}
     </div>
 
-    <div class="card-body">
+    <!-- Contenido del formulario -->
+    <div class="patient-form-content">
       <form method="post" class="needs-validation" novalidate>
         {% csrf_token %}
 
-        <!-- Campos personales -->
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label for="{{ form.first_name.id_for_label }}" class="form-label">
-              {{ field_labels.first_name }}
-            </label>
-            {{ form.first_name }}
-            <div class="error-message" style="display: none;"></div>
-          </div>
+        <!-- Sección: Información Personal -->
+        <div class="form-section">
+          <h3>
+            <i class="fas fa-user"></i>
+            Información Personal
+          </h3>
+          <div class="form-row two-cols">
+            <div class="form-group">
+              <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                {{ field_labels.first_name }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.first_name }}
+            </div>
 
-          <div class="col-md-6">
-            <label for="{{ form.last_name.id_for_label }}" class="form-label">
-              {{ field_labels.last_name }}
-            </label>
-            {{ form.last_name }}
-            <div class="error-message" style="display: none;"></div>
-          </div>
-        </div>
-
-        <!-- Campos de identificación y contacto -->
-        <div class="row g-3 mt-2">
-          <div class="col-md-4">
-            <label for="{{ form.dni.id_for_label }}" class="form-label">
-              {{ field_labels.dni }}
-            </label>
-            {{ form.dni }}
-            <div class="error-message" style="display: none;"></div>
-          </div>
-
-          <div class="col-md-4">
-            <label for="{{ form.phone.id_for_label }}" class="form-label">
-              {{ field_labels.phone }}
-            </label>
-            {{ form.phone }}
-            <div class="error-message" style="display: none;"></div>
-          </div>
-
-          <div class="col-md-4">
-            <label for="{{ form.email.id_for_label }}" class="form-label">
-              {{ field_labels.email }}
-            </label>
-            {{ form.email }}
-            <div class="error-message" style="display: none;"></div>
+            <div class="form-group">
+              <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                {{ field_labels.last_name }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.last_name }}
+            </div>
           </div>
         </div>
 
-        <!-- Campos demográficos -->
-        <div class="row g-3 mt-2">
-          <div class="col-md-6">
-            <label for="{{ form.age_approx.id_for_label }}" class="form-label">
-              {{ field_labels.age_approx }}
-            </label>
-            {{ form.age_approx }}
-            <div class="error-message" style="display: none;"></div>
-          </div>
+        <!-- Sección: Identificación y Contacto -->
+        <div class="form-section">
+          <h3>
+            <i class="fas fa-address-card"></i>
+            Identificación y Contacto
+          </h3>
+          <div class="form-row three-cols">
+            <div class="form-group">
+              <label for="{{ form.dni.id_for_label }}" class="form-label">
+                {{ field_labels.dni }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.dni }}
+            </div>
 
-          <div class="col-md-6">
-            <label for="{{ form.sex.id_for_label }}" class="form-label">
-              {{ field_labels.sex }}
-            </label>
-            {{ form.sex }}
-            <div class="error-message" style="display: none;"></div>
+            <div class="form-group">
+              <label for="{{ form.phone.id_for_label }}" class="form-label">
+                {{ field_labels.phone }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.phone }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.email.id_for_label }}" class="form-label">
+                {{ field_labels.email }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.email }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Información Demográfica -->
+        <div class="form-section">
+          <h3>
+            <i class="fas fa-chart-line"></i>
+            Información Demográfica
+          </h3>
+          <div class="form-row two-cols">
+            <div class="form-group">
+              <label for="{{ form.age_approx.id_for_label }}" class="form-label">
+                {{ field_labels.age_approx }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.age_approx }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.sex.id_for_label }}" class="form-label">
+                {{ field_labels.sex }}
+                <span class="required-asterisk">*</span>
+              </label>
+              {{ form.sex }}
+            </div>
           </div>
         </div>
 
         <!-- Botones de acción -->
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <a href="{{ buttons.cancel.url }}" class="btn {{ buttons.cancel.class }}">
+        <div class="form-actions">
+          <a href="{{ buttons.cancel.url }}" class="btn-cancel">
+            <i class="fas fa-times"></i>
             {{ buttons.cancel.text }}
           </a>
-          <button type="submit" class="btn {{ buttons.submit.class }}">
+          <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i>
             {{ buttons.submit.text }}
           </button>
         </div>
       </form>
     </div>
   </div>
-</div>
-
-{% block extra_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
-<style>
-.error-message {
-  color: #dc3545;
-  font-size: 0.875em;
-  margin-top: 0.25rem;
-}
-
-.warning-message {
-  color: #ffc107;
-  font-size: 0.875em;
-  margin-top: 0.25rem;
-}
-
-.form-control.error {
-  border-color: #dc3545;
-}
-
-.form-control.warning {
-  border-color: #ffc107;
-}
-
-.btn[disabled] {
-  cursor: not-allowed !important;
-  opacity: 0.7;
-  pointer-events: auto;
-  position: relative;
-}
-.btn[disabled] .fa-lock {
-  margin-right: 6px;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elementos del formulario
-  const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
-  const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
-  const dniInput = document.getElementById('{{ form.dni.id_for_label }}');
-  const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
-  const emailInput = document.getElementById('{{ form.email.id_for_label }}');
-  const ageInput = document.getElementById('{{ form.age_approx.id_for_label }}');
-  const sexSelect = document.getElementById('{{ form.sex.id_for_label }}');
-  const form = document.querySelector('form');
-  const updateBtn = form.querySelector('button[type="submit"], .btn-auth, .btn-primary, .btn-success');
-  const updateBtnText = '{{ buttons.submit.text }}';
-
-  // Guardar valores iniciales de los campos
-  const initialValues = {};
-  [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
-    if (input) {
-      initialValues[input.name] = (input.value || '').trim();
-    }
-  });
-
-  // Icono de candado y tooltip
-  function setLockIconAndTooltip(show) {
-    if (!updateBtn) return;
-    if (show) {
-      updateBtn.innerHTML = '<i class="fa fa-lock"></i> ' + updateBtnText;
-      updateBtn.setAttribute('title', 'SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO');
-    } else {
-      updateBtn.innerHTML = updateBtnText;
-      updateBtn.removeAttribute('title');
-    }
-  }
-
-  function isFormChanged() {
-    let changed = false;
-    [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
-      if (input) {
-        const current = (input.value || '').trim();
-        if (current !== initialValues[input.name]) {
-          changed = true;
-        }
-      }
-    });
-    return changed;
-  }
-
-  function checkFormChangeAndToggleBtn() {
-    if (isFormChanged()) {
-      updateBtn.disabled = false;
-      setLockIconAndTooltip(false);
-    } else {
-      updateBtn.disabled = true;
-      setLockIconAndTooltip(true);
-    }
-  }
-
-  // Deshabilitar el botón al cargar y poner candado
-  if (updateBtn) {
-    updateBtn.disabled = true;
-    setLockIconAndTooltip(true);
-  }
-
-  // Detectar cambios en los campos
-  [firstNameInput, lastNameInput, dniInput, phoneInput, emailInput, ageInput, sexSelect].forEach(function(input) {
-    if (input) {
-      input.addEventListener('input', function(e) {
-        checkFormChangeAndToggleBtn();
-      });
-      input.addEventListener('blur', checkFormChangeAndToggleBtn);
-    }
-  });
-
-  // Función para crear mensajes de error
-  function createErrorMessage(input, message, isWarning = false) {
-    removeErrorMessage(input);
-    const errorDiv = document.createElement('div');
-    errorDiv.className = isWarning ? 'warning-message' : 'error-message';
-    errorDiv.textContent = message;
-    input.parentNode.appendChild(errorDiv);
-
-    if (!isWarning) {
-      input.classList.add('error');
-    } else {
-      input.classList.add('warning');
-    }
-  }
-
-  // Función para remover mensajes de error
-  function removeErrorMessage(input) {
-    const errorMsg = input.parentNode.querySelector('.error-message');
-    const warningMsg = input.parentNode.querySelector('.warning-message');
-    if (errorMsg) errorMsg.remove();
-    if (warningMsg) warningMsg.remove();
-    input.classList.remove('error', 'warning');
-  }
-
-  // Validación de nombres completos
-  function validateFullName(value) {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue) {
-      return "El campo está vacío, por favor rellénelo.";
-    }
-
-    if (trimmedValue.length < 3) {
-      return "El nombre o apellido debe tener al menos 3 caracteres.";
-    }
-
-    if (trimmedValue.length > 50) {
-      return "El nombre o apellido no puede tener más de 50 caracteres.";
-    }
-
-    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-    if (!nameRegex.test(trimmedValue)) {
-      return "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.";
-    }
-
-    return null;
-  }
-
-  // Validación de DNI
-  function validateDni(value) {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue) {
-      return {message: "El campo está vacío, por favor rellénelo.", isWarning: false};
-    }
-
-    if (trimmedValue.length !== 10) {
-      return {message: "La cédula debe contener exactamente 10 dígitos.", isWarning: false};
-    }
-
-    if (!/^\d+$/.test(trimmedValue)) {
-      return {message: "La cédula debe contener solo números.", isWarning: false};
-    }
-
-    // Algoritmo de validación ecuatoriano
-    const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
-    let total = 0;
-
-    for (let i = 0; i < 9; i++) {
-      let valor = parseInt(trimmedValue[i]) * coeficientes[i];
-      if (valor > 9) valor -= 9;
-      total += valor;
-    }
-
-    const digitoVerificador = (total % 10) === 0 ? 0 : 10 - (total % 10);
-    if (digitoVerificador !== parseInt(trimmedValue[9])) {
-      return {message: "La cédula ingresada no es válida.", isWarning: false};
-    }
-
-    return null;
-  }
-
-  // Validación de email
-  function validateEmail(value) {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue) {
-      return "El campo está vacío, por favor rellénelo.";
-    }
-
-    if (trimmedValue.length > 254) {
-      return "El correo electrónico no puede tener más de 254 caracteres.";
-    }
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(trimmedValue)) {
-      return "Ingrese un correo electrónico válido.";
-    }
-
-    return null;
-  }
-
-  // Validación de teléfono
-  function validatePhone(value) {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue) {
-      return "El campo está vacío, por favor rellénelo.";
-    }
-
-    if (!/^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/.test(trimmedValue)) {
-      return "Ingrese un número válido (formato: +593 99 999 9999 o 0999999999)";
-    }
-
-    return null;
-  }
-
-  // Validación de edad
-  function validateAge(value) {
-    if (!value) {
-      return "El campo está vacío, por favor rellénelo.";
-    }
-
-    const age = parseInt(value);
-    if (isNaN(age) || age < 0 || age > 120) {
-      return "Ingrese una edad válida entre 0 y 120 años.";
-    }
-
-    return null;
-  }
-
-  // Event listeners para validación en tiempo real
-  if (firstNameInput) {
-    firstNameInput.addEventListener('blur', function() {
-      const error = validateFullName(this.value);
-      if (error) {
-        createErrorMessage(this, error);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  if (lastNameInput) {
-    lastNameInput.addEventListener('blur', function() {
-      const error = validateFullName(this.value);
-      if (error) {
-        createErrorMessage(this, error);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  if (dniInput) {
-    dniInput.addEventListener('blur', function() {
-      const result = validateDni(this.value);
-      if (result) {
-        createErrorMessage(this, result.message, result.isWarning);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  if (phoneInput) {
-    phoneInput.addEventListener('blur', function() {
-      const error = validatePhone(this.value);
-      if (error) {
-        createErrorMessage(this, error);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  if (emailInput) {
-    emailInput.addEventListener('blur', function() {
-      const error = validateEmail(this.value);
-      if (error) {
-        createErrorMessage(this, error);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  if (ageInput) {
-    ageInput.addEventListener('blur', function() {
-      const error = validateAge(this.value);
-      if (error) {
-        createErrorMessage(this, error);
-      } else {
-        removeErrorMessage(this);
-      }
-    });
-  }
-
-  // Validación del formulario completo antes del envío
-  form.addEventListener('submit', function(e) {
-    let hasErrors = false;
-
-    // Validar todos los campos requeridos
-    const firstNameError = validateFullName(firstNameInput.value);
-    if (firstNameError) {
-      createErrorMessage(firstNameInput, firstNameError);
-      hasErrors = true;
-    }
-
-    const lastNameError = validateFullName(lastNameInput.value);
-    if (lastNameError) {
-      createErrorMessage(lastNameInput, lastNameError);
-      hasErrors = true;
-    }
-
-    const dniResult = validateDni(dniInput.value);
-    if (dniResult) {
-      createErrorMessage(dniInput, dniResult.message, dniResult.isWarning);
-      if (!dniResult.isWarning) hasErrors = true;
-    }
-
-    const phoneError = validatePhone(phoneInput.value);
-    if (phoneError) {
-      createErrorMessage(phoneInput, phoneError);
-      hasErrors = true;
-    }
-
-    const emailError = validateEmail(emailInput.value);
-    if (emailError) {
-      createErrorMessage(emailInput, emailError);
-      hasErrors = true;
-    }
-
-    const ageError = validateAge(ageInput.value);
-    if (ageError) {
-      createErrorMessage(ageInput, ageError);
-      hasErrors = true;
-    }
-
-    if (hasErrors) {
-      e.preventDefault();
-    }
-  });
-});
-</script>
-{% endblock %}
+  <script src="{% static 'js/patient_form.js' %}"></script>
 {% endblock %}

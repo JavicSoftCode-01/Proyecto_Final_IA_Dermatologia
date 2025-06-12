@@ -82,6 +82,7 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
                     f"Dirección={getattr(user, 'address', '')}, Ciudad={getattr(user, 'city', '')}, Tel={getattr(user, 'phone', '')}"
                 ))
             context.update({
+                'app_name': 'DermaIA',
                 'page_title': 'Actualización de perfil',
                 'title': 'Actualización de perfil',
                 'photo_section': {
