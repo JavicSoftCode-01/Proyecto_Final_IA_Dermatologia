@@ -814,7 +814,7 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
   model = SkinImage
   template_name = 'Dermatologia_IA/report_list.html'
   context_object_name = 'reports'
-  paginate_by = 10
+  paginate_by = 6
 
   def get_queryset(self):
         queryset = SkinImage.objects.filter(processed=True).select_related('patient').order_by('-created_at')

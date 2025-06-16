@@ -1,25 +1,82 @@
-<!-- Modal envío por email -->
-{#<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">#}
-<div class="modal fade" id="emailModal{{ skin_image.id }}" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+<!-- Modal envío por email - CORREGIDO -->
+<div
+  class="modal fade"
+  id="emailModal{{ skin_image.id }}"
+  tabindex="-1"
+  aria-labelledby="emailModalLabel{{ skin_image.id }}"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="emailModalLabel">Enviar Reporte por Email</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="emailModalLabel{{ skin_image.id }}">
+          <i class="fas fa-envelope me-2"></i>
+          Enviar Reporte por Email
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
       </div>
-      <form action="{% url 'dermatology:send_report_email' image_id=skin_image.id %}" method="post">
+
+      <form
+        action="{% url 'dermatology:send_report_email' image_id=skin_image.id %}"
+        method="post"
+        class="email-form"
+      >
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="email" class="form-label">Email destinatario:</label>
-            <input value="{{ skin_image.email }}" type="email" class="form-control" name="email" id="email"
-                   required placeholder="correo@dominio.com">
+            <label for="email{{ skin_image.id }}" class="form-label">
+              <i class="fas fa-at me-1"></i>
+              Email destinatario:
+            </label>
+            <input
+              value="{{ skin_image.patient.email|default:'' }}"
+              type="email"
+              class="form-control"
+              name="email"
+              id="email{{ skin_image.id }}"
+              required
+              placeholder="correo@ejemplo.com"
+              autocomplete="email"
+            />
+            <div class="invalid-feedback"></div>
           </div>
-          <p class="small text-muted">Se enviará el reporte PDF a la dirección indicada.</p>
+
+          <div class="alert alert-info d-flex align-items-start">
+            <i class="fas fa-info-circle me-2 mt-1"></i>
+            <div>
+              <strong>Se enviará:</strong> Reporte PDF completo del análisis
+              dermatológico para
+              <strong class="patient-name-display">
+                {{ skin_image.patient.first_name }} {{
+                skin_image.patient.last_name }}
+              </strong>
+              (
+              <strong class="condition-display">
+                {{ skin_image.condition|default:"Sin condición especificada" }}
+              </strong>
+              ) a la dirección indicada.
+            </div>
+          </div>
         </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            <i class="fas fa-times me-1"></i>
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane me-1"></i>
+            Enviar Reporte
+          </button>
         </div>
       </form>
     </div>

@@ -19,6 +19,7 @@ from utils.validators import (
   validate_phone,
   validate_profile_picture
 )
+from utils.s3_storage import s3_profile_storage
 
 
 class CustomUserManager(BaseUserManager):
@@ -119,11 +120,10 @@ class User(AbstractBaseUser):
       'unique': 'Ya existe un usuario con este número de teléfono.'
     }
   )
-
   # Imagen de perfil
   profile_picture = models.ImageField(
     'Foto de perfil',
-    upload_to='profile_pictures/',
+    storage=s3_profile_storage,
     blank=True,
     null=True,
     validators=[validate_profile_picture]
@@ -149,7 +149,6 @@ class User(AbstractBaseUser):
   objects = CustomUserManager()
   USERNAME_FIELD = 'email'
   REQUIRED_FIELDS = ['first_name', 'last_name']
-
   def clean(self):
     """Validación personalizada del modelo"""
     if not self.email:
@@ -157,6 +156,26 @@ class User(AbstractBaseUser):
 
     if not self.first_name or not self.last_name:
       raise ValidationError('Los nombres y apellidos son obligatorios')
+
+  def save(self, *args, **kwargs):
+    """Sobrescribe save para manejar la imagen de perfil anterior"""
+    try:
+      # Si es una actualización y hay una nueva imagen
+      if self.pk:
+        old_user = User.objects.get(pk=self.pk)
+        if old_user.profile_picture and self.profile_picture != old_user.profile_picture:
+          # Eliminar la imagen anterior de S3
+          old_user.profile_picture.storage.delete(old_user.profile_picture.name)
+    except User.DoesNotExist:
+      pass
+    
+    super().save(*args, **kwargs)
+
+  def delete(self, *args, **kwargs):
+    """Sobrescribe delete para eliminar la imagen de S3"""
+    if self.profile_picture:
+      self.profile_picture.storage.delete(self.profile_picture.name)
+    super().delete(*args, **kwargs)
 
   def get_full_name(self):
     """Retorna el nombre completo del usuario"""

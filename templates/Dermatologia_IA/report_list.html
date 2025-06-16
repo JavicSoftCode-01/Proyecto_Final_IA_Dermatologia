@@ -1,124 +1,232 @@
-{% extends "components/base.html" %}
+{% extends 'components/base.html' %}
 {% load static %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}
+  {{ page_title|default:"Lista de Reportes" }}
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/report_list.css' %}" />
+{% endblock %}
 
 {% block content %}
-  <div class="container-fluid mt-4 mb-5 px-md-4">
-    <div class="text-center mb-4">
-      <h1 class="display-5 fw-bold text-primary">{{ header_title }}</h1>
-      <div class="underline-custom"></div>
+  <div class="reports-container">
+    <!-- Header de la página -->
+    <div class="reports-header">
+      <h1>{{ header_title|default:"Mis Reportes de Análisis" }}</h1>
+      <p>Visualiza y gestiona todos tus análisis dermatológicos realizados</p>
     </div>
 
+    <!-- Contenido principal -->
     {% if reports %}
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+      <!-- Grid de reportes -->
+      <div class="reports-grid">
         {% for report in reports %}
-          <div class="col">
-            <div class="card card-report h-100">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center mb-3">
-                <span class="icon-circle me-2">
-                  <i class="{{ icon_classes.analysis }}"></i>
-                </span>
-                  <span class="report-label">{{ card_labels.report_id_prefix }} {{ report.id }}</span>
-                </div>
-
-                <h5 class="card-title mb-2">{{ report.condition|default:card_labels.default_condition|truncatewords:5 }}</h5>
-
-                <div class="patient-info flex-grow-1">
-                  <div class="info-row">
-                    <span class="info-label"><i
-                            class="{{ icon_classes.patient }} me-1"></i>{{ card_labels.patient_name }}</span>
-                    <span class="info-value">{{ report.patient.first_name|default:"" }} {{ report.patient.last_name|default:""|truncatechars:15 }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i
-                            class="{{ icon_classes.dni }} me-1"></i>{{ card_labels.patient_dni }}</span>
-                    <span class="info-value">{{ report.patient.dni|default:card_labels.default_na }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i
-                            class="{{ icon_classes.age }} me-1"></i>{{ card_labels.patient_age }}</span>
-                    <span class="info-value">{{ report.patient.age_approx|default:card_labels.default_na }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i
-                            class="{{ icon_classes.sex }} me-1"></i>{{ card_labels.patient_sex }}</span>
-                    <span class="info-value">{{ report.patient.get_sex_display|default:card_labels.default_na }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i
-                            class="{{ icon_classes.location }} me-1"></i>{{ card_labels.lesion_location }}</span>
-                    <span class="info-value">{{ report.get_anatom_site_general_display|default:card_labels.default_na }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label"><i class="{{ icon_classes.datetime }} me-1"></i>{{ card_labels.date_time }}</span>
-                    <span class="info-value">{{ report.created_at|date:"d/m/Y H:i" }}</span>
-                  </div>
-                </div>
-
-                <div class="mt-3 pt-3 border-top">
-                  <a href="{% url 'dermatology:report_detail' report.id %}"
-                     class="btn btn-sm btn-outline-primary w-100 mb-2">
-                    <i class="{{ icon_classes.view_detail }} me-1"></i>{{ button_texts.view_detail }}
-                  </a>
-                  <a href="{% url 'dermatology:generate_report' image_id=report.id %}"
-                     class="btn btn-sm btn-outline-danger w-100 mb-2">
-                    <i class="{{ icon_classes.generate_pdf }} me-1"></i>{{ button_texts.generate_pdf }}
-                  </a>
-                  {% include "includes/sendEmail.html" with skin_image=report email_button_text=button_texts.send_email email_button_icon=icon_classes.send_email %}
-                  <button
-                          type="button"
-                          class="btn btn-sm btn-outline-info w-100"
-                          data-bs-toggle="modal"
-                          data-bs-target="#emailModal{{ report.id }}">
-                    <i class="{{ icon_classes.send_email }} me-1"></i> {{ button_texts.send_email }}
-                  </button>
+          <div class="report-card" data-report-id="{{ report.id }}">
+            <div class="report-header">
+              <div class="report-icon">
+                <i class="fas fa-microscope"></i>
+              </div>
+              <div class="report-status">
+                <div class="report-id">Reporte ID #{{ report.id }}</div>
+                <div class="report-condition">
+                  {{ report.condition|default:"Sin condición especificada" }}
                 </div>
               </div>
+            </div>
+
+            <!-- Información del paciente -->
+            <div class="patient-info">
+              <h4><i class="fas fa-user"></i> Información del Paciente</h4>
+              <div class="patient-details">
+                <div class="patient-detail">
+                  <i class="fas fa-user"></i>
+                  <span>
+                    <strong>Nombre:</strong>
+                    <span data-patient-name>
+                      {% if report.patient.first_name or report.patient.last_name %}
+                        {{ report.patient.first_name|default:"" }} {{ report.patient.last_name|default:"" }}
+                      {% else %}
+                        N/A
+                      {% endif %}
+                    </span>
+                  </span>
+                </div>
+                <div class="patient-detail">
+                  <i class="fas fa-id-card"></i>
+                  <span><strong>DNI:</strong> {{ report.patient.dni|default:"N/A" }}</span>
+                </div>
+                <div class="patient-detail">
+                  <i class="fas fa-user-clock"></i>
+                  <span><strong>Edad:</strong> {{ report.patient.age_approx|default:"N/A" }}</span>
+                </div>
+                <div class="patient-detail">
+                  <i class="fas fa-venus-mars"></i>
+                  <span><strong>Sexo:</strong> {{ report.patient.get_sex_display|default:"N/A" }}</span>
+                </div>
+                <!-- Email oculto para JavaScript -->
+                <div class="patient-detail" style="display: none">
+                  <span data-patient-email>{{ report.patient.email|default:"" }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de la consulta -->
+            <div class="consultation-info">
+              <div class="consultation-detail">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>
+                  <strong>Localización:</strong>
+                  {% if report.anatom_site_general %}
+                    {{ report.get_anatom_site_general_display }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </span>
+              </div>
+              <div class="consultation-detail">
+                <i class="fas fa-calendar-alt"></i>
+                <span><strong>Fecha y Hora:</strong> {{ report.created_at|date:"d/m/Y H:i" }}</span>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="report-actions">
+              <a href="{% url 'dermatology:report_detail' report.id %}" class="btn-action btn-view">
+                <i class="fas fa-eye"></i>
+                Ver Detalle
+              </a>
+              <a href="{% url 'dermatology:generate_report' report.id %}" class="btn-action btn-pdf">
+                <i class="fas fa-file-pdf"></i>
+                PDF
+              </a>
+              <button type="button" 
+                  class="btn-action btn-email"
+                  data-bs-toggle="modal"
+                  data-bs-target="#emailModal{{ report.id }}"
+                  data-report-id="{{ report.id }}"
+                  data-patient-name="{% if report.patient.first_name or report.patient.last_name %}{{ report.patient.first_name|default:'' }} {{ report.patient.last_name|default:'' }}{% else %}Paciente desconocido{% endif %}"
+                  data-patient-email="{{ report.patient.email|default:'' }}"
+                  data-condition="{{ report.condition|default:'Sin condición especificada' }}">
+                <i class="fas fa-envelope"></i>
+                Email
+              </button>
             </div>
           </div>
         {% endfor %}
       </div>
 
-      {% if page_obj.has_other_pages %}
-        <nav aria-label="Page navigation" class="mt-4">
-          <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-              <li class="page-item"><a class="page-link" href="?page=1">{{ pagination_texts.first }}</a></li>
-              <li class="page-item"><a class="page-link"
-                                       href="?page={{ page_obj.previous_page_number }}">{{ pagination_texts.previous }}</a>
-              </li>
-            {% endif %}
+      <!-- Modales para envío por email -->
+      {% for report in reports %}
+        <div class="modal fade"
+           id="emailModal{{ report.id }}"
+           tabindex="-1"
+           aria-labelledby="emailModalLabel{{ report.id }}"
+           aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel{{ report.id }}">
+                  <i class="fas fa-envelope me-2"></i>
+                  Enviar Reporte por Email
+                </h5>
+                <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+              </div>
 
-            {% for num in page_obj.paginator.page_range %}
-              {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+              <form action="{% url 'dermatology:send_report_email' image_id=report.id %}"
+                  method="post"
+                  class="email-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="email{{ report.id }}" class="form-label">
+                      <i class="fas fa-at me-1"></i>
+                      Email destinatario:
+                    </label>
+                    <input value="{{ report.patient.email|default:'' }}"
+                         type="email"
+                         class="form-control"
+                         name="email"
+                         id="email{{ report.id }}"
+                         required
+                         placeholder="correo@ejemplo.com"
+                         autocomplete="email" />
+                    <div class="invalid-feedback"></div>
+                  </div>
+
+                  <p class="small text-muted mb-0">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    El reporte incluye información confidencial del paciente.
+                    Asegúrese de enviar a la dirección correcta.
+                  </p>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i>
+                    Enviar Reporte
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      <!-- Paginación -->
+      {% if is_paginated %}
+        <div class="pagination-container">
+          <nav aria-label="Navegación de reportes">
+            <ul class="pagination">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page=1">« Primera</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
               {% endif %}
-            {% endfor %}
 
-            {% if page_obj.has_next %}
-              <li class="page-item"><a class="page-link"
-                                       href="?page={{ page_obj.next_page_number }}">{{ pagination_texts.next }}</a></li>
-              <li class="page-item"><a class="page-link"
-                                       href="?page={{ page_obj.paginator.num_pages }}">{{ pagination_texts.last }}</a>
+              <li class="page-item active">
+                <span class="page-link">
+                  Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
               </li>
-            {% endif %}
-          </ul>
-        </nav>
-      {% endif %}
 
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última »</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
     {% else %}
-      <div class="text-center empty-state mt-5">
-        <i class="{{ empty_state.icon_class }}"></i>
-        <h3 class="text-muted">{{ empty_state.title }}</h3>
-        <p>{{ empty_state.message }}</p> <br>
-        <a href="{% url 'dermatology:upload_image' %}" class="btn btn-primary">
-          <i class="{{ empty_state.upload_button_icon }} me-1"></i>{{ empty_state.upload_button_text }}
+      <!-- Estado vacío -->
+      <div class="empty-state">
+        <i class="fas fa-folder-open empty-icon"></i>
+        <h3>No hay reportes disponibles</h3>
+        <p>¡Comienza a analizar imágenes para ver tus resultados aquí!</p>
+        <a href="{% url 'dermatology:upload_image' %}" class="btn-upload">
+          <i class="fas fa-upload"></i>
+          Cargar nueva imagen
         </a>
       </div>
     {% endif %}
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/report_list.js' %}"></script>
 {% endblock %}
