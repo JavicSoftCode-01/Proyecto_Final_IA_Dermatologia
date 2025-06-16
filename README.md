@@ -18,7 +18,7 @@ Sistema web avanzado desarrollado en Django que utiliza inteligencia artificial 
 - **Eduardo Javier Quinteros Pacheco**
 - **Gleyder Julissa Lescano Paredes**
 
-## 🚀 Instrucciones de Instalación y Ejecución
+## 🚀 Instrucciones de Instalación y Ejecución.
 
 ### Prerrequisitos
 
