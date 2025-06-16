@@ -401,6 +401,8 @@ Proyecto_Final_IA_Dermatologia/
     ├── 📄 session_middleware.py     # Middleware de sesiones
     └── 📄 validators.py             # Validadores globales
 
+```
+
 ## 📱 Uso del Sistema
 
 ### 1. Registro e Inicio de Sesión
