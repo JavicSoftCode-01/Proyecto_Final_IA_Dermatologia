@@ -341,90 +341,90 @@ El sistema puede identificar las siguientes 25 condiciones:
 
 Proyecto_Final_IA_Dermatologia/
 │
-├── � apps/ # Aplicaciones Django modulares
+├── 📁 apps/ # Aplicaciones Django modulares
 │ │
-│ ├── � auth/ # Sistema de autenticación
+│ ├── 📁 auth/ # Sistema de autenticación
 │ │ ├── 📄 models.py # Modelo de usuario extendido
 │ │ ├── 📄 views.py # Vistas de login/registro
 │ │ ├── 📄 forms.py # Formularios de autenticación
-│ │ ├── � urls.py # URLs de autenticación
-│ │ └── 📂 migrations/ # Migraciones de BD
+│ │ ├── 📄 urls.py # URLs de autenticación
+│ │ └── � migrations/ # Migraciones de BD
 │ │
-│ ├── 📂 core/ # Funcionalidades base
+│ ├── � core/ # Funcionalidades base
 │ │ ├── 📄 mixins.py # Mixins reutilizables
 │ │ ├── 📄 decorators.py # Decoradores personalizados
 │ │ ├── 📄 utils.py # Utilidades generales
-│ │ └── � views/ # Vistas base
+│ │ └── 📁 views/ # Vistas base
 │ │
-│ └── 📂 Dermatologia_IA/ # Módulo principal de IA
+│ └── � Dermatologia_IA/ # Módulo principal de IA
 │ │
-│ ├── � forms/ # Formularios especializados
+│ ├── 📁 forms/ # Formularios especializados
 │ │ ├── 📄 patient_forms.py # Formularios de pacientes
 │ │ └── 📄 upload_forms.py # Formularios de carga
 │ │
-│ ├── � models/ # Modelos de datos
+│ ├── 📁 models/ # Modelos de datos
 │ │ ├── 📄 patient.py # Modelo de paciente
 │ │ ├── 📄 skin_image.py # Modelo de imágenes
 │ │ └── 📄 report.py # Modelo de reportes
 │ │
-│ ├── � utils/ # Utilidades especializadas
+│ ├── 📁 utils/ # Utilidades especializadas
 │ │ ├── 📄 ai_model.py # Carga y predicción del modelo
 │ │ ├── 📄 image_processing.py # Procesamiento de imágenes
 │ │ ├── 📄 report_generator.py # Generación de reportes
 │ │ ├── 📄 email_service.py # Servicio de emails
 │ │ └── 📄 gradcam.py # Implementación Grad-CAM
 │ │
-│ ├── � views/ # Lógica de negocio
+│ ├── 📁 views/ # Lógica de negocio
 │ │ ├── 📄 upload_views.py # Carga de imágenes
 │ │ ├── 📄 patient_views.py # Gestión de pacientes
 │ │ └── 📄 report_views.py # Gestión de reportes
 │ │
-│ └── 📂 migrations/ # Migraciones de base de datos
+│ └── � migrations/ # Migraciones de base de datos
 │
-├── � IA/ # Recursos de inteligencia artificial
-│ └── � Dermatological_AI_Model/ # Modelos entrenados
-│ ├── � checkpoints/ # Checkpoints del modelo
+├── 📁 IA/ # Recursos de inteligencia artificial
+│ └── 📁 Dermatological_AI_Model/ # Modelos entrenados
+│ ├── 📁 checkpoints/ # Checkpoints del modelo
 │ └── 📄 MODELO_IA_DERMATOLOGICO.keras
 │
-├── � media/ # Archivos multimedia
-│ ├── � skin_images/ # Imágenes de análisis
-│ ├── � gradcam_images/ # Mapas de calor generados
-│ ├── � profile_pictures/ # Avatares de usuarios
-│ └── � reports/ # PDFs generados
+├── 📁 media/ # Archivos multimedia
+│ ├── 📁 skin_images/ # Imágenes de análisis
+│ ├── 📁 gradcam_images/ # Mapas de calor generados
+│ ├── 📁 profile_pictures/ # Avatares de usuarios
+│ └── 📁 reports/ # PDFs generados
 │
-├── � static/ # Archivos estáticos
-│ ├── � css/ # Hojas de estilo
+├── 📁 static/ # Archivos estáticos
+│ ├── 📁 css/ # Hojas de estilo
 │ │ ├── 📄 styles.css # Estilos principales
 │ │ ├── 📄 auth.css # Estilos de autenticación
 │ │ ├── 📄 upload.css # Estilos de carga
 │ │ ├── 📄 profile.css # Estilos de perfil
 │ │ └── 📄 report_list.css # Estilos de reportes
 │ │
-│ ├── � js/ # JavaScript
+│ ├── 📁 js/ # JavaScript
 │ │ ├── 📄 index.js # Funcionalidades principales
 │ │ ├── 📄 upload.js # Lógica de carga
 │ │ ├── 📄 patient_list.js # Lista de pacientes
 │ │ └── 📄 report_list.js # Lista de reportes
 │ │
-│ └── � img/ # Imágenes estáticas
+│ └── 📁 img/ # Imágenes estáticas
 │
-├── � templates/ # Plantillas HTML
-│ ├── � components/ # Componentes reutilizables
+├── 📁 templates/ # Plantillas HTML
+│ ├── 📁 components/ # Componentes reutilizables
 │ │ ├── 📄 base.html # Plantilla base
 │ │ └── 📄 sidebar.html # Barra lateral
 │ │
-│ ├── � auth/ # Plantillas de autenticación
-│ ├── � core/ # Plantillas core
-│ ├── � Dermatologia_IA/ # Plantillas principales
-│ └── � includes/ # Includes parciales
+│ ├── 📁 auth/ # Plantillas de autenticación
+│ ├── 📁 core/ # Plantillas core
+│ ├── 📁 Dermatologia_IA/ # Plantillas principales
+│ └── 📁 includes/ # Includes parciales
 │
-├── � utils/ # Utilidades globales
+├── 📁 utils/ # Utilidades globales
 │ ├── 📄 logger.py # Sistema de logging
 │ ├── 📄 s3_storage.py # Integración con AWS S3
 │ ├── 📄 session_middleware.py # Middleware de sesiones
 │ └── 📄 validators.py # Validadores globales
 │
-├── 📂 Proyecto_Final_IA_Dermatologia/ # Configuración principal
+├── � Proyecto_Final_IA_Dermatologia/ # Configuración principal
 │ ├── 📄 settings.py # Configuración Django
 │ ├── 📄 urls.py # URLs principales
 │ ├── 📄 wsgi.py # Configuración WSGI
@@ -611,5 +611,5 @@ Este sistema está diseñado exclusivamente como **herramienta de apoyo diagnós
 
 **🎯 Desarrollado con ❤️ y precisión científica por el equipo de IA Dermatológica**
 
-\*"Democratizando el acceso a diagnósticos dermatológicos de calidad a través de la inteligencia
+*"Democratizando el acceso a diagnósticos dermatológicos de calidad a través de la inteligencia artificial"*
 ```
