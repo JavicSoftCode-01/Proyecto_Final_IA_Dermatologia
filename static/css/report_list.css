@@ -81,24 +81,10 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.report-status {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.report-id {
-    font-size: 14px;
-    font-weight: 600;
-    color: #3b82f6;
-    margin-bottom: 4px;
-}
 
 .report-condition {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1f2937;
-    line-height: 1.2;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 /* Información del paciente */
@@ -107,18 +93,18 @@ body {
 }
 
 .patient-info h4 {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: blod;
     color: #6b7280;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0, 5px;
 }
 
 .patient-details {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 20px;
 }
 
 .patient-detail {
@@ -131,13 +117,18 @@ body {
 
 .patient-detail i {
     width: 16px;
-    font-size: 12px;
+    font-size: 16px;
     color: #6b7280;
     text-align: center;
 }
 
 .patient-detail strong {
     color: #1f2937;
+    font-size: 16px;
+}
+
+.patient-detail span {
+    font-size: 16px;
 }
 
 /* Información de la consulta */
@@ -152,7 +143,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 14px;
     color: #4b5563;
     margin-bottom: 6px;
 }
@@ -202,7 +193,6 @@ body {
     color: white;
     text-decoration: none;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-pdf {
@@ -215,20 +205,19 @@ body {
     color: white;
     text-decoration: none;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .btn-email {
-    background: #059669;
-    color: white;
+    background: white;
+    color: red;
+    border: 2px solid red;
 }
 
 .btn-email:hover {
-    background: #047857;
+    background: rgba(222, 27, 27, 0.82);
     color: white;
     text-decoration: none;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 /* Estado vacío */
@@ -446,39 +435,39 @@ body {
     .reports-container {
         padding: 20px 16px;
     }
-    
+
     .reports-header {
         padding: 30px 20px;
         margin-bottom: 30px;
     }
-    
+
     .reports-header h1 {
         font-size: 1.5rem;
     }
-    
+
     .reports-grid {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .report-card {
         padding: 20px;
     }
-    
+
     .patient-details {
         grid-template-columns: 1fr;
         gap: 6px;
     }
-    
+
     .report-actions {
         flex-direction: column;
     }
-    
+
     .btn-action {
         padding: 12px;
         font-size: 14px;
     }
-    
+
     .modal-dialog {
         margin: 16px;
     }
@@ -488,11 +477,11 @@ body {
     .reports-header h1 {
         font-size: 1.5rem;
     }
-    
+
     .report-card {
         padding: 16px;
     }
-    
+
     .report-actions {
         gap: 6px;
     }

@@ -16,9 +16,9 @@
           Sistema avanzado de diagnóstico dermatológico mediante<br>
           inteligencia artificial
         </p>
-        <button class="btn-primary" onclick="window.location.href='#'">
-          Comenzar
-        </button>
+        <a href="{% url 'dermatology:upload_image' %}" class="btn-primary" type="button">
+          <i class="fas fa-play"></i> Comenzar
+        </a>
       </div>
     </div>
 
@@ -31,36 +31,27 @@
           <div class="report-card">
             <div class="report-header">
               <div class="report-icon">
-                <i class="fas fa-image"></i>
+                <i class="fas fa-file-medical fa-lg"></i>
               </div>
-              <span class="report-status">Imagen detectada {{ forloop.counter }}</span>
+              <strong class="report-status">Reporte {{ img.condition|default:"Pendiente" }}</strong>
             </div>
 
             <div class="report-body">
-              <div class="report-diagnosis">
-                <strong>Reporte:</strong> {{ img.condition|default:"Pendiente" }}
-              </div>
-              <div class="report-patient">
-                <strong>Paciente:</strong> {{ img.patient.first_name }} {{ img.patient.last_name }}
-              </div>
+              <strong>Paciente:</strong> {{ img.patient.get_full_name|default:"Desconocido" }} -
+              CI: {{ img.patient.dni }}
               <div class="report-details">
-                <div class="report-detail-item">
-                  <strong>Edad:</strong> {{ img.patient.age_approx }}
-                </div>
-                <div class="report-detail-item">
-                  <strong>Sexo:</strong> {{ img.patient.get_sex_display }}
-                </div>
+                <strong>Sexo:</strong> {{ img.patient.get_sex_display }}
                 <div class="report-detail-item">
                   <strong>Localización:</strong> {{ img.get_anatom_site_general_display }}
                 </div>
               </div>
-              <div class="report-date">
-                Análisis realizado el {{ img.created_at|date:"d de F, Y H:i" }}
+              <div class="report-date">Realizado el {{ img.created_at|date:"d \\d\\e F, Y - h:i A" }}
               </div>
             </div>
 
             <div class="report-footer">
-              <a href="{% url 'dermatology:report_detail' img.id %}" class="btn-secondary">Ver Detalles</a>
+              <a href="{% url 'dermatology:report_detail' img.id %}" class="btn-secondary"><i class="fas fa-eye"></i>
+                Detalles</a>
             </div>
           </div>
         {% empty %}

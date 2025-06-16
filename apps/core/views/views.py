@@ -156,14 +156,6 @@ class CharacteristicsView(CustomLoginRequiredMixin, TemplateView):
                             'seguimiento. Exporta resultados en múltiples formatos para compartir con '
                             'profesionales.')
                     },
-                    {
-                        'icon': 'fas fa-history',
-                        'title': 'Historial Médico',
-                        'description': (
-                            'Mantén un registro completo de todos los análisis y evolución del '
-                            'paciente. Acceso rápido al historial para seguimiento y comparativas '
-                            'temporales.')
-                    }
                 ]
             })
             logger.success('CharacteristicsView', 'Contexto de características preparado correctamente.')

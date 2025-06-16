@@ -30,9 +30,6 @@ from apps.auth.views.view_auth import CustomLoginRequiredMixin
 from utils.logger import logger
 
 
-
-# --- Definición de CustomF1Score con Registro para Serialización ---
-
 @tf.keras.utils.register_keras_serializable()
 class CustomF1Score(tf.keras.metrics.Metric):
   def __init__(self, num_classes, name='f1_score', **kwargs):
@@ -85,7 +82,6 @@ class CustomF1Score(tf.keras.metrics.Metric):
 
 # Registrar la métrica personalizada (redundante con el decorador, pero por seguridad)
 get_custom_objects().update({'CustomF1Score': CustomF1Score})
-
 
 # --- Configuración de Rutas y Carga del Modelo ---
 
@@ -178,64 +174,65 @@ class AIProcessor:
 
   @staticmethod
   def calculate_gradcam_image_only(img_array, model, pred_index):
-        try:
-            # Find the last convolutional layer directly
-            last_conv_layer = None
-            last_conv_layer_name = None
-            for layer in reversed(model.layers):
-                if hasattr(tf.keras.layers, 'Conv2D') and isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
-                    last_conv_layer = layer
-                    last_conv_layer_name = layer.name
-                    break
-            if not last_conv_layer:
-                raise ValueError("No se encontró ninguna capa convolucional en el modelo")
+    try:
+      # Find the last convolutional layer directly
+      last_conv_layer = None
+      last_conv_layer_name = None
+      for layer in reversed(model.layers):
+        if hasattr(tf.keras.layers, 'Conv2D') and isinstance(layer,
+                                                             (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
+          last_conv_layer = layer
+          last_conv_layer_name = layer.name
+          break
+      if not last_conv_layer:
+        raise ValueError("No se encontró ninguna capa convolucional en el modelo")
 
-            logger.debug('AIProcessor', f"Model inputs for Grad-CAM: {model.inputs}")
+      logger.debug('AIProcessor', f"Model inputs for Grad-CAM: {model.inputs}")
 
-            # Si el modelo espera una sola entrada, pasar el array directamente
-            if isinstance(model.input, (tf.Tensor, tf.compat.v1.Tensor)):
-                input_tensor = img_array
-            else:
-                # Si el modelo espera múltiples entradas, empaquetar en lista
-                input_tensor = [img_array]
+      # Si el modelo espera una sola entrada, pasar el array directamente
+      if isinstance(model.input, (tf.Tensor, tf.compat.v1.Tensor)):
+        input_tensor = img_array
+      else:
+        # Si el modelo espera múltiples entradas, empaquetar en lista
+        input_tensor = [img_array]
 
-            grad_model = tf.keras.Model(
-                inputs=model.input,
-                outputs=[last_conv_layer.output, model.output]
-            )
+      grad_model = tf.keras.Model(
+        inputs=model.input,
+        outputs=[last_conv_layer.output, model.output]
+      )
 
-            with tf.GradientTape() as tape:
-                conv_outputs, predictions = grad_model(input_tensor, training=False)
-                loss = predictions[:, pred_index]
+      with tf.GradientTape() as tape:
+        conv_outputs, predictions = grad_model(input_tensor, training=False)
+        loss = predictions[:, pred_index]
 
-            grads = tape.gradient(loss, conv_outputs)
-            if grads is None:
-                raise ValueError("No se pudieron calcular los gradientes")
+      grads = tape.gradient(loss, conv_outputs)
+      if grads is None:
+        raise ValueError("No se pudieron calcular los gradientes")
 
-            logger.debug('AIProcessor', f"conv_outputs shape: {getattr(conv_outputs, 'shape', None)}")
-            logger.debug('AIProcessor', f"grads shape: {getattr(grads, 'shape', None)}")
+      logger.debug('AIProcessor', f"conv_outputs shape: {getattr(conv_outputs, 'shape', None)}")
+      logger.debug('AIProcessor', f"grads shape: {getattr(grads, 'shape', None)}")
 
-            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-            logger.debug('AIProcessor', f"pooled_grads shape: {getattr(pooled_grads, 'shape', None)}")
+      pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+      logger.debug('AIProcessor', f"pooled_grads shape: {getattr(pooled_grads, 'shape', None)}")
 
-            # Broadcast pooled_grads to match conv_outputs shape
-            conv_outputs = conv_outputs[0]  # Remove batch dimension
-            pooled_grads = pooled_grads
-            heatmap = tf.reduce_mean(conv_outputs * pooled_grads, axis=-1)
+      # Broadcast pooled_grads to match conv_outputs shape
+      conv_outputs = conv_outputs[0]  # Remove batch dimension
+      pooled_grads = pooled_grads
+      heatmap = tf.reduce_mean(conv_outputs * pooled_grads, axis=-1)
 
-            heatmap = tf.maximum(heatmap, 0)
-            max_val = tf.reduce_max(heatmap)
-            if max_val == 0:
-                return None, last_conv_layer_name
-            heatmap = heatmap / max_val
+      heatmap = tf.maximum(heatmap, 0)
+      max_val = tf.reduce_max(heatmap)
+      if max_val == 0:
+        return None, last_conv_layer_name
+      heatmap = heatmap / max_val
 
-            heatmap_np = heatmap.numpy()
-            return heatmap_np, last_conv_layer_name
+      heatmap_np = heatmap.numpy()
+      return heatmap_np, last_conv_layer_name
 
-        except Exception as e:
-            traceback.print_exc()
-            logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
-            return None, None
+    except Exception as e:
+      traceback.print_exc()
+      logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
+      return None, None
 
   @staticmethod
   def generate_ai_content(condition):
@@ -266,14 +263,14 @@ class PatientListView(CustomLoginRequiredMixin, ListView):
   paginate_by = 10
 
   def get_queryset(self):
-        """Filtra los pacientes por DNI si se proporciona en la búsqueda."""
-        queryset = super().get_queryset()
-        dni = self.request.GET.get('dni', '').strip()
-        if dni:
-            queryset = queryset.filter(dni__icontains=dni)
-            logger.info('PatientListView', f'Filtrando pacientes por DNI: {dni}')
-        logger.success('PatientListView', f'Vista de lista de pacientes cargada correctamente. Total: {queryset.count()}')
-        return queryset
+    """Filtra los pacientes por DNI si se proporciona en la búsqueda."""
+    queryset = super().get_queryset()
+    dni = self.request.GET.get('dni', '').strip()
+    if dni:
+      queryset = queryset.filter(dni__icontains=dni)
+      logger.info('PatientListView', f'Filtrando pacientes por DNI: {dni}')
+    logger.success('PatientListView', f'Vista de lista de pacientes cargada correctamente. Total: {queryset.count()}')
+    return queryset
 
   def get_context_data(self, **kwargs):
     """Prepara el contexto con textos y configuración de la interfaz."""
@@ -380,46 +377,47 @@ class PatientCreateView(CustomLoginRequiredMixin, PatientFormMixin, CreateView):
     return context
 
   def form_invalid(self, form):
-        # Mostrar mensajes de error de validación de unicidad
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, f"{form.fields[field].label}: {error}")
-                logger.warning('PatientCreateView', f"Error en campo {field}: {error}")
-        return super().form_invalid(form)
+    # Mostrar mensajes de error de validación de unicidad
+    for field, errors in form.errors.items():
+      for error in errors:
+        messages.error(self.request, f"{form.fields[field].label}: {error}")
+        logger.warning('PatientCreateView', f"Error en campo {field}: {error}")
+    return super().form_invalid(form)
 
   def form_valid(self, form):
-        dni = form.cleaned_data.get('dni')
-        phone = form.cleaned_data.get('phone')
-        email = form.cleaned_data.get('email')
-        first_name = form.cleaned_data.get('first_name')
-        last_name = form.cleaned_data.get('last_name')
-        age_approx = form.cleaned_data.get('age_approx')
-        sex = form.cleaned_data.get('sex')
-        # Obtener el display del sexo
-        sex_display = dict(Patient.SEX_CHOICES).get(sex, sex)
-        
-        # Validar unicidad de campos
-        errors = {}
-        # Excluir el registro actual en caso de update (no aplica aquí pero es seguro)
-        if Patient.objects.filter(dni=dni).exists():
-            errors['dni'] = 'Ya existe un paciente con este número de cédula.'
-            logger.warning('PatientCreateView', f'Intento de registro con DNI duplicado: {dni}')
-        if phone and Patient.objects.filter(phone=phone).exists():
-            errors['phone'] = 'Ya existe un paciente con este número de teléfono.'
-            logger.warning('PatientCreateView', f'Intento de registro con teléfono duplicado: {phone}')
-        if email and Patient.objects.filter(email=email).exists():
-            errors['email'] = 'Ya existe un paciente con este correo electrónico.'
-            logger.warning('PatientCreateView', f'Intento de registro con email duplicado: {email}')
-        if errors:
-            for field, msg in errors.items():
-                form.add_error(field, msg)
-                messages.error(self.request, msg)
-                logger.warning('PatientCreateView', f"Mensaje mostrado al usuario: {msg}")
-            return self.form_invalid(form)
-        response = super().form_valid(form)
-        messages.success(self.request, 'Paciente registrado exitosamente.')
-        logger.success('PatientCreateView', f'Paciente registrado: DNI= {dni}, Tel= {phone}, Email= {email}, Nombres= {first_name}, Apellidos= {last_name}, Edad= {age_approx}, Sexo= {sex_display}')
-        return response
+    dni = form.cleaned_data.get('dni')
+    phone = form.cleaned_data.get('phone')
+    email = form.cleaned_data.get('email')
+    first_name = form.cleaned_data.get('first_name')
+    last_name = form.cleaned_data.get('last_name')
+    age_approx = form.cleaned_data.get('age_approx')
+    sex = form.cleaned_data.get('sex')
+    # Obtener el display del sexo
+    sex_display = dict(Patient.SEX_CHOICES).get(sex, sex)
+
+    # Validar unicidad de campos
+    errors = {}
+    # Excluir el registro actual en caso de update (no aplica aquí pero es seguro)
+    if Patient.objects.filter(dni=dni).exists():
+      errors['dni'] = 'Ya existe un paciente con este número de cédula.'
+      logger.warning('PatientCreateView', f'Intento de registro con DNI duplicado: {dni}')
+    if phone and Patient.objects.filter(phone=phone).exists():
+      errors['phone'] = 'Ya existe un paciente con este número de teléfono.'
+      logger.warning('PatientCreateView', f'Intento de registro con teléfono duplicado: {phone}')
+    if email and Patient.objects.filter(email=email).exists():
+      errors['email'] = 'Ya existe un paciente con este correo electrónico.'
+      logger.warning('PatientCreateView', f'Intento de registro con email duplicado: {email}')
+    if errors:
+      for field, msg in errors.items():
+        form.add_error(field, msg)
+        messages.error(self.request, msg)
+        logger.warning('PatientCreateView', f"Mensaje mostrado al usuario: {msg}")
+      return self.form_invalid(form)
+    response = super().form_valid(form)
+    messages.success(self.request, 'Paciente registrado exitosamente.')
+    logger.success('PatientCreateView',
+                   f'Paciente registrado: DNI= {dni}, Tel= {phone}, Email= {email}, Nombres= {first_name}, Apellidos= {last_name}, Edad= {age_approx}, Sexo= {sex_display}')
+    return response
 
 
 class PatientUpdateView(CustomLoginRequiredMixin, PatientFormMixin, UpdateView):
@@ -430,79 +428,80 @@ class PatientUpdateView(CustomLoginRequiredMixin, PatientFormMixin, UpdateView):
   success_url = reverse_lazy('dermatology:patient-list')
 
   def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        patient = self.get_object()
-        # Mostrar todos los campos y valores actuales en logs
-        sex_display = dict(Patient.SEX_CHOICES).get(patient.sex, patient.sex)
-        logger.info('PatientUpdateView', (
-            f"Datos actuales del paciente (ANTES de editar): "
-            f"DNI= {patient.dni}, Tel= {patient.phone}, Email= {patient.email}, "
-            f"Nombres= {patient.first_name}, Apellidos= {patient.last_name}, "
-            f"Edad= {patient.age_approx}, Sexo= {sex_display}"
-        ))
-        form_context = self.get_base_context('Actualización de Paciente')
-        form_context.update({
-            'subtitle': f'Editando información de {patient.get_full_name()}',
-            'buttons': {
-                'submit': {
-                    'text': 'Guardar Cambios',
-                    'class': 'btn-primary btn-lg'
-                },
-                'cancel': {
-                    'text': 'Cancelar',
-                    'class': 'btn-secondary',
-                    'url': reverse_lazy('dermatology:patient-list')
-                }
-            }
-        })
-        context.update(form_context)
-        return context
+    context = super().get_context_data(**kwargs)
+    patient = self.get_object()
+    # Mostrar todos los campos y valores actuales en logs
+    sex_display = dict(Patient.SEX_CHOICES).get(patient.sex, patient.sex)
+    logger.info('PatientUpdateView', (
+      f"Datos actuales del paciente (ANTES de editar): "
+      f"DNI= {patient.dni}, Tel= {patient.phone}, Email= {patient.email}, "
+      f"Nombres= {patient.first_name}, Apellidos= {patient.last_name}, "
+      f"Edad= {patient.age_approx}, Sexo= {sex_display}"
+    ))
+    form_context = self.get_base_context('Actualización de Paciente')
+    form_context.update({
+      'subtitle': f'Editando información de {patient.get_full_name()}',
+      'buttons': {
+        'submit': {
+          'text': 'Guardar Cambios',
+          'class': 'btn-primary btn-lg'
+        },
+        'cancel': {
+          'text': 'Cancelar',
+          'class': 'btn-secondary',
+          'url': reverse_lazy('dermatology:patient-list')
+        }
+      }
+    })
+    context.update(form_context)
+    return context
 
   def form_invalid(self, form):
-        # Mostrar mensajes de error de validación de unicidad
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, f"{form.fields[field].label}: {error}")
-                logger.warning('PatientUpdateView', f"Error en campo {field}: {error}")
-        return super().form_invalid(form)
+    # Mostrar mensajes de error de validación de unicidad
+    for field, errors in form.errors.items():
+      for error in errors:
+        messages.error(self.request, f"{form.fields[field].label}: {error}")
+        logger.warning('PatientUpdateView', f"Error en campo {field}: {error}")
+    return super().form_invalid(form)
 
   def form_valid(self, form):
-        dni = form.cleaned_data.get('dni')
-        phone = form.cleaned_data.get('phone')
-        email = form.cleaned_data.get('email')
-        first_name = form.cleaned_data.get('first_name')
-        last_name = form.cleaned_data.get('last_name')
-        age_approx = form.cleaned_data.get('age_approx')
-        sex = form.cleaned_data.get('sex')
-        sex_display = dict(Patient.SEX_CHOICES).get(sex, sex)
-        # Mostrar valores nuevos en logs
-        logger.info('PatientUpdateView', (
-            f"Datos nuevos del paciente (DESPUÉS de editar): "
-            f"DNI={dni}, Tel={phone}, Email={email}, "
-            f"Nombres={first_name}, Apellidos={last_name}, "
-            f"Edad={age_approx}, Sexo={sex_display}"
-        ))
-        errors = {}
-        instance_id = self.object.id if self.object else None
-        if Patient.objects.filter(dni=dni).exclude(id=instance_id).exists():
-            errors['dni'] = 'Ya existe un paciente con este número de cédula.'
-            logger.warning('PatientUpdateView', f'Intento de actualización con DNI duplicado: {dni}')
-        if phone and Patient.objects.filter(phone=phone).exclude(id=instance_id).exists():
-            errors['phone'] = 'Ya existe un paciente con este número de teléfono.'
-            logger.warning('PatientUpdateView', f'Intento de actualización con teléfono duplicado: {phone}')
-        if email and Patient.objects.filter(email=email).exclude(id=instance_id).exists():
-            errors['email'] = 'Ya existe un paciente con este correo electrónico.'
-            logger.warning('PatientUpdateView', f'Intento de actualización con email duplicado: {email}')
-        if errors:
-            for field, msg in errors.items():
-                form.add_error(field, msg)
-                messages.error(self.request, msg)
-                logger.warning('PatientUpdateView', f"Mensaje mostrado al usuario: {msg}")
-            return self.form_invalid(form)
-        response = super().form_valid(form)
-        messages.success(self.request, 'Información del paciente actualizada exitosamente.')
-        logger.success('PatientUpdateView', f'Paciente actualizado: DNI= {dni}, Tel= {phone}, Email= {email}, Nombres= {first_name}, Apellidos= {last_name}, Edad= {age_approx}, Sexo= {sex_display}')
-        return response
+    dni = form.cleaned_data.get('dni')
+    phone = form.cleaned_data.get('phone')
+    email = form.cleaned_data.get('email')
+    first_name = form.cleaned_data.get('first_name')
+    last_name = form.cleaned_data.get('last_name')
+    age_approx = form.cleaned_data.get('age_approx')
+    sex = form.cleaned_data.get('sex')
+    sex_display = dict(Patient.SEX_CHOICES).get(sex, sex)
+    # Mostrar valores nuevos en logs
+    logger.info('PatientUpdateView', (
+      f"Datos nuevos del paciente (DESPUÉS de editar): "
+      f"DNI={dni}, Tel={phone}, Email={email}, "
+      f"Nombres={first_name}, Apellidos={last_name}, "
+      f"Edad={age_approx}, Sexo={sex_display}"
+    ))
+    errors = {}
+    instance_id = self.object.id if self.object else None
+    if Patient.objects.filter(dni=dni).exclude(id=instance_id).exists():
+      errors['dni'] = 'Ya existe un paciente con este número de cédula.'
+      logger.warning('PatientUpdateView', f'Intento de actualización con DNI duplicado: {dni}')
+    if phone and Patient.objects.filter(phone=phone).exclude(id=instance_id).exists():
+      errors['phone'] = 'Ya existe un paciente con este número de teléfono.'
+      logger.warning('PatientUpdateView', f'Intento de actualización con teléfono duplicado: {phone}')
+    if email and Patient.objects.filter(email=email).exclude(id=instance_id).exists():
+      errors['email'] = 'Ya existe un paciente con este correo electrónico.'
+      logger.warning('PatientUpdateView', f'Intento de actualización con email duplicado: {email}')
+    if errors:
+      for field, msg in errors.items():
+        form.add_error(field, msg)
+        messages.error(self.request, msg)
+        logger.warning('PatientUpdateView', f"Mensaje mostrado al usuario: {msg}")
+      return self.form_invalid(form)
+    response = super().form_valid(form)
+    messages.success(self.request, 'Información del paciente actualizada exitosamente.')
+    logger.success('PatientUpdateView',
+                   f'Paciente actualizado: DNI= {dni}, Tel= {phone}, Email= {email}, Nombres= {first_name}, Apellidos= {last_name}, Edad= {age_approx}, Sexo= {sex_display}')
+    return response
 
 
 # ------------------ VISTA DE SUBIDA / IMAGE UPLOAD ------------------
@@ -519,134 +518,139 @@ class UploadImageView(CustomLoginRequiredMixin, View):
   template_name = 'Dermatologia_IA/upload.html'
 
   def get(self, request):
-        logger.info('UploadImageView', 'Cargando formulario de subida de imagen y selección de paciente.')
-        initial_patients = Patient.objects.all().order_by('-id')[:10]
-        skin_image_form = SkinImageForm()
-        context = {
-            'app_name': 'DermaIA',
-            'page_title': 'Nuevo Análisis Dermatológico',
-            'form': skin_image_form,  # Pasar el formulario para acceder a sus campos (ej. choices)
-            'patients': initial_patients,
-            'upload_section': {
-              'title': 'Análisis Dermatológico con IA',
-              'patient_search': {
-                'label': 'Seleccionar paciente existente o registrar uno nuevo',
-                'select_placeholder': 'Busque por cédula (solo números, máx. 10) o seleccione "Nuevo Paciente"',
-                'typing_hint': '💡 Haga clic y escriba la cédula (solo números, máximo 10 dígitos)',
-                'no_results': 'No se encontró ningún paciente con esa cédula.',
-              },
-              'new_patient': {
-                'button_text': 'Registrar Nuevo Paciente',
-                'title': 'Datos del Nuevo Paciente',
-                'labels': {
-                  'first_name': 'Nombre',
-                  'last_name': 'Apellido',
-                  'dni': 'DNI',
-                  'phone': 'Teléfono',
-                  'email': 'Correo Electrónico',
-                  'age_approx': 'Edad Aproximada',
-                  'sex': 'Sexo',
-                },
-                'sex_placeholder': '-- Seleccionar Sexo --',
-              },
-              'image_upload': {
-                'title': 'Subir Imagen de la Piel',
-                'instructions': 'Arrastra una imagen aquí o haz clic para seleccionar',
-                'formats': 'Formatos aceptados: JPG, PNG, JPEG. Tamaño máximo: 5MB.',
-                'preview_alt': 'Vista previa de la imagen',
-              },
-              'location': {
-                'label': 'Localización Anatómica de la Lesión',
-                'placeholder': 'Seleccione la zona del cuerpo',
-              }
-            },
-            'buttons': {
-              'submit': {
-                'text': 'Analizar Imagen',
-                'class': 'btn-primary btn-lg',
-              }
-            },
-            'loading': {
-              'message': 'Analizando su imagen...',
-              'submessage': 'Este proceso puede tardar unos segundos.',
-              'spinner_alt': 'Cargando...',
-            },
-            'error_messages_general': {
-              'form_errors': 'Por favor, corrija los errores en el formulario.',
-              'server_error': 'Ocurrió un error en el servidor. Intente de nuevo.',
-            },
-            'sex_choices': SEX_CHOICES_FOR_CONTEXT,  # Para el select de sexo del nuevo paciente
-            'js_texts': {  # Textos para JavaScript
-              'searching_prefix': 'Buscando:',
-              'search_placeholder_default': 'Busque por cédula (solo números, máx. 10)',
-              'error_searching_patients': 'Error al buscar pacientes:',
-              'validation_errors': {
-                'empty_field': "El campo está vacío, por favor rellénelo.",
-                'name_min_length': "El nombre o apellido debe tener al menos 3 caracteres.",
-                'name_max_length': "El nombre o apellido no puede tener más de 50 caracteres.",
-                'name_regex': "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.",
-                'dni_exact_length': "La cédula debe contener exactamente 10 dígitos.",
-                'dni_numeric': "La cédula debe contener solo números.",
-                'dni_invalid': "La cédula ingresada no es válida.",
-                'email_max_length': "El correo electrónico no puede tener más de 254 caracteres.",
-                'email_invalid': "Ingrese un correo electrónico válido.",
-                'phone_invalid_format': "Ingrese un número válido (formato: +593 99 999 9999 o 0999999999)",
-                'age_invalid': "Ingrese una edad válida entre 0 y 120 años.",
-                'image_required': "Por favor seleccione una imagen para analizar.",
-                'image_invalid_type': "El archivo debe ser una imagen (JPG, JPEG o PNG).",
-                'image_max_size': "La imagen no debe exceder los 5MB.",
-                'site_required': "Por favor seleccione la localización anatómica."
-              }
-            }
+    logger.info('UploadImageView', 'Cargando formulario de subida de imagen y selección de paciente.')
+    initial_patients = Patient.objects.all().order_by('-id')[:10]
+    skin_image_form = SkinImageForm()
+    context = {
+      'app_name': 'DermaIA',
+      'page_title': 'Nuevo Análisis Dermatológico',
+      'form': skin_image_form,  # Pasar el formulario para acceder a sus campos (ej. choices)
+      'patients': initial_patients,
+      'upload_section': {
+        'title': 'Análisis Dermatológico con IA',
+        'patient_search': {
+          'label': 'Seleccionar paciente existente o registrar uno nuevo',
+          'select_placeholder': 'Busque por cédula (solo números, máx. 10) o seleccione "Nuevo Paciente"',
+          'typing_hint': '💡 Haga clic y escriba la cédula (solo números, máximo 10 dígitos)',
+          'no_results': 'No se encontró ningún paciente con esa cédula.',
+        },
+        'new_patient': {
+          'button_text': 'Registrar Nuevo Paciente',
+          'title': 'Datos del Nuevo Paciente',
+          'labels': {
+            'first_name': 'Nombre',
+            'last_name': 'Apellido',
+            'dni': 'DNI',
+            'phone': 'Teléfono',
+            'email': 'Correo Electrónico',
+            'age_approx': 'Edad Aproximada',
+            'sex': 'Sexo',
+          },
+          'sex_placeholder': '-- Seleccionar Sexo --',
+        },
+        'image_upload': {
+          'title': 'Subir Imagen de la Piel',
+          'instructions': 'Arrastra una imagen aquí o haz clic para seleccionar',
+          'formats': 'Formatos aceptados: JPG, PNG, JPEG. Tamaño máximo: 5MB.',
+          'preview_alt': 'Vista previa de la imagen',
+        },
+        'location': {
+          'label': 'Localización Anatómica de la Lesión',
+          'placeholder': 'Seleccione la zona del cuerpo',
         }
-        logger.success('UploadImageView', 'Vista de subida de imagen cargada correctamente.')
-        return render(request, self.template_name, context)
+      },
+      'buttons': {
+        'submit': {
+          'text': 'Analizar Imagen',
+          'class': 'btn-primary btn-lg',
+        }
+      },
+      'loading': {
+        'message': 'Analizando su imagen...',
+        'submessage': 'Este proceso puede tardar unos segundos.',
+        'spinner_alt': 'Cargando...',
+      },
+      'error_messages_general': {
+        'form_errors': 'Por favor, corrija los errores en el formulario.',
+        'server_error': 'Ocurrió un error en el servidor. Intente de nuevo.',
+      },
+      'sex_choices': SEX_CHOICES_FOR_CONTEXT,  # Para el select de sexo del nuevo paciente
+      'js_texts': {  # Textos para JavaScript
+        'searching_prefix': 'Buscando:',
+        'search_placeholder_default': 'Busque por cédula (solo números, máx. 10)',
+        'error_searching_patients': 'Error al buscar pacientes:',
+        'validation_errors': {
+          'empty_field': "El campo está vacío, por favor rellénelo.",
+          'name_min_length': "El nombre o apellido debe tener al menos 3 caracteres.",
+          'name_max_length': "El nombre o apellido no puede tener más de 50 caracteres.",
+          'name_regex': "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.",
+          'dni_exact_length': "La cédula debe contener exactamente 10 dígitos.",
+          'dni_numeric': "La cédula debe contener solo números.",
+          'dni_invalid': "La cédula ingresada no es válida.",
+          'email_max_length': "El correo electrónico no puede tener más de 254 caracteres.",
+          'email_invalid': "Ingrese un correo electrónico válido.",
+          'phone_invalid_format': "Ingrese un número válido (formato: +593 99 999 9999 o 0999999999)",
+          'age_invalid': "Ingrese una edad válida entre 0 y 120 años.",
+          'image_required': "Por favor seleccione una imagen para analizar.",
+          'image_invalid_type': "El archivo debe ser una imagen (JPG, JPEG o PNG).",
+          'image_max_size': "La imagen no debe exceder los 5MB.",
+          'site_required': "Por favor seleccione la localización anatómica."
+        }
+      }
+    }
+    logger.success('UploadImageView', 'Vista de subida de imagen cargada correctamente.')
+    return render(request, self.template_name, context)
 
   def post(self, request):
+    try:
+      logger.info('UploadImageView', 'Procesando POST para crear paciente y/o reporte.')
+      patient_id = request.POST.get('patient')
+      patient = None
+      if patient_id:
         try:
-            logger.info('UploadImageView', 'Procesando POST para crear paciente y/o reporte.')
-            patient_id = request.POST.get('patient')
-            patient = None
-            if patient_id:
-                try:
-                    patient = Patient.objects.get(id=patient_id)
-                    logger.info('UploadImageView', f'Paciente existente seleccionado: ID={patient_id}')
-                except Patient.DoesNotExist:
-                    logger.warning('UploadImageView', f'Paciente no válido: ID={patient_id}')
-                    return JsonResponse({'success': False, 'errors': {'patient': ['Paciente seleccionado no válido.']}}, status=400)
-            else:
-                patient_form_data = {
-                    'first_name': request.POST.get('first_name'),
-                    'last_name': request.POST.get('last_name'),
-                    'dni': request.POST.get('dni'),
-                    'phone': request.POST.get('phone'),
-                    'email': request.POST.get('email'),
-                    'age_approx': request.POST.get('age_approx'),
-                    'sex': request.POST.get('sex'),
-                    'user': request.user
-                }
-                patient_form = PatientForm(patient_form_data)
-                if patient_form.is_valid():
-                    patient = patient_form.save()
-                    logger.success('UploadImageView', f'Paciente creado desde upload: DNI={patient.dni}, Email={patient.email}')
-                else:
-                    logger.warning('UploadImageView', f'Errores al crear paciente desde upload: {patient_form.errors}')
-                    return JsonResponse({'success': False, 'errors': patient_form.errors}, status=400)
-            image_form_data = {'anatom_site_general': request.POST.get('anatom_site_general')}
-            skin_image_form = SkinImageForm(image_form_data, request.FILES)
-            if skin_image_form.is_valid():
-                skin_image = skin_image_form.save(commit=False)
-                skin_image.patient = patient
-                skin_image.processed = False
-                skin_image.save()
-                logger.success('UploadImageView', f'Reporte creado correctamente para paciente ID={patient.id}, Reporte ID={skin_image.id}')
-                return JsonResponse({'success': True, 'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})})
-            else:
-                logger.warning('UploadImageView', f'Errores al crear reporte: {skin_image_form.errors}')
-                return JsonResponse({'success': False, 'errors': skin_image_form.errors}, status=400)
-        except Exception as e:
-            logger.error('UploadImageView', f'Error en carga de imagen: {str(e)}')
-            return JsonResponse({'success': False, 'errors': {'general': ['Error interno al procesar la solicitud. Intente más tarde.']}}, status=500)
+          patient = Patient.objects.get(id=patient_id)
+          logger.info('UploadImageView', f'Paciente existente seleccionado: ID={patient_id}')
+        except Patient.DoesNotExist:
+          logger.warning('UploadImageView', f'Paciente no válido: ID={patient_id}')
+          return JsonResponse({'success': False, 'errors': {'patient': ['Paciente seleccionado no válido.']}},
+                              status=400)
+      else:
+        patient_form_data = {
+          'first_name': request.POST.get('first_name'),
+          'last_name': request.POST.get('last_name'),
+          'dni': request.POST.get('dni'),
+          'phone': request.POST.get('phone'),
+          'email': request.POST.get('email'),
+          'age_approx': request.POST.get('age_approx'),
+          'sex': request.POST.get('sex'),
+          'user': request.user
+        }
+        patient_form = PatientForm(patient_form_data)
+        if patient_form.is_valid():
+          patient = patient_form.save()
+          logger.success('UploadImageView', f'Paciente creado desde upload: DNI={patient.dni}, Email={patient.email}')
+        else:
+          logger.warning('UploadImageView', f'Errores al crear paciente desde upload: {patient_form.errors}')
+          return JsonResponse({'success': False, 'errors': patient_form.errors}, status=400)
+      image_form_data = {'anatom_site_general': request.POST.get('anatom_site_general')}
+      skin_image_form = SkinImageForm(image_form_data, request.FILES)
+      if skin_image_form.is_valid():
+        skin_image = skin_image_form.save(commit=False)
+        skin_image.patient = patient
+        skin_image.processed = False
+        skin_image.save()
+        logger.success('UploadImageView',
+                       f'Reporte creado correctamente para paciente ID={patient.id}, Reporte ID={skin_image.id}')
+        return JsonResponse(
+          {'success': True, 'redirect_url': reverse('dermatology:process_image', kwargs={'image_id': skin_image.id})})
+      else:
+        logger.warning('UploadImageView', f'Errores al crear reporte: {skin_image_form.errors}')
+        return JsonResponse({'success': False, 'errors': skin_image_form.errors}, status=400)
+    except Exception as e:
+      logger.error('UploadImageView', f'Error en carga de imagen: {str(e)}')
+      return JsonResponse(
+        {'success': False, 'errors': {'general': ['Error interno al procesar la solicitud. Intente más tarde.']}},
+        status=500)
 
 
 class SearchPatientsView(CustomLoginRequiredMixin, View):
@@ -739,74 +743,75 @@ class ResultsViewMixin:
 
 
 class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
-    """Vista para procesar y mostrar resultados del análisis de imagen."""
-    model = SkinImage
-    pk_url_kwarg = 'image_id'
+  """Vista para procesar y mostrar resultados del análisis de imagen."""
+  model = SkinImage
+  pk_url_kwarg = 'image_id'
 
-    def get_context_data(self, **kwargs):
-        logger.info('ProcessImageView', f'Procesando imagen para SkinImage ID {getattr(self.object, "id", "?")}')
-        context = super().get_context_data(**kwargs)
-        context.update(self.get_base_context())
-        context['show_actions'] = True
-        si = self.object
-        if not si.processed:
-            try:
-                if keras_model is None:
-                    logger.error('ProcessImageView', 'Sistema de IA no disponible')
-                    raise RuntimeError('Sistema de IA no disponible')
-                img_array, original_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
-                if img_array is None:
-                    logger.error('ProcessImageView', 'No se pudo preprocesar la imagen')
-                    raise ValueError('No se pudo preprocesar la imagen')
-                preds = keras_model.predict(tf.constant(img_array), verbose=0)[0]
-                idx = int(np.argmax(preds))
-                predicted_class = index_to_class.get(idx, 'Condición desconocida')
-                disease_name = disease_names.get(predicted_class, 'Desconocido')
-                si.condition = disease_name
-                si.confidence = float(preds[idx] * 100)
-                try:
-                    heatmap, layer_name = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
-                    if heatmap is not None:
-                        h, w = original_rgb.shape[:2]
-                        if np.isnan(heatmap).any() or np.isinf(heatmap).any():
-                            heatmap = np.nan_to_num(heatmap)
-                        heatmap_resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
-                        heatmap_uint8 = np.uint8(255 * heatmap_resized)
-                        heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
-                        orig_bgr = cv2.cvtColor(original_rgb, cv2.COLOR_RGB2BGR)
-                        overlay = cv2.addWeighted(orig_bgr, 0.6, heatmap_color, 0.4, 0)
-                        grad_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
-                        os.makedirs(grad_dir, exist_ok=True)
-                        fname = f'gradcam_{si.id}.jpg'
-                        fpath = os.path.join(grad_dir, fname)
-                        success = cv2.imwrite(fpath, overlay)
-                        if success:
-                            relative_path = os.path.join('gradcam_images', fname)
-                            si.gradcam_path = relative_path
-                            logger.success('ProcessImageView', f'Grad-CAM guardado en: {fpath}, gradcam_path: {relative_path}')
-                        else:
-                            messages.warning(self.request, f'No se pudo guardar el mapa de calor en: {fpath}')
-                            logger.warning('ProcessImageView', f'No se pudo guardar el mapa de calor en: {fpath}')
-                    else:
-                        messages.warning(self.request, 'No se pudo generar el mapa de calor: heatmap vacío')
-                        logger.warning('ProcessImageView', 'Heatmap es None tras Grad-CAM')
-                except Exception as grad_error:
-                    messages.warning(self.request, f'Error en Grad-CAM: {grad_error}')
-                    logger.error('ProcessImageView', f'Error en Grad-CAM: {str(grad_error)}')
-                si.ai_report, si.ai_treatment = AIProcessor.generate_ai_content(si.get_status())
-                si.processed = True
-                si.save()
-                logger.success('ProcessImageView', f'SkinImage {getattr(si, "id", "?")} procesada, gradcam_path: {si.gradcam_path}')
-                messages.success(self.request, f'Análisis completado: {si.get_status()}')
-                logger.info('ProcessImageView', f'Mensaje de éxito mostrado: Análisis completado: {si.get_status()}')
-                return self.get_context_data(**kwargs)
-            except Exception as error:
-                messages.error(self.request, f'Error al procesar imagen: {error}')
-                context['error'] = str(error)
-                logger.error('ProcessImageView', f'Error al procesar imagen: {str(error)}')
-        else:
-            logger.info('ProcessImageView', f'Imagen ya procesada para SkinImage ID {getattr(si, "id", "?")}')
-        return context
+  def get_context_data(self, **kwargs):
+    logger.info('ProcessImageView', f'Procesando imagen para SkinImage ID {getattr(self.object, "id", "?")}')
+    context = super().get_context_data(**kwargs)
+    context.update(self.get_base_context())
+    context['show_actions'] = True
+    si = self.object
+    if not si.processed:
+      try:
+        if keras_model is None:
+          logger.error('ProcessImageView', 'Sistema de IA no disponible')
+          raise RuntimeError('Sistema de IA no disponible')
+        img_array, original_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
+        if img_array is None:
+          logger.error('ProcessImageView', 'No se pudo preprocesar la imagen')
+          raise ValueError('No se pudo preprocesar la imagen')
+        preds = keras_model.predict(tf.constant(img_array), verbose=0)[0]
+        idx = int(np.argmax(preds))
+        predicted_class = index_to_class.get(idx, 'Condición desconocida')
+        disease_name = disease_names.get(predicted_class, 'Desconocido')
+        si.condition = disease_name
+        si.confidence = float(preds[idx] * 100)
+        try:
+          heatmap, layer_name = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
+          if heatmap is not None:
+            h, w = original_rgb.shape[:2]
+            if np.isnan(heatmap).any() or np.isinf(heatmap).any():
+              heatmap = np.nan_to_num(heatmap)
+            heatmap_resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
+            heatmap_uint8 = np.uint8(255 * heatmap_resized)
+            heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
+            orig_bgr = cv2.cvtColor(original_rgb, cv2.COLOR_RGB2BGR)
+            overlay = cv2.addWeighted(orig_bgr, 0.6, heatmap_color, 0.4, 0)
+            grad_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
+            os.makedirs(grad_dir, exist_ok=True)
+            fname = f'gradcam_{si.id}.jpg'
+            fpath = os.path.join(grad_dir, fname)
+            success = cv2.imwrite(fpath, overlay)
+            if success:
+              relative_path = os.path.join('gradcam_images', fname)
+              si.gradcam_path = relative_path
+              logger.success('ProcessImageView', f'Grad-CAM guardado en: {fpath}, gradcam_path: {relative_path}')
+            else:
+              messages.warning(self.request, f'No se pudo guardar el mapa de calor en: {fpath}')
+              logger.warning('ProcessImageView', f'No se pudo guardar el mapa de calor en: {fpath}')
+          else:
+            messages.warning(self.request, 'No se pudo generar el mapa de calor: heatmap vacío')
+            logger.warning('ProcessImageView', 'Heatmap es None tras Grad-CAM')
+        except Exception as grad_error:
+          messages.warning(self.request, f'Error en Grad-CAM: {grad_error}')
+          logger.error('ProcessImageView', f'Error en Grad-CAM: {str(grad_error)}')
+        si.ai_report, si.ai_treatment = AIProcessor.generate_ai_content(si.get_status())
+        si.processed = True
+        si.save()
+        logger.success('ProcessImageView',
+                       f'SkinImage {getattr(si, "id", "?")} procesada, gradcam_path: {si.gradcam_path}')
+        messages.success(self.request, f'Análisis completado: {si.get_status()}')
+        logger.info('ProcessImageView', f'Mensaje de éxito mostrado: Análisis completado: {si.get_status()}')
+        return self.get_context_data(**kwargs)
+      except Exception as error:
+        messages.error(self.request, f'Error al procesar imagen: {error}')
+        context['error'] = str(error)
+        logger.error('ProcessImageView', f'Error al procesar imagen: {str(error)}')
+    else:
+      logger.info('ProcessImageView', f'Imagen ya procesada para SkinImage ID {getattr(si, "id", "?")}')
+    return context
 
 
 # ------------------ VISTAS DE REPORTES ------------------
@@ -814,64 +819,64 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
   model = SkinImage
   template_name = 'Dermatologia_IA/report_list.html'
   context_object_name = 'reports'
-  paginate_by = 6
+  paginate_by = 10
 
   def get_queryset(self):
-        queryset = SkinImage.objects.filter(processed=True).select_related('patient').order_by('-created_at')
-        logger.info('ReportListView', f'Se consultaron {queryset.count()} reportes procesados.')
-        logger.success('ReportListView', 'Vista de lista de reportes cargada correctamente.')
-        return queryset
+    queryset = SkinImage.objects.filter(processed=True).select_related('patient').order_by('-created_at')
+    logger.info('ReportListView', f'Se consultaron {queryset.count()} reportes procesados.')
+    logger.success('ReportListView', 'Vista de lista de reportes cargada correctamente.')
+    return queryset
 
   def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'app_name': 'DermaIA',
-            'page_title': 'Mis Reportes',
-            'header_title': 'Mis Reportes de Análisis',
-            'card_labels': {
-                'report_id_prefix': 'Reporte ID',
-                'default_condition': 'Sin condición especificada',
-                'patient_name': 'Nombre:',
-                'patient_dni': 'DNI:',
-                'patient_age': 'Edad:',
-                'patient_sex': 'Sexo:',
-                'lesion_location': 'Localización:',
-                'date_time': 'Fecha y Hora:',
-                'default_na': 'N/A',
-            },
-            'button_texts': {
-                'view_detail': 'Ver Detalle',
-                'generate_pdf': 'PDF',
-                'send_email': 'Enviar por Email',
-            },
-            'icon_classes': {
-                'view_detail': 'fas fa-eye',
-                'generate_pdf': 'fas fa-file-pdf',
-                'send_email': 'fas fa-envelope',
-                'analysis': 'fas fa-microscope',
-                'patient': 'fas fa-user',
-                'dni': 'fas fa-id-card',
-                'age': 'fas fa-user-clock',
-                'sex': 'fas fa-venus-mars',
-                'location': 'fas fa-map-marker-alt',
-                'datetime': 'fas fa-calendar-alt',
-            },
-            'empty_state': {
-                'icon_class': 'fas fa-folder-open empty-icon mb-3',
-                'title': 'No hay reportes disponibles',
-                'message': '¡Comienza a analizar imágenes para ver tus resultados aquí!',
-                'upload_button_text': 'Cargar nueva imagen',
-                'upload_button_icon': 'fas fa-upload',
-            },
-            'pagination_texts': {
-                'first': '« Primera',
-                'previous': 'Anterior',
-                'next': 'Siguiente',
-                'last': 'Última »',
-            }
-        })
-        logger.info('ReportListView', 'Contexto de lista de reportes generado.')
-        return context
+    context = super().get_context_data(**kwargs)
+    context.update({
+      'app_name': 'DermaIA',
+      'page_title': 'Mis Reportes',
+      'header_title': 'Mis Reportes de Análisis',
+      'card_labels': {
+        'report_id_prefix': 'Reporte ID',
+        'default_condition': 'Sin condición especificada',
+        'patient_name': 'Nombre:',
+        'patient_dni': 'DNI:',
+        'patient_age': 'Edad:',
+        'patient_sex': 'Sexo:',
+        'lesion_location': 'Localización:',
+        'date_time': 'Fecha y Hora:',
+        'default_na': 'N/A',
+      },
+      'button_texts': {
+        'view_detail': 'Ver Detalle',
+        'generate_pdf': 'PDF',
+        'send_email': 'Enviar por Email',
+      },
+      'icon_classes': {
+        'view_detail': 'fas fa-eye',
+        'generate_pdf': 'fas fa-file-pdf',
+        'send_email': 'fas fa-envelope',
+        'analysis': 'fas fa-microscope',
+        'patient': 'fas fa-user',
+        'dni': 'fas fa-id-card',
+        'age': 'fas fa-user-clock',
+        'sex': 'fas fa-venus-mars',
+        'location': 'fas fa-map-marker-alt',
+        'datetime': 'fas fa-calendar-alt',
+      },
+      'empty_state': {
+        'icon_class': 'fas fa-folder-open empty-icon mb-3',
+        'title': 'No hay reportes disponibles',
+        'message': '¡Comienza a analizar imágenes para ver tus resultados aquí!',
+        'upload_button_text': 'Cargar nueva imagen',
+        'upload_button_icon': 'fas fa-upload',
+      },
+      'pagination_texts': {
+        'first': '« Primera',
+        'previous': 'Anterior',
+        'next': 'Siguiente',
+        'last': 'Última »',
+      }
+    })
+    logger.info('ReportListView', 'Contexto de lista de reportes generado.')
+    return context
 
   def post(self, request, *args, **kwargs):
     """Sobrescribir el método post para manejar la generación de reportes PDF y envío por email."""
@@ -880,12 +885,14 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
       # Aquí puedes manejar la lógica para generar reportes PDF o enviar emails
       # Por ejemplo, si se envía un formulario con un botón específico:
       if 'generate_pdf' in request.POST:
-        logger.info('ReportListView', 'Generando reporte PDF para el reporte ID: {}'.format(request.POST.get('report_id')))
+        logger.info('ReportListView',
+                    'Generando reporte PDF para el reporte ID: {}'.format(request.POST.get('report_id')))
         # Lógica para generar el PDF
         messages.success(request, 'Reporte PDF generado exitosamente.')
         logger.success('ReportListView', 'Reporte PDF generado exitosamente.')
       elif 'send_email' in request.POST:
-        logger.info('ReportListView', 'Enviando reporte por email para el reporte ID: {}'.format(request.POST.get('report_id')))
+        logger.info('ReportListView',
+                    'Enviando reporte por email para el reporte ID: {}'.format(request.POST.get('report_id')))
         # Lógica para enviar el email
         messages.success(request, 'Reporte enviado por email exitosamente.')
         logger.success('ReportListView', 'Reporte enviado por email exitosamente.')
