@@ -395,6 +395,15 @@ body {
     transform: translateY(-1px);
 }
 
+ .imgResult     {
+    width: 70%;
+    height: 55%;
+     margin-left: 15%;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+ }
+
 /* RESPONSIVE */
 @media (max-width: 1024px) {
     .sidebar {

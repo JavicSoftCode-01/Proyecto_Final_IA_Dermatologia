@@ -92,7 +92,7 @@ body {
     margin-bottom: 20px;
 }
 
-.patient-info {
+.patient-info h4 {
     font-size: 16px;
     font-weight: blod;
     color: #6b7280;
@@ -137,6 +137,10 @@ body {
     padding: 12px;
     background: #f8fafc;
     border-radius: 8px;
+}
+
+.add-patient-btn{
+    display: none;
 }
 
 .consultation-detail {

@@ -2,635 +2,529 @@
 
 <!-- Estilos adicionales -->
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}" />
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-/>
-<style>
-  .btn-update[disabled] {
-    cursor: not-allowed !important;
-    opacity: 0.7;
-    pointer-events: auto;
-    position: relative;
-  }
-  .btn-update[disabled] .fa-lock {
-    margin-right: 6px;
-  }
-</style>
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}"/>
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+  <style>
+      .btn-update[disabled] {
+          cursor: not-allowed !important;
+          opacity: 0.7;
+          pointer-events: auto;
+          position: relative;
+      }
+
+      .btn-update[disabled] .fa-lock {
+          margin-right: 6px;
+      }
+  </style>
 {% endblock %} {% block content %}
-<div class="profile-container">
-  <h1 class="page-title">{{ title }}</h1>
+  <div class="profile-container">
+    <h1 class="page-title">{{ title }}</h1>
 
-  <!-- Formulario de actualización -->
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+    <!-- Formulario de actualización -->
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
 
-    <!-- Sección de foto de perfil -->
-    <div class="update-photo-section">
-      <div class="photo-label">{{ photo_section.title }}</div>
-      <div class="update-avatar-container">
-        {% if user|has_profile_picture %}
-        <img
-          id="profile-preview"
-          src="{{ user.profile_picture|s3_url }}"
-          alt="{{ photo_section.alt_text }}"
-        />
-        {% else %}
-        <img
-          id="profile-preview"
-          src="{% static 'img/avatar.jpg' %}"
-          alt="{{ photo_section.alt_text_default }}"
-        />
-        {% endif %}
+      <!-- Sección de foto de perfil -->
+      <div class="update-photo-section">
+        <div class="photo-label">{{ photo_section.title }}</div>
+        <div class="update-avatar-container">
+          {% if user|has_profile_picture %}
+            <img
+                    id="profile-preview"
+                    src="{{ user.profile_picture|s3_url }}"
+                    alt="{{ photo_section.alt_text }}"
+            />
+          {% else %}
+            <img
+                    id="profile-preview"
+                    src="{% static 'img/avatar.jpg' %}"
+                    alt="{{ photo_section.alt_text_default }}"
+            />
+          {% endif %}
+        </div>
+
+        <div class="file-selector">
+          <input
+                  type="file"
+                  name="profile_picture"
+                  id="id_profile_picture"
+                  class="form-control"
+          />
+        </div>
       </div>
 
-      <div class="file-selector">
-        <input
-          type="file"
-          name="profile_picture"
-          id="id_profile_picture"
-          class="form-control"
-        />
-      </div>
-    </div>
-
-    <!-- Campos del formulario en dos columnas -->
-    <div class="update-form-grid">
-      <!-- Columna izquierda -->
-      <div class="update-form-column">
-        <!-- Campo Nombres -->
-        <div class="update-form-group">
-          <label for="{{ form.first_name.id_for_label }}"
+      <!-- Campos del formulario en dos columnas -->
+      <div class="update-form-grid">
+        <!-- Columna izquierda -->
+        <div class="update-form-column">
+          <!-- Campo Nombres -->
+          <div class="update-form-group">
+            <label for="{{ form.first_name.id_for_label }}"
             >{{ form_labels.first_name }}</label
-          >
-          {{ form.first_name }} {% if form.first_name.errors %}
-          <div class="error-message">{{ form.first_name.errors.0 }}</div>
+            >
+            {{ form.first_name }} {% if form.first_name.errors %}
+            <div class="error-message">{{ form.first_name.errors.0 }}</div>
           {% endif %}
-        </div>
+          </div>
 
-        <!-- Campo Cédula -->
-        <div class="update-form-group">
-          <label for="{{ form.dni.id_for_label }}">{{ form_labels.dni }}</label>
-          {{ form.dni }} {% if form.dni.errors %}
-          <div class="error-message">{{ form.dni.errors.0 }}</div>
+          <!-- Campo Cédula -->
+          <div class="update-form-group">
+            <label for="{{ form.dni.id_for_label }}">{{ form_labels.dni }}</label>
+            {{ form.dni }} {% if form.dni.errors %}
+            <div class="error-message">{{ form.dni.errors.0 }}</div>
           {% endif %}
-        </div>
+          </div>
 
-        <!-- Campo Dirección -->
-        <div class="update-form-group">
-          <label for="{{ form.address.id_for_label }}"
+          <!-- Campo Dirección -->
+          <div class="update-form-group">
+            <label for="{{ form.address.id_for_label }}"
             >{{ form_labels.address }}</label
-          >
-          {{ form.address }} {% if form.address.errors %}
-          <div class="error-message">{{ form.address.errors.0 }}</div>
+            >
+            {{ form.address }} {% if form.address.errors %}
+            <div class="error-message">{{ form.address.errors.0 }}</div>
           {% endif %}
-        </div>
+          </div>
 
-        <!-- Campo Ciudad -->
-        <div class="update-form-group">
-          <label for="{{ form.city.id_for_label }}"
+          <!-- Campo Ciudad -->
+          <div class="update-form-group">
+            <label for="{{ form.city.id_for_label }}"
             >{{ form_labels.city }}</label
-          >
-          {{ form.city }} {% if form.city.errors %}
-          <div class="error-message">{{ form.city.errors.0 }}</div>
+            >
+            {{ form.city }} {% if form.city.errors %}
+            <div class="error-message">{{ form.city.errors.0 }}</div>
           {% endif %}
+          </div>
         </div>
-      </div>
 
-      <!-- Columna derecha -->
-      <div class="update-form-column">
-        <!-- Campo Apellidos -->
-        <div class="update-form-group">
-          <label for="{{ form.last_name.id_for_label }}"
+        <!-- Columna derecha -->
+        <div class="update-form-column">
+          <!-- Campo Apellidos -->
+          <div class="update-form-group">
+            <label for="{{ form.last_name.id_for_label }}"
             >{{ form_labels.last_name }}</label
-          >
-          {{ form.last_name }} {% if form.last_name.errors %}
-          <div class="error-message">{{ form.last_name.errors.0 }}</div>
+            >
+            {{ form.last_name }} {% if form.last_name.errors %}
+            <div class="error-message">{{ form.last_name.errors.0 }}</div>
           {% endif %}
-        </div>
+          </div>
 
-        <!-- Campo Teléfono -->
-        <div class="update-form-group">
-          <label for="{{ form.phone.id_for_label }}"
+          <!-- Campo Teléfono -->
+          <div class="update-form-group">
+            <label for="{{ form.phone.id_for_label }}"
             >{{ form_labels.phone }}</label
-          >
-          {{ form.phone }} {% if form.phone.errors %}
-          <div class="error-message">{{ form.phone.errors.0 }}</div>
+            >
+            {{ form.phone }} {% if form.phone.errors %}
+            <div class="error-message">{{ form.phone.errors.0 }}</div>
           {% endif %}
-        </div>
+          </div>
 
-        <!-- Campo Correo Electrónico -->
-        <div class="update-form-group">
-          <label for="{{ form.email.id_for_label }}"
+          <!-- Campo Correo Electrónico -->
+          <div class="update-form-group">
+            <label for="{{ form.email.id_for_label }}"
             >{{ form_labels.email }}</label
-          >
-          {{ form.email }} {% if form.email.errors %}
-          <div class="error-message">{{ form.email.errors.0 }}</div>
+            >
+            {{ form.email }} {% if form.email.errors %}
+            <div class="error-message">{{ form.email.errors.0 }}</div>
           {% endif %}
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="update-form-actions">
+          <button type="submit" class="btn-update">{{ buttons.update }}</button>
+          <a href="{% url 'auth:view_profile' %}" class="btn-cancel"
+          >{{ buttons.cancel }}</a
+          >
         </div>
       </div>
+    </form>
+  </div>
 
-      <!-- Botones de acción -->
-      <div class="update-form-actions">
-        <button type="submit" class="btn-update">{{ buttons.update }}</button>
-        <a href="{% url 'auth:view_profile' %}" class="btn-cancel"
-          >{{ buttons.cancel }}</a
-        >
-      </div>
-    </div>
-  </form>
-</div>
+  <!-- Scripts de validación -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Elementos del archivo de perfil
+      const profileInput = document.getElementById(
+        "{{ form.profile_picture.id_for_label }}"
+      );
+      const previewImg = document.getElementById("profile-preview");
+      const fileStatus = document.querySelector(".file-status");
+      const fileButton = document.querySelector(".file-button");
 
-<!-- Scripts de validación -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Elementos del archivo de perfil
-    const profileInput = document.getElementById(
-      "{{ form.profile_picture.id_for_label }}"
-    );
-    const previewImg = document.getElementById("profile-preview");
-    const fileStatus = document.querySelector(".file-status");
-    const fileButton = document.querySelector(".file-button");
+      // Elementos de los campos del formulario
+      const firstNameInput = document.getElementById(
+        "{{ form.first_name.id_for_label }}"
+      );
+      const lastNameInput = document.getElementById(
+        "{{ form.last_name.id_for_label }}"
+      );
+      const dniInput = document.getElementById("{{ form.dni.id_for_label }}");
+      const emailInput = document.getElementById("{{ form.email.id_for_label }}");
+      const addressInput = document.getElementById(
+        "{{ form.address.id_for_label }}"
+      );
+      const cityInput = document.getElementById("{{ form.city.id_for_label }}");
+      const phoneInput = document.getElementById("{{ form.phone.id_for_label }}");
 
-    // Elementos de los campos del formulario
-    const firstNameInput = document.getElementById(
-      "{{ form.first_name.id_for_label }}"
-    );
-    const lastNameInput = document.getElementById(
-      "{{ form.last_name.id_for_label }}"
-    );
-    const dniInput = document.getElementById("{{ form.dni.id_for_label }}");
-    const emailInput = document.getElementById("{{ form.email.id_for_label }}");
-    const addressInput = document.getElementById(
-      "{{ form.address.id_for_label }}"
-    );
-    const cityInput = document.getElementById("{{ form.city.id_for_label }}");
-    const phoneInput = document.getElementById("{{ form.phone.id_for_label }}");
+      // Función para crear mensajes de error
+      function createErrorMessage(input, message, isWarning = false) {
+        removeErrorMessage(input);
+        const errorDiv = document.createElement("div");
+        errorDiv.className = isWarning ? "warning-message" : "error-message";
+        errorDiv.textContent = message;
+        input.parentNode.appendChild(errorDiv);
 
-    // Función para crear mensajes de error
-    function createErrorMessage(input, message, isWarning = false) {
-      removeErrorMessage(input);
-      const errorDiv = document.createElement("div");
-      errorDiv.className = isWarning ? "warning-message" : "error-message";
-      errorDiv.textContent = message;
-      input.parentNode.appendChild(errorDiv);
-
-      if (!isWarning) {
-        input.classList.add("error");
-      } else {
-        input.classList.add("warning");
-      }
-    }
-
-    // Función para remover mensajes de error
-    function removeErrorMessage(input) {
-      const errorMsg = input.parentNode.querySelector(".error-message");
-      const warningMsg = input.parentNode.querySelector(".warning-message");
-      if (errorMsg) errorMsg.remove();
-      if (warningMsg) warningMsg.remove();
-      input.classList.remove("error", "warning");
-    }
-
-    // Validación de email
-    function validateEmail(value) {
-      const trimmedValue = value.trim();
-
-      if (!trimmedValue) {
-        return "El campo está vacío, por favor rellénelo.";
-      }
-
-      if (trimmedValue.length > 50) {
-        return "El correo electrónico no puede tener más de 50 caracteres.";
-      }
-
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!emailRegex.test(trimmedValue)) {
-        return "Ingrese un correo electrónico válido.";
-      }
-
-      return null;
-    }
-
-    // Validación de nombres completos
-    function validateFullName(value) {
-      const trimmedValue = value.trim();
-
-      if (!trimmedValue) {
-        return "El campo está vacío, por favor rellénelo.";
-      }
-
-      if (trimmedValue.length < 3) {
-        return "El nombre o apellido debe tener al menos 3 caracteres.";
-      }
-
-      if (trimmedValue.length > 50) {
-        return "El nombre o apellido no puede tener más de 50 caracteres.";
-      }
-
-      const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-      if (!nameRegex.test(trimmedValue)) {
-        return "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.";
-      }
-
-      return null;
-    }
-
-    // Validación de DNI
-    function validateDni(value) {
-      const trimmedValue = value.trim();
-
-      if (!trimmedValue) {
-        return {
-          message: "El campo esta vacio (opcional rellenarlo)",
-          isWarning: true,
-        };
-      }
-
-      if (trimmedValue.length !== 10) {
-        return {
-          message: "La cédula debe contener exactamente 10 dígitos.",
-          isWarning: false,
-        };
-      }
-
-      if (!/^\d+$/.test(trimmedValue)) {
-        return {
-          message: "La cédula debe contener solo números.",
-          isWarning: false,
-        };
-      }
-
-      // Algoritmo de validación ecuatoriano
-      const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
-      let total = 0;
-
-      for (let i = 0; i < 9; i++) {
-        const digito = parseInt(trimmedValue[i]);
-        const coeficiente = coeficientes[i];
-        let producto = digito * coeficiente;
-        if (producto > 9) {
-          producto -= 9;
-        }
-        total += producto;
-      }
-
-      const digitoVerificador = (total * 9) % 10;
-      if (digitoVerificador !== parseInt(trimmedValue[9])) {
-        return { message: "La cédula no es válida.", isWarning: false };
-      }
-
-      return null;
-    }
-
-    // Validación de dirección y ciudad
-    function validateAddressAndCity(value) {
-      const trimmedValue = value.trim();
-
-      if (!trimmedValue) {
-        return {
-          message: "El campo esta vacio (opcional rellenarlo)",
-          isWarning: true,
-        };
-      }
-
-      if (trimmedValue.length > 255) {
-        return {
-          message: "El campo no puede tener más de 255 caracteres.",
-          isWarning: false,
-        };
-      }
-
-      if (trimmedValue.length < 5) {
-        return {
-          message: "El campo debe tener mas de 5 caracteres.",
-          isWarning: false,
-        };
-      }
-
-      const addressRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ.\s]+$/;
-      if (!addressRegex.test(trimmedValue)) {
-        return {
-          message:
-            "El campo solo puede contener letras y espacios, incluyendo caracteres especiales como la Ñ, letras con tilde o Puntuación ( . ).",
-          isWarning: false,
-        };
-      }
-
-      return null;
-    }
-
-    // Validación de teléfono
-    function validatePhone(value) {
-      const trimmedValue = value.trim();
-
-      if (!trimmedValue) {
-        return {
-          message: "El campo esta vacio (opcional rellenarlo)",
-          isWarning: true,
-        };
-      }
-
-      if (trimmedValue.length > 16) {
-        return {
-          message: "El campo no puede tener más de 16 caracteres.",
-          isWarning: false,
-        };
-      }
-
-      const phoneRegex = /^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/;
-      if (!phoneRegex.test(trimmedValue)) {
-        return {
-          message:
-            "El teléfono debe estar en un formato válido, como 0995336523 o +593 99 533 6523. Solo digitos y el unico caracter ( + )",
-          isWarning: false,
-        };
-      }
-
-      return null;
-    }
-
-    // Validación de imagen de perfil
-    function validateProfilePicture(file) {
-      if (!file) {
-        return {
-          message: "El campo esta vacio (opcional rellenarlo)",
-          isWarning: true,
-        };
-      }
-
-      const validExtensions = ["png", "jpg", "jpeg"];
-      const extension = file.name.split(".").pop().toLowerCase();
-
-      if (!validExtensions.includes(extension)) {
-        return {
-          message: "Solo se permiten imágenes en formato PNG, JPG o JPEG.",
-          isWarning: false,
-        };
-      }
-
-      return null;
-    }
-
-    // Event listeners para validación en blur
-
-    // Nombres (obligatorio)
-    if (firstNameInput) {
-      firstNameInput.addEventListener("blur", function () {
-        const error = validateFullName(this.value);
-        if (error) {
-          createErrorMessage(this, error);
+        if (!isWarning) {
+          input.classList.add("error");
         } else {
-          removeErrorMessage(this);
+          input.classList.add("warning");
         }
-      });
-    }
+      }
 
-    // Apellidos (obligatorio)
-    if (lastNameInput) {
-      lastNameInput.addEventListener("blur", function () {
-        const error = validateFullName(this.value);
-        if (error) {
-          createErrorMessage(this, error);
-        } else {
-          removeErrorMessage(this);
+      // Función para remover mensajes de error
+      function removeErrorMessage(input) {
+        const errorMsg = input.parentNode.querySelector(".error-message");
+        const warningMsg = input.parentNode.querySelector(".warning-message");
+        if (errorMsg) errorMsg.remove();
+        if (warningMsg) warningMsg.remove();
+        input.classList.remove("error", "warning");
+      }
+
+      // Validación de email
+      function validateEmail(value) {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+          return "El campo está vacío, por favor rellénelo.";
         }
-      });
-    }
 
-    // Email (obligatorio)
-    if (emailInput) {
-      emailInput.addEventListener("blur", function () {
-        const error = validateEmail(this.value);
-        if (error) {
-          createErrorMessage(this, error);
-        } else {
-          removeErrorMessage(this);
+        if (trimmedValue.length > 50) {
+          return "El correo electrónico no puede tener más de 50 caracteres.";
         }
-      });
-    }
 
-    // DNI (opcional)
-    if (dniInput) {
-      dniInput.addEventListener("blur", function () {
-        const result = validateDni(this.value);
-        if (result) {
-          createErrorMessage(this, result.message, result.isWarning);
-        } else {
-          removeErrorMessage(this);
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(trimmedValue)) {
+          return "Ingrese un correo electrónico válido.";
         }
-      });
-    }
 
-    // Dirección (opcional)
-    if (addressInput) {
-      addressInput.addEventListener("blur", function () {
-        const result = validateAddressAndCity(this.value);
-        if (result) {
-          createErrorMessage(this, result.message, result.isWarning);
-        } else {
-          removeErrorMessage(this);
+        return null;
+      }
+
+      // Validación de nombres completos
+      function validateFullName(value) {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+          return "El campo está vacío, por favor rellénelo.";
         }
-      });
-    }
 
-    // Ciudad (opcional)
-    if (cityInput) {
-      cityInput.addEventListener("blur", function () {
-        const result = validateAddressAndCity(this.value);
-        if (result) {
-          createErrorMessage(this, result.message, result.isWarning);
-        } else {
-          removeErrorMessage(this);
+        if (trimmedValue.length < 3) {
+          return "El nombre o apellido debe tener al menos 3 caracteres.";
         }
-      });
-    }
 
-    // Teléfono (opcional)
-    if (phoneInput) {
-      phoneInput.addEventListener("blur", function () {
-        const result = validatePhone(this.value);
-        if (result) {
-          createErrorMessage(this, result.message, result.isWarning);
-        } else {
-          removeErrorMessage(this);
+        if (trimmedValue.length > 50) {
+          return "El nombre o apellido no puede tener más de 50 caracteres.";
         }
-      });
-    }
 
-    // Manejo de imagen de perfil
-    if (fileButton) {
-      fileButton.addEventListener("click", function () {
-        if (profileInput) {
-          profileInput.click();
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(trimmedValue)) {
+          return "Solo puede contener letras, incluyendo letras especiales como la Ñ o tilde.";
         }
-      });
-    }
 
-    if (profileInput) {
-      // Validación cuando se sale del input de archivo
-      profileInput.addEventListener("blur", function () {
-        const result = validateProfilePicture(this.files && this.files[0]);
-        if (result) {
-          createErrorMessage(this, result.message, result.isWarning);
-        } else {
-          removeErrorMessage(this);
+        return null;
+      }
+
+      // Validación de DNI
+      function validateDni(value) {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+          return {
+            message: "El campo esta vacio (opcional rellenarlo)",
+            isWarning: true,
+          };
         }
-      });
 
-      profileInput.addEventListener("change", function () {
-        // Remover mensaje anterior
-        removeErrorMessage(this);
+        if (trimmedValue.length !== 10) {
+          return {
+            message: "La cédula debe contener exactamente 10 dígitos.",
+            isWarning: false,
+          };
+        }
 
-        if (this.files && this.files[0]) {
-          const result = validateProfilePicture(this.files[0]);
-          if (result && !result.isWarning) {
+        if (!/^\d+$/.test(trimmedValue)) {
+          return {
+            message: "La cédula debe contener solo números.",
+            isWarning: false,
+          };
+        }
+
+        // Algoritmo de validación ecuatoriano
+        const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+        let total = 0;
+
+        for (let i = 0; i < 9; i++) {
+          const digito = parseInt(trimmedValue[i]);
+          const coeficiente = coeficientes[i];
+          let producto = digito * coeficiente;
+          if (producto > 9) {
+            producto -= 9;
+          }
+          total += producto;
+        }
+
+        const digitoVerificador = (total * 9) % 10;
+        if (digitoVerificador !== parseInt(trimmedValue[9])) {
+          return {message: "La cédula no es válida.", isWarning: false};
+        }
+
+        return null;
+      }
+
+      // Validación de dirección y ciudad
+      function validateAddressAndCity(value) {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+          return {
+            message: "El campo esta vacio (opcional rellenarlo)",
+            isWarning: true,
+          };
+        }
+
+        if (trimmedValue.length > 255) {
+          return {
+            message: "El campo no puede tener más de 255 caracteres.",
+            isWarning: false,
+          };
+        }
+
+        if (trimmedValue.length < 5) {
+          return {
+            message: "El campo debe tener mas de 5 caracteres.",
+            isWarning: false,
+          };
+        }
+
+        const addressRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ.\s]+$/;
+        if (!addressRegex.test(trimmedValue)) {
+          return {
+            message:
+              "El campo solo puede contener letras y espacios, incluyendo caracteres especiales como la Ñ, letras con tilde o Puntuación ( . ).",
+            isWarning: false,
+          };
+        }
+
+        return null;
+      }
+
+      // Validación de teléfono
+      function validatePhone(value) {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+          return {
+            message: "El campo esta vacio (opcional rellenarlo)",
+            isWarning: true,
+          };
+        }
+
+        if (trimmedValue.length > 16) {
+          return {
+            message: "El campo no puede tener más de 16 caracteres.",
+            isWarning: false,
+          };
+        }
+
+        const phoneRegex = /^(\+593\s\d{2}\s\d{3}\s\d{4}|0\d{9})$/;
+        if (!phoneRegex.test(trimmedValue)) {
+          return {
+            message:
+              "El teléfono debe estar en un formato válido, como 0995336523 o +593 99 533 6523. Solo digitos y el unico caracter ( + )",
+            isWarning: false,
+          };
+        }
+
+        return null;
+      }
+
+      // Validación de imagen de perfil
+      function validateProfilePicture(file) {
+        if (!file) {
+          return {
+            message: "El campo esta vacio (opcional rellenarlo)",
+            isWarning: true,
+          };
+        }
+
+        const validExtensions = ["png", "jpg", "jpeg"];
+        const extension = file.name.split(".").pop().toLowerCase();
+
+        if (!validExtensions.includes(extension)) {
+          return {
+            message: "Solo se permiten imágenes en formato PNG, JPG o JPEG.",
+            isWarning: false,
+          };
+        }
+
+        return null;
+      }
+
+      // Event listeners para validación en blur
+
+      // Nombres (obligatorio)
+      if (firstNameInput) {
+        firstNameInput.addEventListener("blur", function () {
+          const error = validateFullName(this.value);
+          if (error) {
+            createErrorMessage(this, error);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Apellidos (obligatorio)
+      if (lastNameInput) {
+        lastNameInput.addEventListener("blur", function () {
+          const error = validateFullName(this.value);
+          if (error) {
+            createErrorMessage(this, error);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Email (obligatorio)
+      if (emailInput) {
+        emailInput.addEventListener("blur", function () {
+          const error = validateEmail(this.value);
+          if (error) {
+            createErrorMessage(this, error);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // DNI (opcional)
+      if (dniInput) {
+        dniInput.addEventListener("blur", function () {
+          const result = validateDni(this.value);
+          if (result) {
             createErrorMessage(this, result.message, result.isWarning);
-            this.value = ""; // Limpiar el input si hay error
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Dirección (opcional)
+      if (addressInput) {
+        addressInput.addEventListener("blur", function () {
+          const result = validateAddressAndCity(this.value);
+          if (result) {
+            createErrorMessage(this, result.message, result.isWarning);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Ciudad (opcional)
+      if (cityInput) {
+        cityInput.addEventListener("blur", function () {
+          const result = validateAddressAndCity(this.value);
+          if (result) {
+            createErrorMessage(this, result.message, result.isWarning);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Teléfono (opcional)
+      if (phoneInput) {
+        phoneInput.addEventListener("blur", function () {
+          const result = validatePhone(this.value);
+          if (result) {
+            createErrorMessage(this, result.message, result.isWarning);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+      }
+
+      // Manejo de imagen de perfil
+      if (fileButton) {
+        fileButton.addEventListener("click", function () {
+          if (profileInput) {
+            profileInput.click();
+          }
+        });
+      }
+
+      if (profileInput) {
+        // Validación cuando se sale del input de archivo
+        profileInput.addEventListener("blur", function () {
+          const result = validateProfilePicture(this.files && this.files[0]);
+          if (result) {
+            createErrorMessage(this, result.message, result.isWarning);
+          } else {
+            removeErrorMessage(this);
+          }
+        });
+
+        profileInput.addEventListener("change", function () {
+          // Remover mensaje anterior
+          removeErrorMessage(this);
+
+          if (this.files && this.files[0]) {
+            const result = validateProfilePicture(this.files[0]);
+            if (result && !result.isWarning) {
+              createErrorMessage(this, result.message, result.isWarning);
+              this.value = ""; // Limpiar el input si hay error
+              if (fileStatus) {
+                fileStatus.textContent = "Ningún archivo seleccionado";
+              }
+            } else {
+              // Actualizar texto de estado
+              if (fileStatus) {
+                fileStatus.textContent = this.files[0].name;
+              }
+
+              // Actualizar la imagen de vista previa
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                if (previewImg) {
+                  previewImg.src = e.target.result;
+                }
+              };
+              reader.readAsDataURL(this.files[0]);
+            }
+          } else {
             if (fileStatus) {
               fileStatus.textContent = "Ningún archivo seleccionado";
             }
-          } else {
-            // Actualizar texto de estado
-            if (fileStatus) {
-              fileStatus.textContent = this.files[0].name;
-            }
-
-            // Actualizar la imagen de vista previa
-            const reader = new FileReader();
-            reader.onload = function (e) {
-              if (previewImg) {
-                previewImg.src = e.target.result;
-              }
-            };
-            reader.readAsDataURL(this.files[0]);
           }
-        } else {
-          if (fileStatus) {
-            fileStatus.textContent = "Ningún archivo seleccionado";
-          }
-        }
-      });
-    }
-  });
-</script>
-{% endblock %} {% block extra_js %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Elementos del archivo de perfil
-    const profileInput = document.getElementById(
-      "{{ form.profile_picture.id_for_label }}"
-    );
-    const previewImg = document.getElementById("profile-preview");
-    const fileStatus = document.querySelector(".file-status");
-    const fileButton = document.querySelector(".file-button");
-
-    // Elementos de los campos del formulario
-    const firstNameInput = document.getElementById(
-      "{{ form.first_name.id_for_label }}"
-    );
-    const lastNameInput = document.getElementById(
-      "{{ form.last_name.id_for_label }}"
-    );
-    const dniInput = document.getElementById("{{ form.dni.id_for_label }}");
-    const emailInput = document.getElementById("{{ form.email.id_for_label }}");
-    const addressInput = document.getElementById(
-      "{{ form.address.id_for_label }}"
-    );
-    const cityInput = document.getElementById("{{ form.city.id_for_label }}");
-    const phoneInput = document.getElementById("{{ form.phone.id_for_label }}");
-
-    const form = document.querySelector("form");
-    const updateBtn = form.querySelector(
-      'button[type="submit"], .btn-update, .btn-auth, .btn-primary, .btn-success'
-    );
-    const updateBtnText = "{{ buttons.update }}";
-
-    // Guardar valores iniciales de los campos
-    const initialValues = {};
-    [
-      firstNameInput,
-      lastNameInput,
-      dniInput,
-      emailInput,
-      addressInput,
-      cityInput,
-      phoneInput,
-    ].forEach(function (input) {
-      if (input) {
-        initialValues[input.name] = (input.value || "").trim();
-      }
-    });
-
-    // Icono de candado y tooltip
-    function setLockIconAndTooltip(show) {
-      if (!updateBtn) return;
-      if (show) {
-        updateBtn.innerHTML = '<i class="fa fa-lock"></i> ' + updateBtnText;
-        updateBtn.setAttribute(
-          "title",
-          "SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO"
-        );
-      } else {
-        updateBtn.innerHTML = updateBtnText;
-        updateBtn.removeAttribute("title");
-      }
-    }
-
-    function isFormChanged() {
-      let changed = false;
-      [
-        firstNameInput,
-        lastNameInput,
-        dniInput,
-        emailInput,
-        addressInput,
-        cityInput,
-        phoneInput,
-      ].forEach(function (input) {
-        if (input) {
-          const current = (input.value || "").trim();
-          if (current !== initialValues[input.name]) {
-            changed = true;
-          }
-        }
-      });
-      return changed;
-    }
-
-    function checkFormChangeAndToggleBtn() {
-      if (isFormChanged()) {
-        updateBtn.disabled = false;
-        setLockIconAndTooltip(false);
-      } else {
-        updateBtn.disabled = true;
-        setLockIconAndTooltip(true);
-      }
-    }
-
-    // Deshabilitar el botón al cargar y poner candado
-    if (updateBtn) {
-      updateBtn.disabled = true;
-      setLockIconAndTooltip(true);
-    }
-
-    // Detectar cambios en los campos
-    [
-      firstNameInput,
-      lastNameInput,
-      dniInput,
-      emailInput,
-      addressInput,
-      cityInput,
-      phoneInput,
-    ].forEach(function (input) {
-      if (input) {
-        input.addEventListener("input", function (e) {
-          checkFormChangeAndToggleBtn();
         });
-        input.addEventListener("blur", checkFormChangeAndToggleBtn);
       }
     });
-  });
-</script>
+  </script>
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/profile.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const updateButton = document.querySelector(".btn-update");
+        if (updateButton) {
+            updateButton.disabled = true; // Deshabilitar el botón al cargar la página
+        }
+        });
+    </script>
 {% endblock %}

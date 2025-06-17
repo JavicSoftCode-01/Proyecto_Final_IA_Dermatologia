@@ -13,7 +13,7 @@ class PatientFormManager {
     initializeElements() {
         this.form = document.querySelector('form');
         this.submitBtn = this.form.querySelector('button[type="submit"]');
-        
+
         // Campos del formulario
         this.firstNameInput = document.getElementById('id_first_name');
         this.lastNameInput = document.getElementById('id_last_name');
@@ -22,7 +22,7 @@ class PatientFormManager {
         this.emailInput = document.getElementById('id_email');
         this.ageInput = document.getElementById('id_age_approx');
         this.sexSelect = document.getElementById('id_sex');
-        
+
         this.allFields = [
             this.firstNameInput, this.lastNameInput, this.dniInput,
             this.phoneInput, this.emailInput, this.ageInput, this.sexSelect
@@ -35,7 +35,7 @@ class PatientFormManager {
         this.allFields.forEach(field => {
             this.initialValues[field.name] = (field.value || '').trim();
         });
-        
+
         this.submitBtnText = this.submitBtn.textContent;
         this.isFormValid = true;
     }
@@ -87,10 +87,10 @@ class PatientFormManager {
 
     formatPhoneInput() {
         let value = this.phoneInput.value;
-        
+
         // Permitir solo números, + y espacios
         value = value.replace(/[^\d+\s]/g, '');
-        
+
         // Si empieza con +593, formatear automáticamente
         if (value.startsWith('+593') && value.length > 4) {
             value = value.replace(/(\+593)(\d{0,2})(\d{0,3})(\d{0,4})/, (match, p1, p2, p3, p4) => {
@@ -101,7 +101,7 @@ class PatientFormManager {
                 return formatted;
             });
         }
-        
+
         this.phoneInput.value = value;
     }
 
@@ -116,10 +116,10 @@ class PatientFormManager {
 
     setSubmitButtonState(disabled) {
         this.submitBtn.disabled = disabled;
-        
+
         if (disabled) {
             this.submitBtn.innerHTML = '<i class="fa fa-lock"></i> ' + this.submitBtnText;
-            this.submitBtn.setAttribute('title', 'SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO');
+            // this.submitBtn.setAttribute('title', 'SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO');
         } else {
             this.submitBtn.innerHTML = this.submitBtnText;
             this.submitBtn.removeAttribute('title');
@@ -274,11 +274,11 @@ class PatientFormManager {
 
     createErrorMessage(field, message, isWarning = false) {
         this.removeErrorMessage(field);
-        
+
         const errorDiv = document.createElement('div');
         errorDiv.className = isWarning ? 'warning-message' : 'error-message';
         errorDiv.textContent = message;
-        
+
         field.parentNode.appendChild(errorDiv);
         field.classList.add(isWarning ? 'warning' : 'error');
     }
@@ -287,16 +287,16 @@ class PatientFormManager {
         const parentNode = field.parentNode;
         const errorMsg = parentNode.querySelector('.error-message');
         const warningMsg = parentNode.querySelector('.warning-message');
-        
+
         if (errorMsg) errorMsg.remove();
         if (warningMsg) warningMsg.remove();
-        
+
         field.classList.remove('error', 'warning');
     }
 
     handleFormSubmit(e) {
         this.isFormValid = true;
-        
+
         // Validar todos los campos
         this.allFields.forEach(field => {
             this.validateField(field);
@@ -316,7 +316,7 @@ class PatientFormManager {
         alert.style.right = '20px';
         alert.style.zIndex = '9999';
         alert.style.minWidth = '300px';
-        
+
         alert.innerHTML = `
             <i class="fas fa-${this.getAlertIcon(type)}"></i>
             ${message}

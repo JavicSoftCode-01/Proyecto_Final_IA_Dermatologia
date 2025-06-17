@@ -110,14 +110,14 @@
 
         <!-- Botones de acción -->
         <div class="form-actions">
-          <a href="{{ buttons.cancel.url }}" class="btn-cancel">
-            <i class="fas fa-times"></i>
-            {{ buttons.cancel.text }}
-          </a>
-          <button type="submit" class="btn-submit">
+
+          <button type="submit" class="btn-submit" title="SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO">
             <i class="fas fa-save"></i>
             {{ buttons.submit.text }}
           </button>
+          <a href="{{ buttons.cancel.url }}" class="btn-cancel">
+            {{ buttons.cancel.text }}
+          </a>
         </div>
       </form>
     </div>

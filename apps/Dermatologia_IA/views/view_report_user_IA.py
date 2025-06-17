@@ -281,19 +281,17 @@ class AIProcessor:
     if not gemini_model:
       return default_report, default_treatment
     try:
-      # report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas."
       report_prompt = (
         f"Eres un médico dermatólogo con más de 20 años de experiencia. "
         f"Elabora un informe de análisis sobre la condición «{condition}» "
-        f"(máx. 800 caracteres), describiendo con detalle qué es, sus síntomas, "
+        f"(máx. 1000 caracteres, sin cortar palabras o frases), describiendo con detalle qué es, sus síntomas, "
         f"mecanismos subyacentes, factores de riesgo y posibles causas."
       )
 
-      # treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados."
       treatment_prompt = (
         f"Eres un médico dermatólogo con más de 20 años de experiencia. "
         f"Elabora recomendaciones breves para la condición «{condition}» "
-        f"(máx. 800 caracteres), incluyendo tratamientos generales, cuidados de la piel, "
+        f"(máx. 1000 caracteres, sin cortar palabras o frases), incluyendo tratamientos generales, cuidados de la piel, "
         f"medidas preventivas y pautas de seguimiento."
       )
 
@@ -596,7 +594,7 @@ class UploadImageView(CustomLoginRequiredMixin, View):
             'dni': 'DNI',
             'phone': 'Teléfono',
             'email': 'Correo Electrónico',
-            'age_approx': 'Edad Aproximada',
+            'age_approx': 'Edad',
             'sex': 'Sexo',
           },
           'sex_placeholder': '-- Seleccionar Sexo --',

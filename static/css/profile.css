@@ -219,9 +219,8 @@ textarea:focus {
 /* Título de página */
 .page-title {
     font-size: 28px;
-    color: #3b82f6;
     margin-bottom: 30px;
-    font-weight: 600;
+    font-weight: bold;
 }
 
 .update-photo-section {
@@ -306,7 +305,7 @@ textarea:focus {
 }
 
 .update-form-actions {
-  margin-top: 30px;
+  margin-top: -50px;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
@@ -327,14 +326,19 @@ textarea:focus {
 }
 
 .btn-cancel {
-  background-color: #f1f3f4;
-  color: #5f6368;
+  background-color: rgba(107, 110, 115, 0.97);
+  color: white;
   border: none;
   border-radius: 4px;
   padding: 10px 20px;
   text-decoration: none;
   font-size: 16px;
   cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #5f6368;
+
 }
 
 /* Estilos para el formulario de actualización de perfil */
