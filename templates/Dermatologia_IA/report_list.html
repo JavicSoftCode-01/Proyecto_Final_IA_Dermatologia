@@ -17,6 +17,9 @@
       <p>Visualiza y gestiona todos tus análisis dermatológicos realizados</p>
     </div>
 
+    <!-- Barra de búsqueda y acciones -->
+    {% include 'includes/search.html' %}
+
     <!-- Contenido principal -->
     {% if reports %}
       <!-- Grid de reportes -->
@@ -104,6 +107,7 @@
                       data-bs-target="#emailModal{{ report.id }}"
                       data-report-id="{{ report.id }}"
                       data-patient-name="
+
                               {% if report.patient.first_name or report.patient.last_name %}{{ report.patient.first_name|default:'' }}
                                 {{ report.patient.last_name|default:'' }}{% else %}Paciente desconocido{% endif %}"
                       data-patient-email="{{ report.patient.email|default:'' }}"

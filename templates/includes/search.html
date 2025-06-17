@@ -1,0 +1,26 @@
+<!-- Barra de búsqueda y acciones -->
+<div class="search-actions-bar">
+  <div class="search-container">
+    <form method="get" class="search-form">
+      <div class="search-input-group">
+        <input
+                type="text"
+                name="dni"
+                class="search-input"
+                placeholder="{{ texts.search_placeholder }}"
+                maxlength="10"
+                value="{{ request.GET.dni|default_if_none:'' }}"
+        />
+        <button type="submit" class="search-btn">
+          <i class="fas fa-search"></i>
+          {{ actions.search.button_text }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <a href="{% url 'dermatology:patient-create' %}" class="add-patient-btn">
+    <i class="fas fa-plus"></i>
+    {{ actions.add.button_text }}
+  </a>
+</div>

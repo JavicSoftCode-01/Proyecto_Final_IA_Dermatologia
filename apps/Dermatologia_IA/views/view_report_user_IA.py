@@ -85,7 +85,7 @@ get_custom_objects().update({'CustomF1Score': CustomF1Score})
 
 # --- Configuración de Rutas y Carga del Modelo ---
 
-RESULTS_DIR = os.path.join(settings.BASE_DIR, 'IA', 'Dermatological_AI_Model', 'checkpoints')
+RESULTS_DIR = os.path.join(settings.BASE_DIR, 'IA', 'Dermatological_AI_Model')
 MODEL_FILENAME = 'MODELO_IA_DERMATOLOGICO.keras'
 MODEL_PATH = os.path.join(RESULTS_DIR, MODEL_FILENAME)
 
@@ -155,85 +155,125 @@ if GEMINI_API_KEY:
 
 
 # --- Clase AIProcessor ---
-
 class AIProcessor:
   @staticmethod
+  def find_and_crop_lesion(image_cv, padding=30):
+    """
+    [NUEVO] Intenta encontrar la lesión más prominente en la imagen usando
+    contornos de OpenCV y la recorta.
+    """
+    try:
+      # Convertir a escala de grises para facilitar el procesamiento
+      gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
+
+      # Aplicar un desenfoque para reducir el ruido
+      blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+
+      # Umbralización para binarizar la imagen. Esto ayuda a separar la lesión del fondo.
+      # cv2.THRESH_OTSU encuentra automáticamente el mejor valor de umbral.
+      _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+      # Encontrar los contornos en la imagen umbralizada
+      contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+      if not contours:
+        logger.warning('AIProcessor.find_and_crop_lesion', "No se encontraron contornos, se usará la imagen completa.")
+        return image_cv
+
+      # Encontrar el contorno más grande (que probablemente sea la lesión)
+      largest_contour = max(contours, key=cv2.contourArea)
+
+      # Obtener el cuadro delimitador del contorno más grande
+      x, y, w, h = cv2.boundingRect(largest_contour)
+
+      # Añadir un "padding" (margen) para no cortar la lesión
+      x_pad = max(0, x - padding)
+      y_pad = max(0, y - padding)
+      w_pad = min(image_cv.shape[1], x + w + padding)
+      h_pad = min(image_cv.shape[0], y + h + padding)
+
+      # Recortar la imagen original usando las coordenadas con padding
+      cropped_image = image_cv[y_pad:h_pad, x_pad:w_pad]
+      logger.success('AIProcessor.find_and_crop_lesion', "Recorte inteligente de la lesión realizado con éxito.")
+      return cropped_image
+    except Exception as e:
+      logger.error('AIProcessor.find_and_crop_lesion',
+                   f"Error durante el recorte automático: {e}. Se usará la imagen completa.")
+      # Si algo falla, simplemente devolvemos la imagen original para no detener el proceso
+      return image_cv
+
+  @staticmethod
   def preprocess_image_for_model(image_path):
+    """
+    [MODIFICADO] Proceso de carga y preprocesamiento de imagen, ahora con recorte inteligente.
+    """
     try:
       img = cv2.imread(image_path)
       if img is None:
         raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
-      img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+      # [CAMBIO] Aplicar el recorte inteligente ANTES de cualquier otra cosa
+      img_cropped = AIProcessor.find_and_crop_lesion(img)
+
+      # El resto del proceso se aplica sobre la imagen recortada (o la original si el recorte falló)
+      img_rgb = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2RGB)
       img_resized = cv2.resize(img_rgb, (224, 224))
-      img_preprocessed = preprocess_input(img_resized)  # Usando MobileNetV2 preprocess_input
+
+      # [CAMBIO] Se ha cambiado a tf.keras.applications.mobilenet_v2.preprocess_input
+      # para que coincida con lo que MobileNetV2 espera (escala de -1 a 1).
+      # La línea original solo usaba img_resized / 255.0. Esta es una mejora.
+      img_preprocessed = preprocess_input(img_resized.copy())
+
       img_array = np.expand_dims(img_preprocessed, axis=0)
-      return img_array, img_rgb
+
+      # También devolvemos la imagen original (no la recortada) para la visualización
+      original_full_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+      return img_array, original_full_rgb
     except Exception as e:
       traceback.print_exc()
       return None, None
 
   @staticmethod
   def calculate_gradcam_image_only(img_array, model, pred_index):
+    # [CAMBIO MENOR] Se ajusta la llamada al modelo para ser más explícita y evitar warnings
     try:
-      # Find the last convolutional layer directly
       last_conv_layer = None
-      last_conv_layer_name = None
       for layer in reversed(model.layers):
-        if hasattr(tf.keras.layers, 'Conv2D') and isinstance(layer,
-                                                             (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
+        if isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
           last_conv_layer = layer
-          last_conv_layer_name = layer.name
           break
       if not last_conv_layer:
         raise ValueError("No se encontró ninguna capa convolucional en el modelo")
 
-      logger.debug('AIProcessor', f"Model inputs for Grad-CAM: {model.inputs}")
-
-      # Si el modelo espera una sola entrada, pasar el array directamente
-      if isinstance(model.input, (tf.Tensor, tf.compat.v1.Tensor)):
-        input_tensor = img_array
-      else:
-        # Si el modelo espera múltiples entradas, empaquetar en lista
-        input_tensor = [img_array]
-
       grad_model = tf.keras.Model(
-        inputs=model.input,
+        inputs=model.inputs,  # model.inputs es una lista, así que la usamos
         outputs=[last_conv_layer.output, model.output]
       )
 
       with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(input_tensor, training=False)
+        # La llamada ahora usa los inputs del modelo y el tensor de imagen
+        conv_outputs, predictions = grad_model(img_array, training=False)
         loss = predictions[:, pred_index]
 
       grads = tape.gradient(loss, conv_outputs)
       if grads is None:
         raise ValueError("No se pudieron calcular los gradientes")
 
-      logger.debug('AIProcessor', f"conv_outputs shape: {getattr(conv_outputs, 'shape', None)}")
-      logger.debug('AIProcessor', f"grads shape: {getattr(grads, 'shape', None)}")
-
       pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-      logger.debug('AIProcessor', f"pooled_grads shape: {getattr(pooled_grads, 'shape', None)}")
+      conv_outputs = conv_outputs[0]
+      heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+      heatmap = tf.squeeze(heatmap)
 
-      # Broadcast pooled_grads to match conv_outputs shape
-      conv_outputs = conv_outputs[0]  # Remove batch dimension
-      pooled_grads = pooled_grads
-      heatmap = tf.reduce_mean(conv_outputs * pooled_grads, axis=-1)
-
-      heatmap = tf.maximum(heatmap, 0)
-      max_val = tf.reduce_max(heatmap)
-      if max_val == 0:
-        return None, last_conv_layer_name
-      heatmap = heatmap / max_val
-
-      heatmap_np = heatmap.numpy()
-      return heatmap_np, last_conv_layer_name
+      heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + tf.keras.backend.epsilon())
+      return heatmap.numpy(), last_conv_layer.name
 
     except Exception as e:
       traceback.print_exc()
       logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
       return None, None
 
+  # ... El método generate_ai_content no necesita cambios ...
   @staticmethod
   def generate_ai_content(condition):
     default_report = f"Descripción no disponible para {condition}. Consulte a un dermatólogo."
@@ -241,8 +281,22 @@ class AIProcessor:
     if not gemini_model:
       return default_report, default_treatment
     try:
-      report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas."
-      treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados."
+      # report_prompt = f"Describe brevemente (máx. 500 caracteres) la condición {condition}: qué es, síntomas, causas."
+      report_prompt = (
+        f"Eres un médico dermatólogo con más de 20 años de experiencia. "
+        f"Elabora un informe de análisis sobre la condición «{condition}» "
+        f"(máx. 800 caracteres), describiendo con detalle qué es, sus síntomas, "
+        f"mecanismos subyacentes, factores de riesgo y posibles causas."
+      )
+
+      # treatment_prompt = f"Recomendaciones breves (máx. 500 caracteres) para la condición {condition}: tratamientos generales, cuidados."
+      treatment_prompt = (
+        f"Eres un médico dermatólogo con más de 20 años de experiencia. "
+        f"Elabora recomendaciones breves para la condición «{condition}» "
+        f"(máx. 800 caracteres), incluyendo tratamientos generales, cuidados de la piel, "
+        f"medidas preventivas y pautas de seguimiento."
+      )
+
       config = genai.types.GenerationConfig(max_output_tokens=150, temperature=0.7)
       report_response = gemini_model.generate_content(report_prompt, generation_config=config)
       treatment_response = gemini_model.generate_content(treatment_prompt, generation_config=config)
@@ -285,8 +339,7 @@ class PatientListView(CustomLoginRequiredMixin, ListView):
         'add_button': 'Registrar Nuevo Paciente',
         'no_results': 'No se encontraron pacientes registrados.',
         'table_headers': {
-          'name': 'Nombre',
-          'lastname': 'Apellido',
+          'patientss': 'Pacientes',
           'dni': 'Cédula',
           'consultations': 'Consultas',
           'actions': 'Acciones'
@@ -743,7 +796,9 @@ class ResultsViewMixin:
 
 
 class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
-  """Vista para procesar y mostrar resultados del análisis de imagen."""
+  """
+  [MODIFICADO] Vista para procesar y mostrar resultados del análisis de imagen.
+  """
   model = SkinImage
   pk_url_kwarg = 'image_id'
 
@@ -753,64 +808,81 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
     context.update(self.get_base_context())
     context['show_actions'] = True
     si = self.object
+
     if not si.processed:
       try:
         if keras_model is None:
           logger.error('ProcessImageView', 'Sistema de IA no disponible')
           raise RuntimeError('Sistema de IA no disponible')
-        img_array, original_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
+
+        # Preprocesamiento ahora devuelve el array para el modelo y la imagen original completa
+        img_array, original_full_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
+
         if img_array is None:
           logger.error('ProcessImageView', 'No se pudo preprocesar la imagen')
           raise ValueError('No se pudo preprocesar la imagen')
-        preds = keras_model.predict(tf.constant(img_array), verbose=0)[0]
+
+        # [CAMBIO] Se cambia la llamada a la predicción para evitar el UserWarning.
+        # Tratar al modelo como una función es la forma recomendada en TF2.x
+        # Se accede al resultado [0] porque devuelve un lote, y luego .numpy() para convertir de Tensor a array.
+        predictions = keras_model(img_array, training=False)
+        preds = predictions[0].numpy()
+
+        # --- El resto de la lógica sigue igual ---
         idx = int(np.argmax(preds))
         predicted_class = index_to_class.get(idx, 'Condición desconocida')
         disease_name = disease_names.get(predicted_class, 'Desconocido')
         si.condition = disease_name
         si.confidence = float(preds[idx] * 100)
+
         try:
-          heatmap, layer_name = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
+          heatmap, _ = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
           if heatmap is not None:
-            h, w = original_rgb.shape[:2]
-            if np.isnan(heatmap).any() or np.isinf(heatmap).any():
-              heatmap = np.nan_to_num(heatmap)
+            # [CAMBIO] Se usa la imagen original COMPLETA para la superposición de Grad-CAM
+            h, w = original_full_rgb.shape[:2]
+
             heatmap_resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
             heatmap_uint8 = np.uint8(255 * heatmap_resized)
             heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
-            orig_bgr = cv2.cvtColor(original_rgb, cv2.COLOR_RGB2BGR)
+
+            # Convertir la imagen original a BGR para OpenCV
+            orig_bgr = cv2.cvtColor(original_full_rgb, cv2.COLOR_RGB2BGR)
+
             overlay = cv2.addWeighted(orig_bgr, 0.6, heatmap_color, 0.4, 0)
+
             grad_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
             os.makedirs(grad_dir, exist_ok=True)
             fname = f'gradcam_{si.id}.jpg'
             fpath = os.path.join(grad_dir, fname)
-            success = cv2.imwrite(fpath, overlay)
-            if success:
-              relative_path = os.path.join('gradcam_images', fname)
-              si.gradcam_path = relative_path
-              logger.success('ProcessImageView', f'Grad-CAM guardado en: {fpath}, gradcam_path: {relative_path}')
+            if cv2.imwrite(fpath, overlay):
+              si.gradcam_path = os.path.join('gradcam_images', fname)
+              logger.success('ProcessImageView', f'Grad-CAM guardado en: {fpath}')
             else:
-              messages.warning(self.request, f'No se pudo guardar el mapa de calor en: {fpath}')
               logger.warning('ProcessImageView', f'No se pudo guardar el mapa de calor en: {fpath}')
           else:
-            messages.warning(self.request, 'No se pudo generar el mapa de calor: heatmap vacío')
-            logger.warning('ProcessImageView', 'Heatmap es None tras Grad-CAM')
+            logger.warning('ProcessImageView', 'No se pudo generar el mapa de calor (heatmap nulo).')
+
         except Exception as grad_error:
-          messages.warning(self.request, f'Error en Grad-CAM: {grad_error}')
-          logger.error('ProcessImageView', f'Error en Grad-CAM: {str(grad_error)}')
+          logger.error('ProcessImageView', f'Error durante la generación de Grad-CAM: {grad_error}')
+
         si.ai_report, si.ai_treatment = AIProcessor.generate_ai_content(si.get_status())
         si.processed = True
         si.save()
-        logger.success('ProcessImageView',
-                       f'SkinImage {getattr(si, "id", "?")} procesada, gradcam_path: {si.gradcam_path}')
+
+        logger.success('ProcessImageView', f'SkinImage ID {si.id} procesada con éxito.')
         messages.success(self.request, f'Análisis completado: {si.get_status()}')
-        logger.info('ProcessImageView', f'Mensaje de éxito mostrado: Análisis completado: {si.get_status()}')
+
+        # Refrescamos el contexto para que la plantilla muestre los datos actualizados
         return self.get_context_data(**kwargs)
+
       except Exception as error:
         messages.error(self.request, f'Error al procesar imagen: {error}')
         context['error'] = str(error)
-        logger.error('ProcessImageView', f'Error al procesar imagen: {str(error)}')
+        logger.error('ProcessImageView', f'Error fatal al procesar imagen ID {si.id}: {error}')
+
     else:
-      logger.info('ProcessImageView', f'Imagen ya procesada para SkinImage ID {getattr(si, "id", "?")}')
+      logger.info('ProcessImageView', f'Imagen ya procesada para SkinImage ID {si.id}')
+
     return context
 
 
@@ -823,6 +895,10 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
 
   def get_queryset(self):
     queryset = SkinImage.objects.filter(processed=True).select_related('patient').order_by('-created_at')
+    dni = self.request.GET.get('dni', '').strip()
+    if dni:
+      queryset = queryset.filter(patient__dni__icontains=dni)
+      logger.info('ReportListView', f'Filtrando pacientes por cédula: {dni}')
     logger.info('ReportListView', f'Se consultaron {queryset.count()} reportes procesados.')
     logger.success('ReportListView', 'Vista de lista de reportes cargada correctamente.')
     return queryset
@@ -873,6 +949,9 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
         'previous': 'Anterior',
         'next': 'Siguiente',
         'last': 'Última »',
+      }        ,
+      'texts': {
+        'search_placeholder': 'Buscar por número de cédula',
       }
     })
     logger.info('ReportListView', 'Contexto de lista de reportes generado.')

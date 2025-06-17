@@ -140,12 +140,6 @@
             {# Si es para una lista, el ID del modal debe ser #emailModal{{ skin_image.id }} #}
             {% include "includes/sendEmail.html" with skin_image=skin_image modal_id_suffix=skin_image.id %}
           {% else %}
-            <div class="mt-4 text-center">
-              <p class="text-muted"><i>Las acciones adicionales no están disponibles en esta vista.</i></p>
-              <a href="{% url 'dermatology:report_list' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-list-ul"></i> Volver a Mis Reportes
-              </a>
-            </div>
           {% endif %}
         {% else %}
           <div class="text-muted">

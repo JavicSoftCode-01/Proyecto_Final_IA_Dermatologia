@@ -408,7 +408,6 @@ body {
 }
 
 .patient-info h6 {
-    color: #3b82f6;
     font-weight: 600;
     margin-bottom: 16px;
     border-bottom: 1px solid #e5e7eb;
@@ -418,10 +417,11 @@ body {
 .patient-info p {
     margin-bottom: 8px;
     line-height: 1.5;
+    color: #6B7280;
 }
 
 .patient-info strong {
-    color: #374151;
+    color: black;
     min-width: 80px;
     display: inline-block;
 }
@@ -455,37 +455,37 @@ body {
     .patient-header {
         padding: 24px 20px;
     }
-    
+
     .patient-content {
         padding: 20px;
     }
-    
+
     .search-actions-bar {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .search-container {
         max-width: none;
         margin-bottom: 16px;
     }
-    
+
     .patients-cards-container {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .patient-info-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-    
+
     .patient-card-footer {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
     }
-    
+
     .action-buttons {
         justify-content: center;
     }
@@ -497,22 +497,22 @@ body {
         padding: 8px 4px;
         font-size: 11px;
     }
-    
+
     .patients-table th:first-child,
     .patients-table td:first-child {
         padding-left: 12px;
     }
-    
+
     .patients-table th:last-child,
     .patients-table td:last-child {
         padding-right: 12px;
     }
-    
+
     .btn-action {
         padding: 4px 8px;
         font-size: 10px;
     }
-    
+
     .btn-action i {
         display: none; /* Ocultar iconos en pantallas muy pequeñas */
     }
@@ -662,7 +662,7 @@ body.modal-open {
         margin: 0.5rem;
         max-width: calc(100% - 1rem);
     }
-    
+
     .modal-lg {
         max-width: none;
     }

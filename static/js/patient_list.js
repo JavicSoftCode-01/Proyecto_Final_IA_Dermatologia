@@ -57,12 +57,12 @@ class PatientListManager {
 
     handleSearchInput(e) {
         const value = e.target.value;
-        
+
         // Validar que solo sean números
         if (value && !/^\d*$/.test(value)) {
             e.target.value = value.replace(/\D/g, '');
         }
-        
+
         // Limitar a 10 caracteres
         if (e.target.value.length > 10) {
             e.target.value = e.target.value.slice(0, 10);
@@ -71,11 +71,10 @@ class PatientListManager {
 
     handleSearchSubmit(e) {
         const searchValue = this.searchInput.value.trim();
-        
+
         if (searchValue && searchValue.length < 3) {
             e.preventDefault();
             this.showAlert('La búsqueda debe tener al menos 3 caracteres', 'warning');
-            return;
         }
     }
 
@@ -95,23 +94,23 @@ class PatientListManager {
         const patientId = button.dataset.patientId;
         const modalId = `patientModal${patientId}`;
         const modal = document.getElementById(modalId);
-        
+
         console.log('Intentando abrir modal:', modalId);
         console.log('Modal encontrado:', modal);
-        
+
         if (modal) {
             // Crear backdrop manualmente
             const backdrop = document.createElement('div');
             backdrop.className = 'modal-backdrop fade show';
             backdrop.style.zIndex = '1040';
             document.body.appendChild(backdrop);
-            
+
             // Mostrar modal
             modal.style.display = 'block';
             modal.style.zIndex = '1050';
             modal.classList.add('show');
             document.body.classList.add('modal-open');
-            
+
             // Configurar cierre del modal
             this.setupModalClose(modal, backdrop);
         } else {
@@ -138,7 +137,7 @@ class PatientListManager {
 
         // Click en backdrop
         backdrop.addEventListener('click', closeModal);
-        
+
         // Click fuera del modal
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -172,18 +171,18 @@ class PatientListManager {
         // Cerrar todos los modales abiertos
         const openModals = document.querySelectorAll('.modal.show');
         const backdrops = document.querySelectorAll('.modal-backdrop');
-        
+
         openModals.forEach(modal => {
             modal.style.display = 'none';
             modal.classList.remove('show');
         });
-        
+
         backdrops.forEach(backdrop => {
             if (backdrop.parentNode) {
                 backdrop.parentNode.removeChild(backdrop);
             }
         });
-        
+
         document.body.classList.remove('modal-open');
     }
 
@@ -199,7 +198,7 @@ class PatientListManager {
         alert.style.padding = '12px 16px';
         alert.style.borderRadius = '8px';
         alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        
+
         // Colores según tipo
         const colors = {
             'success': { bg: '#d1fae5', border: '#10b981', text: '#065f46' },
@@ -207,12 +206,12 @@ class PatientListManager {
             'error': { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
             'info': { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' }
         };
-        
+
         const color = colors[type] || colors.info;
         alert.style.backgroundColor = color.bg;
         alert.style.borderLeft = `4px solid ${color.border}`;
         alert.style.color = color.text;
-        
+
         alert.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-${this.getAlertIcon(type)}"></i>
@@ -248,40 +247,10 @@ class PatientListManager {
     }
 }
 
-// Función de utilidad para formatear números de teléfono
-function formatPhoneNumber(phone) {
-    if (!phone || phone === 'No especificado') return 'No especificado';
-    
-    // Si empieza con +593, formatear como internacional
-    if (phone.startsWith('+593')) {
-        return phone.replace(/(\+593)(\d{2})(\d{3})(\d{4})/, '$1 $2 $3 $4');
-    }
-    
-    // Si empieza con 0, formatear como nacional
-    if (phone.startsWith('0') && phone.length === 10) {
-        return phone.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3');
-    }
-    
-    return phone;
-}
-
-// Función de utilidad para formatear DNI
-function formatDNI(dni) {
-    if (!dni) return '';
-    // Simplemente devolver el DNI sin formato adicional
-    return dni;
-}
-
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando PatientListManager...');
-    
+
     const manager = new PatientListManager();
-    
-    // Formatear números de teléfono en la tabla
-    const phoneElements = document.querySelectorAll('.patient-phone');
-    phoneElements.forEach(el => {
-        el.textContent = formatPhoneNumber(el.textContent.trim());
-    });
     console.log('PatientListManager inicializado correctamente');
 });
