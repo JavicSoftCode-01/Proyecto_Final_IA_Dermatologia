@@ -80,14 +80,23 @@ try:
       keras_model.summary(print_fn=lambda x: logger.info('ModelLoader', x))
       # Imprimir el nombre de la capa de entrada para depuración
       logger.info('ModelLoader', f"Nombre de la capa de entrada: {keras_model.input_names}")
+      # --- Calentamiento del modelo ---
+      _ = keras_model.predict(np.zeros((1, 224, 224, 3)), verbose=0)
+      logger.info('ModelLoader', 'Modelo calentado con predicción dummy')
     except Exception as summary_error:
-      logger.warning('ModelLoader', f'No se pudo mostrar el resumen del modelo: {summary_error}')
+      logger.warning('ModelLoader', f'No se pudo mostrar el resumen del modelo o calentar: {summary_error}')
   else:
     logger.error('ModelLoader', f"No se encontró el modelo en {MODEL_PATH}")
     keras_model = None
 except Exception as e:
   logger.error('ModelLoader', f"Error al cargar el modelo desde {MODEL_PATH}: {e}")
   keras_model = None
+
+# --- Función para mejorar calidad de imagen y eliminar marcas de agua (si es necesario) ---
+def enhance_image_quality_and_remove_watermark(img):
+  # Aquí puedes aplicar técnicas de mejora de calidad y eliminación de marcas de agua si lo deseas
+  # Por defecto, retorna la imagen sin cambios
+  return img
 
 # --- Configuración de Gemini AI ---
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
@@ -134,29 +143,28 @@ class AIProcessor:
   @staticmethod
   def preprocess_image_for_model(image_path):
     """
-      Procesa la imagen para el modelo, omitiendo el recorte automático si ya es 224x224.
-      """
+    Procesa la imagen para el modelo, usando el mismo flujo que el entrenamiento (división por 255.0).
+    Aplica mejora de calidad y eliminación de marcas de agua si es necesario.
+    Devuelve (img_array, original_full_rgb)
+    """
     try:
-      img = cv2.imread(image_path)
-      if img is None:
-        raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
-
-      # Verificar si la imagen ya está en el tamaño deseado (224x224)
-      if img.shape[:2] == (224, 224):
-        img_cropped = img
-      else:
-        img_cropped = AIProcessor.find_and_crop_lesion(img)
-
-      img_rgb = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2RGB)
-      img_resized = cv2.resize(img_rgb, (224, 224))
-      img_preprocessed = preprocess_input(img_resized.copy())
-      img_array = np.expand_dims(img_preprocessed, axis=0)
-      original_full_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-      return img_array, original_full_rgb
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
+        # Si la imagen no es 224x224, recortar lesión
+        if img.shape[:2] != (224, 224):
+            img = AIProcessor.find_and_crop_lesion(img)
+        img = enhance_image_quality_and_remove_watermark(img)  # Mejora de calidad y eliminación de marcas de agua
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_resized = cv2.resize(img_rgb, (224, 224))
+        img_preprocessed = img_resized.astype(np.float32) / 255.0  # Normalización igual que en entrenamiento
+        img_array = np.expand_dims(img_preprocessed, axis=0)
+        original_full_rgb = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)  # Imagen original sin recorte
+        return img_array, original_full_rgb
     except Exception as e:
-      logger.error('AIProcessor.preprocess_image_for_model', f"Error al preprocesar la imagen: {e}")
-      traceback.print_exc()
-      return None, None
+        logger.error('AIProcessor.preprocess_image_for_model', f"Error al preprocesar la imagen: {e}")
+        traceback.print_exc()
+        return None, None
 
   @staticmethod
   def calculate_gradcam_image_only(img_array, model, pred_index):
