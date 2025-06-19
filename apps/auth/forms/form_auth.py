@@ -1,4 +1,3 @@
-# apps/auth/forms/form_auth.py
 """
 Formulario de autenticación personalizado para la aplicación auth.
 Incluye formularios para registro, inicio de sesión y cambio de contraseña.
@@ -17,7 +16,6 @@ class BaseUserForm(forms.ModelForm):
   Contiene todos los campos comunes y la configuración de widgets.
   """
 
-  # Campos de identificación
   email = forms.EmailField(
     label='Correo electrónico',
     required=True,
@@ -27,7 +25,6 @@ class BaseUserForm(forms.ModelForm):
     })
   )
 
-  # Información personal
   first_name = forms.CharField(
     label='Nombres',
     max_length=50,
@@ -58,7 +55,6 @@ class BaseUserForm(forms.ModelForm):
     })
   )
 
-  # Información de contacto
   address = forms.CharField(
     label='Dirección',
     max_length=255,
@@ -89,7 +85,6 @@ class BaseUserForm(forms.ModelForm):
     })
   )
 
-  # Imagen de perfil
   profile_picture = forms.ImageField(
     label='Foto de perfil',
     required=False,
@@ -112,6 +107,7 @@ class CustomUserCreationForm(BaseUserForm, UserCreationForm):
   Formulario para la creación de nuevos usuarios.
   Extiende el formulario base y añade los campos de contraseña.
   """
+
   password1 = forms.CharField(
     label='Contraseña',
     widget=forms.PasswordInput(attrs={
@@ -141,6 +137,7 @@ class CustomAuthenticationForm(AuthenticationForm):
   Formulario para la autenticación de usuarios.
   Personaliza los campos de inicio de sesión.
   """
+
   username = forms.EmailField(
     label='Correo electrónico',
     widget=forms.EmailInput(attrs={
@@ -169,7 +166,6 @@ class CustomSetPasswordForm(SetPasswordForm):
     self._setup_fields()
 
   def _setup_fields(self):
-    """Configura los atributos y etiquetas de los campos del formulario"""
     self.fields['new_password1'].widget = forms.PasswordInput(attrs={
       'class': 'form-control',
       'placeholder': 'Ingrese su nueva contraseña'
@@ -183,7 +179,6 @@ class CustomSetPasswordForm(SetPasswordForm):
     self.fields['new_password2'].label = 'Confirmar nueva contraseña'
 
   def clean(self):
-    """Valida que las contraseñas coincidan"""
     cleaned_data = super().clean()
     password1 = cleaned_data.get('new_password1')
     password2 = cleaned_data.get('new_password2')

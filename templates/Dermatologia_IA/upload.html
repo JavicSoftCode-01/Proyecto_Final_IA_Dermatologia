@@ -480,15 +480,15 @@
 
         // Crear nuevo cropper con tamaño fijo de 224x224
         cropper = new Cropper(imageToCrop, {
-          aspectRatio: 1, // Proporción cuadrada 1:1
-          viewMode: 1, // Restringir el crop box a los límites de la imagen
-          minCropBoxWidth: 224, // Tamaño fijo mínimo
-          minCropBoxHeight: 224, // Tamaño fijo mínimo
-          maxCropBoxWidth: 224, // Tamaño fijo máximo
-          maxCropBoxHeight: 224, // Tamaño fijo máximo
-          cropBoxResizable: false, // Desactivar redimensionamiento
-          cropBoxMovable: true, // Permitir mover el cuadro
-          dragMode: 'move', // Modo de arrastrar para mover el cuadro
+          aspectRatio: 1,
+          viewMode: 1,
+          minCropBoxWidth: 224,
+          minCropBoxHeight: 224,
+          maxCropBoxWidth: 224,
+          maxCropBoxHeight: 224,
+          cropBoxResizable: false,
+          cropBoxMovable: true,
+          dragMode: 'move',
           responsive: true,
           restore: false,
           guides: true,
@@ -498,7 +498,6 @@
           autoCrop: true,
           autoCropArea: 0.8,
           ready: function () {
-            // El cropper está listo
             console.log('Cropper inicializado correctamente');
           }
         });

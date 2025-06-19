@@ -1,5 +1,3 @@
-# apps\Dermatologia_IA\models.py
-
 """
 Modelo de datos para la aplicación Dermatología IA.
 Este módulo define los modelos `Patient` y `SkinImage` que representan
@@ -85,11 +83,9 @@ class Patient(models.Model):
   )
 
   def get_full_name(self):
-    """Retorna el nombre completo del paciente"""
     return f"{self.first_name} {self.last_name}"
 
   def __str__(self):
-    """Representación en string del paciente"""
     return f"{self.get_full_name()} (CI: {self.dni})"
 
   class Meta:
@@ -106,14 +102,12 @@ class SkinImage(models.Model):
   resultados del análisis de IA y ubicación anatómica.
   """
 
-  # Relación con el paciente
   patient = models.ForeignKey(
     Patient,
     on_delete=models.CASCADE,
     related_name='consultas',
   )
 
-  # Campos de imagen y timestamp
   image = models.ImageField(
     upload_to='skin_images/',
     validators=[validate_profile_picture]
@@ -131,7 +125,6 @@ class SkinImage(models.Model):
     null=True,
   )
 
-  # Campos de procesamiento y diagnóstico IA
   processed = models.BooleanField(
     default=False,
     blank=True,
@@ -171,7 +164,6 @@ class SkinImage(models.Model):
     null=True,
   )
 
-  # Ubicación anatómica
   ANATOM_SITE_CHOICES = [
     ('abdomen', 'Abdomen'),
     ('acral', 'Acral (Palmas, Plantas, Dedos)'),
@@ -203,13 +195,11 @@ class SkinImage(models.Model):
   )
 
   def get_status(self):
-    """Retorna el estado actual del análisis de la imagen"""
     if self.condition:
       return self.condition
     return 'Procesada' if self.processed else 'Pendiente'
 
   def __str__(self):
-    """Representación en string de la consulta"""
     return (f"Consulta de {self.patient.get_full_name()} - "
             f"({self.get_status()})")
 

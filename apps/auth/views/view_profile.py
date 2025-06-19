@@ -1,4 +1,3 @@
-# apps/auth/views/view_profile.py
 """
 Vistas para la gestión del perfil de usuario.
 Incluye vistas para mostrar y actualizar el perfil del usuario.
@@ -22,10 +21,10 @@ class ProfileView(CustomLoginRequiredMixin, TemplateView):
   Vista para mostrar el perfil del usuario.
   Requiere que el usuario esté autenticado.
   """
+
   template_name = 'auth/profile/profile.html'
 
   def get_context_data(self, **kwargs):
-    """Añade el usuario actual y textos al contexto de la plantilla"""
     logger.info('ProfileView', 'Cargando datos de perfil de usuario.')
     try:
       context = super().get_context_data(**kwargs)
@@ -63,6 +62,7 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
   Vista para actualizar el perfil del usuario.
   Permite modificar la información personal y de contacto.
   """
+
   model = User
   form_class = ProfileUpdateForm
   template_name = 'auth/profile/update_profile.html'
@@ -73,7 +73,6 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
         try:
             context = super().get_context_data(**kwargs)
             user = self.get_object()
-            # Evitar errores si user es None o AnonymousUser
             if user and hasattr(user, 'first_name'):
                 logger.info('UpdateProfileView', (
                     f"Datos actuales del usuario (ANTES de editar): "
@@ -135,7 +134,6 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
             return super().form_invalid(form)
 
   def form_invalid(self, form):
-    """Maneja errores en el formulario"""
     logger.warning('UpdateProfileView', f'Errores de validación en actualización de perfil: {form.errors}')
     messages.error(
       self.request,
@@ -144,7 +142,6 @@ class UpdateProfileView(CustomLoginRequiredMixin, UpdateView):
     return super().form_invalid(form)
 
   def get_object(self, queryset=None):
-        """Retorna el usuario actual para la edición"""
         logger.info('UpdateProfileView', 'Obteniendo usuario autenticado para edición de perfil.')
         try:
             user = self.request.user

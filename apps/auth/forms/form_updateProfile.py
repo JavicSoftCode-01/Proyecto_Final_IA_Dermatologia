@@ -1,4 +1,3 @@
-# apps/auth/forms/form_updateProfile.py
 """
 Formulario para actualizar el perfil del usuario.
 """
@@ -21,10 +20,6 @@ class ProfileUpdateForm(BaseUserForm):
     fields = BaseUserForm.Meta.fields
 
   def __init__(self, *args, **kwargs):
-    """
-    Inicializa el formulario y pre-llena los campos con la información
-    actual del usuario.
-    """
     super().__init__(*args, **kwargs)
     self.fields['first_name'].initial = self.instance.first_name
     self.fields['last_name'].initial = self.instance.last_name

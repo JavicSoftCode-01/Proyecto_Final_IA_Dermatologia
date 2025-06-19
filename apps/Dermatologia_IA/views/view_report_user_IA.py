@@ -1,5 +1,3 @@
-# apps\Dermatologia_IA\views\view_report_user_IA.py
-
 """
 Vistas para la gestión de pacientes y sus análisis dermatológicos.
 Incluye las vistas para listar, crear, actualizar pacientes y gestionar sus análisis.
@@ -21,7 +19,6 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import get_custom_objects
 
 from apps.Dermatologia_IA.forms.form_patient import PatientForm
 from apps.Dermatologia_IA.forms.form_report_user_IA import SkinImageForm
@@ -29,62 +26,7 @@ from apps.Dermatologia_IA.models import SkinImage, Patient
 from apps.auth.views.view_auth import CustomLoginRequiredMixin
 from utils.logger import logger
 
-
-@tf.keras.utils.register_keras_serializable()
-class CustomF1Score(tf.keras.metrics.Metric):
-  def __init__(self, num_classes, name='f1_score', **kwargs):
-    super(CustomF1Score, self).__init__(name=name, **kwargs)
-    self.num_classes = num_classes
-    self.true_positives = self.add_weight(
-      name='tp', shape=(num_classes,), initializer='zeros'
-    )
-    self.false_positives = self.add_weight(
-      name='fp', shape=(num_classes,), initializer='zeros'
-    )
-    self.false_negatives = self.add_weight(
-      name='fn', shape=(num_classes,), initializer='zeros'
-    )
-
-  def update_state(self, y_true, y_pred, sample_weight=None):
-    y_true = tf.cast(y_true, tf.int32)
-    y_pred = tf.cast(tf.argmax(y_pred, axis=-1), tf.int32)
-    y_true_one_hot = tf.one_hot(y_true, depth=self.num_classes)
-    y_pred_one_hot = tf.one_hot(y_pred, depth=self.num_classes)
-
-    tp = tf.reduce_sum(y_true_one_hot * y_pred_one_hot, axis=0)
-    fp = tf.reduce_sum((1 - y_true_one_hot) * y_pred_one_hot, axis=0)
-    fn = tf.reduce_sum(y_true_one_hot * (1 - y_pred_one_hot), axis=0)
-
-    self.true_positives.assign_add(tp)
-    self.false_positives.assign_add(fp)
-    self.false_negatives.assign_add(fn)
-
-  def result(self):
-    precision = self.true_positives / (self.true_positives + self.false_positives + tf.keras.backend.epsilon())
-    recall = self.true_positives / (self.true_positives + self.false_negatives + tf.keras.backend.epsilon())
-    f1 = 2 * (precision * recall) / (precision + recall + tf.keras.backend.epsilon())
-    return tf.reduce_mean(f1)
-
-  def reset_states(self):
-    self.true_positives.assign(tf.zeros(self.num_classes))
-    self.false_positives.assign(tf.zeros(self.num_classes))
-    self.false_negatives.assign(tf.zeros(self.num_classes))
-
-  def get_config(self):
-    config = super(CustomF1Score, self).get_config()
-    config.update({'num_classes': self.num_classes})
-    return config
-
-  @classmethod
-  def from_config(cls, config):
-    return cls(**config)
-
-
-# Registrar la métrica personalizada (redundante con el decorador, pero por seguridad)
-get_custom_objects().update({'CustomF1Score': CustomF1Score})
-
 # --- Configuración de Rutas y Carga del Modelo ---
-
 RESULTS_DIR = os.path.join(settings.BASE_DIR, 'IA', 'Dermatological_AI_Model')
 MODEL_FILENAME = 'MODELO_IA_DERMATOLOGICO.keras'
 MODEL_PATH = os.path.join(RESULTS_DIR, MODEL_FILENAME)
@@ -126,19 +68,20 @@ disease_names = {
   "SHG": "Herpes zóster"
 }
 
-# --- Carga del Modelo Keras ---
+# Carga del Modelo Keras
 try:
   logger.info('ModelLoader', f"Intentando cargar el modelo desde: {MODEL_PATH}")
   logger.info('ModelLoader', f"¿Existe el archivo?: {os.path.exists(MODEL_PATH)}")
   logger.info('ModelLoader', f"Ruta absoluta: {os.path.abspath(MODEL_PATH)}")
   if os.path.exists(MODEL_PATH):
-    keras_model = load_model(MODEL_PATH, custom_objects={'CustomF1Score': CustomF1Score})
+    keras_model = load_model(MODEL_PATH)  # No se necesitan custom_objects ya que CustomF1Score no se usa
     logger.success('ModelLoader', 'Modelo cargado exitosamente')
     try:
       keras_model.summary(print_fn=lambda x: logger.info('ModelLoader', x))
+      # Imprimir el nombre de la capa de entrada para depuración
+      logger.info('ModelLoader', f"Nombre de la capa de entrada: {keras_model.input_names}")
     except Exception as summary_error:
       logger.warning('ModelLoader', f'No se pudo mostrar el resumen del modelo: {summary_error}')
-    logger.debug('ModelLoader', f"Model inputs: {keras_model.inputs}")
   else:
     logger.error('ModelLoader', f"No se encontró el modelo en {MODEL_PATH}")
     keras_model = None
@@ -159,123 +102,144 @@ class AIProcessor:
   @staticmethod
   def find_and_crop_lesion(image_cv, padding=30):
     """
-    [NUEVO] Intenta encontrar la lesión más prominente en la imagen usando
-    contornos de OpenCV y la recorta.
-    """
+      Intenta encontrar la lesión más prominente en la imagen usando contornos de OpenCV y la recorta.
+      """
     try:
-      # Convertir a escala de grises para facilitar el procesamiento
       gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
-
-      # Aplicar un desenfoque para reducir el ruido
       blurred = cv2.GaussianBlur(gray, (7, 7), 0)
-
-      # Umbralización para binarizar la imagen. Esto ayuda a separar la lesión del fondo.
-      # cv2.THRESH_OTSU encuentra automáticamente el mejor valor de umbral.
       _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-      # Encontrar los contornos en la imagen umbralizada
       contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
       if not contours:
-        logger.warning('AIProcessor.find_and_crop_lesion', "No se encontraron contornos, se usará la imagen completa.")
+        logger.warning('AIProcessor.find_and_crop_lesion',
+                       "No se encontraron contornos, se usará la imagen completa.")
         return image_cv
 
-      # Encontrar el contorno más grande (que probablemente sea la lesión)
       largest_contour = max(contours, key=cv2.contourArea)
-
-      # Obtener el cuadro delimitador del contorno más grande
       x, y, w, h = cv2.boundingRect(largest_contour)
 
-      # Añadir un "padding" (margen) para no cortar la lesión
       x_pad = max(0, x - padding)
       y_pad = max(0, y - padding)
       w_pad = min(image_cv.shape[1], x + w + padding)
       h_pad = min(image_cv.shape[0], y + h + padding)
 
-      # Recortar la imagen original usando las coordenadas con padding
       cropped_image = image_cv[y_pad:h_pad, x_pad:w_pad]
       logger.success('AIProcessor.find_and_crop_lesion', "Recorte inteligente de la lesión realizado con éxito.")
       return cropped_image
     except Exception as e:
       logger.error('AIProcessor.find_and_crop_lesion',
                    f"Error durante el recorte automático: {e}. Se usará la imagen completa.")
-      # Si algo falla, simplemente devolvemos la imagen original para no detener el proceso
       return image_cv
 
   @staticmethod
   def preprocess_image_for_model(image_path):
     """
-    [MODIFICADO] Proceso de carga y preprocesamiento de imagen, ahora con recorte inteligente.
-    """
+      Procesa la imagen para el modelo, omitiendo el recorte automático si ya es 224x224.
+      """
     try:
       img = cv2.imread(image_path)
       if img is None:
         raise ValueError(f"No se pudo cargar la imagen desde: {image_path}")
 
-      # [CAMBIO] Aplicar el recorte inteligente ANTES de cualquier otra cosa
-      img_cropped = AIProcessor.find_and_crop_lesion(img)
+      # Verificar si la imagen ya está en el tamaño deseado (224x224)
+      if img.shape[:2] == (224, 224):
+        img_cropped = img
+      else:
+        img_cropped = AIProcessor.find_and_crop_lesion(img)
 
-      # El resto del proceso se aplica sobre la imagen recortada (o la original si el recorte falló)
       img_rgb = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2RGB)
       img_resized = cv2.resize(img_rgb, (224, 224))
-
-      # [CAMBIO] Se ha cambiado a tf.keras.applications.mobilenet_v2.preprocess_input
-      # para que coincida con lo que MobileNetV2 espera (escala de -1 a 1).
-      # La línea original solo usaba img_resized / 255.0. Esta es una mejora.
       img_preprocessed = preprocess_input(img_resized.copy())
-
       img_array = np.expand_dims(img_preprocessed, axis=0)
-
-      # También devolvemos la imagen original (no la recortada) para la visualización
       original_full_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
       return img_array, original_full_rgb
     except Exception as e:
+      logger.error('AIProcessor.preprocess_image_for_model', f"Error al preprocesar la imagen: {e}")
       traceback.print_exc()
       return None, None
 
   @staticmethod
   def calculate_gradcam_image_only(img_array, model, pred_index):
-    # [CAMBIO MENOR] Se ajusta la llamada al modelo para ser más explícita y evitar warnings
+    """
+    Calcula el mapa de calor Grad-CAM usando la última capa convolucional.
+    Optimizado para modelos MobileNetV2 personalizados.
+    """
     try:
+      # Buscar la última capa convolucional en el modelo MobileNetV2
       last_conv_layer = None
+
+      # Primero buscar en las capas directas del modelo
       for layer in reversed(model.layers):
         if isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
           last_conv_layer = layer
           break
+
+      # Si no se encuentra, buscar en el modelo base (MobileNetV2)
+      if not last_conv_layer:
+        for layer in model.layers:
+          if hasattr(layer, 'layers'):  # Es un modelo anidado
+            for sublayer in reversed(layer.layers):
+              if isinstance(sublayer, (tf.keras.layers.Conv2D, tf.keras.layers.DepthwiseConv2D)):
+                last_conv_layer = sublayer
+                break
+            if last_conv_layer:
+              break
+
       if not last_conv_layer:
         raise ValueError("No se encontró ninguna capa convolucional en el modelo")
 
+      logger.info('AIProcessor.calculate_gradcam_image_only',
+                  f'Usando capa convolucional: {last_conv_layer.name}')
+
+      # Crear el modelo de gradientes
       grad_model = tf.keras.Model(
-        inputs=model.inputs,  # model.inputs es una lista, así que la usamos
+        inputs=model.input,
         outputs=[last_conv_layer.output, model.output]
       )
 
+      # Calcular los gradientes
       with tf.GradientTape() as tape:
-        # La llamada ahora usa los inputs del modelo y el tensor de imagen
         conv_outputs, predictions = grad_model(img_array, training=False)
+
+        # Asegurar que pred_index sea válido
+        if predictions.shape[-1] <= pred_index:
+          pred_index = tf.argmax(predictions[0])
+          logger.warning('AIProcessor.calculate_gradcam_image_only',
+                         f'Índice de predicción ajustado a: {pred_index}')
+
         loss = predictions[:, pred_index]
 
+      # Calcular gradientes
       grads = tape.gradient(loss, conv_outputs)
       if grads is None:
         raise ValueError("No se pudieron calcular los gradientes")
 
+      # Procesar gradientes y crear heatmap
       pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
       conv_outputs = conv_outputs[0]
       heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
       heatmap = tf.squeeze(heatmap)
 
-      heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + tf.keras.backend.epsilon())
+      # Normalizar heatmap
+      heatmap = tf.maximum(heatmap, 0)
+      max_val = tf.math.reduce_max(heatmap)
+      if max_val > 0:
+        heatmap = heatmap / max_val
+
+      logger.success('AIProcessor.calculate_gradcam_image_only',
+                     f'Grad-CAM generado exitosamente usando capa: {last_conv_layer.name}')
+
       return heatmap.numpy(), last_conv_layer.name
 
     except Exception as e:
+      logger.error('AIProcessor.calculate_gradcam_image_only', f"Error en Grad-CAM: {str(e)}")
+      import traceback
       traceback.print_exc()
-      logger.error('AIProcessor', f"Error en Grad-CAM: {str(e)}")
       return None, None
 
-  # ... El método generate_ai_content no necesita cambios ...
   @staticmethod
   def generate_ai_content(condition):
+    # Método sin cambios, se mantiene como estaba
     default_report = f"Descripción no disponible para {condition}. Consulte a un dermatólogo."
     default_treatment = f"Tratamiento no disponible para {condition}. Busque atención médica."
     if not gemini_model:
@@ -287,14 +251,12 @@ class AIProcessor:
         f"(máx. 1000 caracteres, sin cortar palabras o frases), describiendo con detalle qué es, sus síntomas, "
         f"mecanismos subyacentes, factores de riesgo y posibles causas."
       )
-
       treatment_prompt = (
         f"Eres un médico dermatólogo con más de 20 años de experiencia. "
         f"Elabora recomendaciones breves para la condición «{condition}» "
         f"(máx. 1000 caracteres, sin cortar palabras o frases), incluyendo tratamientos generales, cuidados de la piel, "
         f"medidas preventivas y pautas de seguimiento."
       )
-
       config = genai.types.GenerationConfig(max_output_tokens=150, temperature=0.7)
       report_response = gemini_model.generate_content(report_prompt, generation_config=config)
       treatment_response = gemini_model.generate_content(treatment_prompt, generation_config=config)
@@ -729,8 +691,8 @@ class SearchPatientsView(CustomLoginRequiredMixin, View):
     ]
     return JsonResponse({'patients': patients_data})
 
+  # ------------------ VISTA DE PROCESO DE IMAGEN ------------------
 
-# ------------------ VISTA DE PROCESO DE IMAGEN ------------------
 
 class ResultsViewMixin:
   """Mixin para compartir configuración común entre vistas que usan results.html"""
@@ -738,7 +700,6 @@ class ResultsViewMixin:
   context_object_name = 'skin_image'
 
   def get_base_context(self):
-    """Retorna el contexto base para el template results.html"""
     return {
       'app_name': 'DermaIA',
       'page_title': 'Análisis Dermatológico',
@@ -795,7 +756,7 @@ class ResultsViewMixin:
 
 class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
   """
-  [MODIFICADO] Vista para procesar y mostrar resultados del análisis de imagen.
+  Vista para procesar y mostrar resultados del análisis de imagen.
   """
   model = SkinImage
   pk_url_kwarg = 'image_id'
@@ -813,39 +774,47 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
           logger.error('ProcessImageView', 'Sistema de IA no disponible')
           raise RuntimeError('Sistema de IA no disponible')
 
-        # Preprocesamiento ahora devuelve el array para el modelo y la imagen original completa
         img_array, original_full_rgb = AIProcessor.preprocess_image_for_model(si.image.path)
 
         if img_array is None:
           logger.error('ProcessImageView', 'No se pudo preprocesar la imagen')
           raise ValueError('No se pudo preprocesar la imagen')
 
-        # [CAMBIO] Se cambia la llamada a la predicción para evitar el UserWarning.
-        # Tratar al modelo como una función es la forma recomendada en TF2.x
-        # Se accede al resultado [0] porque devuelve un lote, y luego .numpy() para convertir de Tensor a array.
-        predictions = keras_model(img_array, training=False)
-        preds = predictions[0].numpy()
+        # SOLUCIÓN: Predicción directa para modelo MobileNetV2 personalizado
+        try:
+          # Usar predict() que es más compatible con modelos Functional personalizados
+          predictions = keras_model.predict(img_array, verbose=0)
+          logger.info('ProcessImageView', 'Predicción realizada exitosamente')
+        except Exception as e:
+          logger.error('ProcessImageView', f'Error en predicción: {e}')
+          # Fallback: intentar predicción directa
+          try:
+            predictions = keras_model(img_array, training=False)
+            if hasattr(predictions, 'numpy'):
+              predictions = predictions.numpy()
+            logger.info('ProcessImageView', 'Usando predicción directa como fallback')
+          except Exception as e2:
+            logger.error('ProcessImageView', f'Error en fallback: {e2}')
+            raise ValueError(f"No se pudo realizar la predicción: {e}, {e2}")
 
-        # --- El resto de la lógica sigue igual ---
+        # Procesar predicciones (ya es numpy array desde predict())
+        preds = predictions[0] if len(predictions.shape) > 1 else predictions
+
         idx = int(np.argmax(preds))
         predicted_class = index_to_class.get(idx, 'Condición desconocida')
         disease_name = disease_names.get(predicted_class, 'Desconocido')
         si.condition = disease_name
         si.confidence = float(preds[idx] * 100)
 
+        # Generación de Grad-CAM
         try:
           heatmap, _ = AIProcessor.calculate_gradcam_image_only(img_array, keras_model, idx)
           if heatmap is not None:
-            # [CAMBIO] Se usa la imagen original COMPLETA para la superposición de Grad-CAM
             h, w = original_full_rgb.shape[:2]
-
             heatmap_resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
             heatmap_uint8 = np.uint8(255 * heatmap_resized)
             heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
-
-            # Convertir la imagen original a BGR para OpenCV
             orig_bgr = cv2.cvtColor(original_full_rgb, cv2.COLOR_RGB2BGR)
-
             overlay = cv2.addWeighted(orig_bgr, 0.6, heatmap_color, 0.4, 0)
 
             grad_dir = os.path.join(settings.MEDIA_ROOT, 'gradcam_images')
@@ -859,7 +828,6 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
               logger.warning('ProcessImageView', f'No se pudo guardar el mapa de calor en: {fpath}')
           else:
             logger.warning('ProcessImageView', 'No se pudo generar el mapa de calor (heatmap nulo).')
-
         except Exception as grad_error:
           logger.error('ProcessImageView', f'Error durante la generación de Grad-CAM: {grad_error}')
 
@@ -869,15 +837,12 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
 
         logger.success('ProcessImageView', f'SkinImage ID {si.id} procesada con éxito.')
         messages.success(self.request, f'Análisis completado: {si.get_status()}')
-
-        # Refrescamos el contexto para que la plantilla muestre los datos actualizados
         return self.get_context_data(**kwargs)
 
       except Exception as error:
         messages.error(self.request, f'Error al procesar imagen: {error}')
         context['error'] = str(error)
         logger.error('ProcessImageView', f'Error fatal al procesar imagen ID {si.id}: {error}')
-
     else:
       logger.info('ProcessImageView', f'Imagen ya procesada para SkinImage ID {si.id}')
 
@@ -947,7 +912,7 @@ class ReportListView(CustomLoginRequiredMixin, ListView):
         'previous': 'Anterior',
         'next': 'Siguiente',
         'last': 'Última »',
-      }        ,
+      },
       'texts': {
         'search_placeholder': 'Buscar por número de cédula',
       }

@@ -1,4 +1,3 @@
-# apps\auth\urls.py
 """
 Configuración de URLs para la aplicación auth.
 Incluye rutas para registro, inicio de sesión, cierre de sesión,
@@ -20,16 +19,13 @@ from apps.auth.views.view_profile import ProfileView, UpdateProfileView
 app_name = 'auth'
 
 urlpatterns = [
-  # URLs de autenticación básica (registro, login, logout)
   path('register/', RegisterUserView.as_view(), name='register'),
   path('', LoginUserView.as_view(), name='login'),
   path('logout/', LogoutUserView.as_view(), name='logout'),
 
-  # URLs para gestión del perfil de usuario
   path('profile/', ProfileView.as_view(), name='view_profile'),
   path('profile/update/', UpdateProfileView.as_view(), name='update_profile'),
 
-  # URLs para el proceso de restablecimiento de contraseña
   path('password-reset/',
        PasswordResetRequestView.as_view(),
        name='password_reset'),

@@ -1,5 +1,3 @@
-# apps\Dermatologia_IA\utils\sendReportEmail.py
-
 """
   Módulo para enviar reportes por email en la aplicación Dermatología IA.
   Este módulo contiene la función `send_report_email` que envía un reporte PDF
@@ -30,18 +28,16 @@ def send_report_email(image_id, email_address):
     Raises:
         ValidationError: Si los datos proporcionados son inválidos
     """
+
     logger.info('send_report_email', f'Intentando enviar reporte ID {image_id} a {email_address}')
     try:
-        # Validar que la imagen existe y está procesada
         skin_image = SkinImage.objects.get(id=image_id, processed=True)
 
-        # Generar el PDF
         pdf_response = generate_report(image_id)
         if not pdf_response:
             logger.error('send_report_email', f'Fallo en la generación del PDF para email (ID: {image_id})')
             return False
 
-        # Preparar el asunto y cuerpo del correo
         nombre = skin_image.patient.get_full_name() if hasattr(skin_image.patient, 'get_full_name') else ''
         dni = skin_image.patient.dni or ''
         subject = f'Reporte de Análisis Dermatológico Preliminar - ID {image_id}'
@@ -56,7 +52,6 @@ def send_report_email(image_id, email_address):
             "Derma IA"
         )
 
-        # Configurar y enviar el email
         email = EmailMessage(
             subject=subject,
             body=body,
@@ -64,7 +59,6 @@ def send_report_email(image_id, email_address):
             to=[email_address]
         )
 
-        # Extraer el nombre del archivo PDF
         content_disposition = pdf_response.get('Content-Disposition')
         if not content_disposition or 'filename=' not in content_disposition:
             filename = "reporte_dermatologico.pdf"

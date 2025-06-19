@@ -293,7 +293,7 @@ El sistema puede identificar las siguientes 25 condiciones:
 
 #### Integración con Servicios en Nube
 
-- **Amazon S3**: [`s3_storage.py`](utils/s3_storage.py) - Almacenamiento escalable
+- **Amazon S3**: [`s3_storage.py`](apps/auth/services/aws/s3_storage.py) - Almacenamiento escalable
 - **CDN Integration**: Distribución global de contenido estático
 - **Monitoring**: Integración con servicios de monitoreo
 

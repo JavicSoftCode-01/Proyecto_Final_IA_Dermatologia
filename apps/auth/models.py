@@ -1,4 +1,3 @@
-# apps/auth/models.py
 """
 Modelo de usuario personalizado para la aplicación auth.
 Este modelo utiliza el correo electrónico como identificador principal
@@ -19,7 +18,7 @@ from utils.validators import (
   validate_phone,
   validate_profile_picture
 )
-from utils.s3_storage import s3_profile_storage
+from apps.auth.services.aws.s3_storage import s3_profile_storage
 
 
 class CustomUserManager(BaseUserManager):
@@ -29,7 +28,6 @@ class CustomUserManager(BaseUserManager):
   """
 
   def create_user(self, email, password=None, **extra_fields):
-    """Crea y guarda un nuevo usuario con el email y contraseña dados"""
     if not email:
       raise ValueError('El correo electrónico es obligatorio')
 
@@ -43,7 +41,6 @@ class CustomUserManager(BaseUserManager):
     return user
 
   def create_superuser(self, email, password=None, **extra_fields):
-    """Crea un superusuario para administración"""
     extra_fields['is_staff'] = True
     extra_fields['is_superuser'] = True
     return self.create_user(email, password, **extra_fields)
@@ -56,7 +53,7 @@ class User(AbstractBaseUser):
   Este modelo representa a los usuarios del sistema, almacenando su información
   personal y de contacto. No incluye manejo de permisos para mantener la simplicidad.
   """
-  # Campos de identificación
+
   email = models.EmailField(
     'Correo electrónico',
     unique=True,
@@ -67,7 +64,6 @@ class User(AbstractBaseUser):
     }
   )
 
-  # Información personal
   first_name = models.CharField(
     'Nombres',
     max_length=50,
@@ -92,7 +88,6 @@ class User(AbstractBaseUser):
     }
   )
 
-  # Información de contacto
   address = models.CharField(
     'Dirección',
     max_length=255,
@@ -120,7 +115,7 @@ class User(AbstractBaseUser):
       'unique': 'Ya existe un usuario con este número de teléfono.'
     }
   )
-  # Imagen de perfil
+
   profile_picture = models.ImageField(
     'Foto de perfil',
     storage=s3_profile_storage,
@@ -129,7 +124,6 @@ class User(AbstractBaseUser):
     validators=[validate_profile_picture]
   )
 
-  # Campos de auditoría
   created_at = models.DateTimeField(
     'Fecha de creación',
     auto_now_add=True
@@ -140,17 +134,15 @@ class User(AbstractBaseUser):
     auto_now=True
   )
 
-  # Campos requeridos por Django
   is_active = models.BooleanField(default=True)
   is_staff = models.BooleanField(default=False)
   is_superuser = models.BooleanField(default=False)
 
-  # Configuración del modelo
   objects = CustomUserManager()
   USERNAME_FIELD = 'email'
   REQUIRED_FIELDS = ['first_name', 'last_name']
+
   def clean(self):
-    """Validación personalizada del modelo"""
     if not self.email:
       raise ValidationError({'email': 'El correo electrónico es obligatorio'})
 
@@ -158,9 +150,7 @@ class User(AbstractBaseUser):
       raise ValidationError('Los nombres y apellidos son obligatorios')
 
   def save(self, *args, **kwargs):
-    """Sobrescribe save para manejar la imagen de perfil anterior"""
     try:
-      # Si es una actualización y hay una nueva imagen
       if self.pk:
         old_user = User.objects.get(pk=self.pk)
         if old_user.profile_picture and self.profile_picture != old_user.profile_picture:
@@ -168,17 +158,15 @@ class User(AbstractBaseUser):
           old_user.profile_picture.storage.delete(old_user.profile_picture.name)
     except User.DoesNotExist:
       pass
-    
+
     super().save(*args, **kwargs)
 
   def delete(self, *args, **kwargs):
-    """Sobrescribe delete para eliminar la imagen de S3"""
     if self.profile_picture:
       self.profile_picture.storage.delete(self.profile_picture.name)
     super().delete(*args, **kwargs)
 
   def get_full_name(self):
-    """Retorna el nombre completo del usuario"""
     return f"{self.first_name} {self.last_name}"
 
   def __str__(self):
