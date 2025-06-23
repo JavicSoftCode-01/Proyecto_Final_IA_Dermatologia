@@ -383,6 +383,7 @@
       // Variables para el cropper
       let cropper;
       let isFileInputTriggered = false;
+      let hasCropped = false; // Bandera para saber si el usuario recortó la imagen
 
       // Referencias a elementos
       const uploadArea = document.getElementById('uploadArea');
@@ -394,16 +395,9 @@
 
       // Evento click del área de upload para abrir explorador de archivos
       uploadArea.addEventListener('click', function (e) {
-        // Prevenir que se dispare múltiples veces
         if (isFileInputTriggered) return;
-
-        // Marcar que se está disparando el input
         isFileInputTriggered = true;
-
-        // Disparar el input de archivo
         fileInput.click();
-
-        // Reset la bandera después de un pequeño delay
         setTimeout(() => {
           isFileInputTriggered = false;
         }, 100);
@@ -426,22 +420,18 @@
       // Manejar la selección de archivos
       fileInput.addEventListener('change', function (e) {
         const file = e.target.files[0];
-
         if (!file) {
-          // Si no hay archivo, resetear todo
           imagePreview.style.display = 'none';
           imagePreview.src = '#';
           return;
         }
 
-        // Validar tipo de archivo
         if (!file.type.startsWith('image/')) {
           alert('Por favor selecciona un archivo de imagen válido.');
           fileInput.value = '';
           return;
         }
 
-        // Validar tamaño de archivo (ejemplo: 10MB máximo)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
           alert('El archivo es demasiado grande. Máximo 10MB.');
@@ -449,14 +439,12 @@
           return;
         }
 
-        // Mostrar preview inmediato de la imagen original
         const reader = new FileReader();
         reader.onload = function (e) {
           imagePreview.src = e.target.result;
           imagePreview.style.display = 'block';
-
-          // Abrir modal de crop automáticamente solo si es una nueva selección
           imageToCrop.src = e.target.result;
+          hasCropped = false; // Resetear bandera al cargar nueva imagen
           const modal = new bootstrap.Modal(cropModal);
           modal.show();
         };
@@ -472,13 +460,11 @@
 
       // Inicializar cropper cuando se muestra el modal
       cropModal.addEventListener('shown.bs.modal', function () {
-        // Destruir cropper anterior si existe
         if (cropper) {
           cropper.destroy();
           cropper = null;
         }
 
-        // Crear nuevo cropper con tamaño fijo de 224x224
         cropper = new Cropper(imageToCrop, {
           aspectRatio: 1,
           viewMode: 1,
@@ -511,7 +497,6 @@
         }
 
         try {
-          // Obtener el canvas con la imagen recortada
           const canvas = cropper.getCroppedCanvas({
             width: 224,
             height: 224,
@@ -524,57 +509,74 @@
             return;
           }
 
-          // Convertir a blob
           canvas.toBlob(function (blob) {
             if (!blob) {
               alert('Error al generar la imagen recortada.');
               return;
             }
 
-            // Crear un nuevo archivo con el blob
             const croppedFile = new File([blob], 'cropped-image.jpg', {
               type: 'image/jpeg',
               lastModified: Date.now()
             });
 
-            // Actualizar el input de archivo
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(croppedFile);
             fileInput.files = dataTransfer.files;
 
-            // Mostrar preview
             const previewUrl = URL.createObjectURL(blob);
             imagePreview.src = previewUrl;
             imagePreview.style.display = 'block';
 
-            // Cerrar el modal
+            hasCropped = true; // Marcar que el usuario recortó la imagen
             const modal = bootstrap.Modal.getInstance(cropModal);
             modal.hide();
 
             console.log('Imagen recortada exitosamente');
           }, 'image/jpeg', 0.9);
-
         } catch (error) {
           console.error('Error al procesar la imagen:', error);
           alert('Error al procesar la imagen. Por favor intenta nuevamente.');
         }
       });
 
-      // Limpiar cropper cuando se cierra el modal
+      // Redimensionar automáticamente si no se recortó
       cropModal.addEventListener('hidden.bs.modal', function () {
+        if (!hasCropped && fileInput.files && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+              const canvas = document.createElement('canvas');
+              canvas.width = 224;
+              canvas.height = 224;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, 224, 224);
+
+              canvas.toBlob(function (blob) {
+                const resizedFile = new File([blob], 'resized-image.jpg', {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(resizedFile);
+                fileInput.files = dataTransfer.files;
+
+                const previewUrl = URL.createObjectURL(blob);
+                imagePreview.src = previewUrl;
+                imagePreview.style.display = 'block';
+                console.log('Imagen redimensionada a 224x224 automáticamente');
+              }, 'image/jpeg', 0.9);
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+
         if (cropper) {
           cropper.destroy();
           cropper = null;
-        }
-      });
-
-      // Manejar el caso cuando se cancela el modal
-      cropModal.addEventListener('hidden.bs.modal', function (e) {
-        // Si se cerró el modal sin hacer crop, mantener la imagen original
-        // Solo limpiar si no hay ninguna imagen previa
-        if (!imagePreview.src || imagePreview.src === window.location.href + '#') {
-          fileInput.value = '';
-          imagePreview.style.display = 'none';
         }
       });
 
@@ -596,7 +598,6 @@
         const files = e.dataTransfer.files;
         if (files.length > 0) {
           fileInput.files = files;
-          // Disparar el evento change manualmente
           const event = new Event('change', {bubbles: true});
           fileInput.dispatchEvent(event);
         }
