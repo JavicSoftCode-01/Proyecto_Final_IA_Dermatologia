@@ -679,7 +679,7 @@ class ResultsViewMixin:
         'images': {
           'title': 'Imágenes',
           'original': 'Imagen Original',
-          'heatmap': 'Mapa de Calor (Grad-CAM)'
+          'heatmap': 'Grad-CAM'
         }
       },
       'buttons': {
@@ -753,9 +753,9 @@ class ProcessImageView(CustomLoginRequiredMixin, ResultsViewMixin, DetailView):
               si.gradcam_path = os.path.join('gradcam_images', fname)
               logger.success('ProcessImageView', f'Grad-CAM guardado en: {fpath}')
             else:
-              logger.warning('ProcessImageView', f'No se pudo guardar el mapa de calor en: {fpath}')
+              logger.warning('ProcessImageView', f'No se pudo guardar el Grad-CAM en: {fpath}')
           else:
-            logger.warning('ProcessImageView', 'No se pudo generar el mapa de calor (heatmap nulo).')
+            logger.warning('ProcessImageView', 'No se pudo generar el Grad-CAM (heatmap nulo).')
         except Exception as grad_error:
           logger.error('ProcessImageView', f'Error durante la generación de Grad-CAM: {grad_error}')
 
