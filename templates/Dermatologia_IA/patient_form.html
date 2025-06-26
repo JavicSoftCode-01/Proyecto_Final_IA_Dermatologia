@@ -12,20 +12,15 @@
 
 {% block content %}
   <div class="patient-form-container">
-    <!-- Header con gradiente -->
     <div class="patient-form-header">
       <h2>{{ page_title }}</h2>
       {% if subtitle %}
         <p class="subtitle">{{ subtitle }}</p>
       {% endif %}
     </div>
-
-    <!-- Contenido del formulario -->
     <div class="patient-form-content">
       <form method="post" class="needs-validation" novalidate>
         {% csrf_token %}
-
-        <!-- Sección: Información Personal -->
         <div class="form-section">
           <h3>
             <i class="fas fa-user"></i>
@@ -39,7 +34,6 @@
               </label>
               {{ form.first_name }}
             </div>
-
             <div class="form-group">
               <label for="{{ form.last_name.id_for_label }}" class="form-label">
                 {{ field_labels.last_name }}
@@ -49,8 +43,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Sección: Identificación y Contacto -->
         <div class="form-section">
           <h3>
             <i class="fas fa-address-card"></i>
@@ -64,7 +56,6 @@
               </label>
               {{ form.dni }}
             </div>
-
             <div class="form-group">
               <label for="{{ form.phone.id_for_label }}" class="form-label">
                 {{ field_labels.phone }}
@@ -72,7 +63,6 @@
               </label>
               {{ form.phone }}
             </div>
-
             <div class="form-group">
               <label for="{{ form.email.id_for_label }}" class="form-label">
                 {{ field_labels.email }}
@@ -82,8 +72,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Sección: Información Demográfica -->
         <div class="form-section">
           <h3>
             <i class="fas fa-chart-line"></i>
@@ -97,7 +85,6 @@
               </label>
               {{ form.age_approx }}
             </div>
-
             <div class="form-group">
               <label for="{{ form.sex.id_for_label }}" class="form-label">
                 {{ field_labels.sex }}
@@ -107,10 +94,7 @@
             </div>
           </div>
         </div>
-
-        <!-- Botones de acción -->
         <div class="form-actions">
-
           <button type="submit" class="btn-submit" title="SE HABILITARÁ CUANDO REALICE ALGÚN CAMBIO EN EL FORMULARIO">
             <i class="fas fa-save"></i>
             {{ buttons.submit.text }}

@@ -1,17 +1,13 @@
-/* Estilos para la página de lista de reportes */
-
 body {
     background-color: #f8f9fa;
 }
 
-/* Contenedor principal */
 .reports-container {
     padding: 10px;
     max-width: 100%;
     margin: 0 auto;
 }
 
-/* Header de la página */
 .reports-header {
     color: black;
     padding: 30px;
@@ -21,10 +17,9 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 10px;
-    color: #1f2937; /* Color gris oscuro */
+    color: #1f2937;
 }
 
-/* Grid de reportes */
 .reports-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -32,7 +27,6 @@ body {
     margin-bottom: 40px;
 }
 
-/* Tarjetas de reporte - estilo similar al home */
 .report-card {
     background: white;
     border-radius: 16px;
@@ -58,7 +52,6 @@ body {
     height: 4px;
 }
 
-/* Header de la tarjeta */
 .report-header {
     display: flex;
     align-items: center;
@@ -81,13 +74,11 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-
 .report-condition {
     font-size: 20px;
     font-weight: bold;
 }
 
-/* Información del paciente */
 .patient-info {
     margin-bottom: 20px;
 }
@@ -131,7 +122,6 @@ body {
     font-size: 16px;
 }
 
-/* Información de la consulta */
 .consultation-info {
     margin-bottom: 20px;
     padding: 12px;
@@ -163,7 +153,6 @@ body {
     text-align: center;
 }
 
-/* Botones de acción */
 .report-actions {
     display: flex;
     gap: 8px;
@@ -224,7 +213,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* Estado vacío */
 .empty-state {
     text-align: center;
     padding: 80px 40px;
@@ -278,13 +266,12 @@ body {
     text-decoration: none;
 }
 
-/* Modal de email - FIX: Asegurar que esté oculto por defecto */
 .modal {
-    display: none !important; /* Forzar que esté oculto por defecto */
+    display: none !important;
 }
 
 .modal.show {
-    display: block !important; /* Mostrar solo cuando Bootstrap lo active */
+    display: block !important;
 }
 
 .modal-content {
@@ -362,7 +349,6 @@ body {
     font-size: 13px;
 }
 
-/* Botones del modal */
 .btn-secondary {
     background: #6b7280;
     border: none;
@@ -389,7 +375,6 @@ body {
     background: #2563eb;
 }
 
-/* Paginación */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -434,7 +419,6 @@ body {
     cursor: not-allowed;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .reports-container {
         padding: 20px 16px;

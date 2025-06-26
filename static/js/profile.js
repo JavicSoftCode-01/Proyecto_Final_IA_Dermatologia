@@ -1,11 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Elementos del archivo de perfil
   const profileInput = document.getElementById("id_profile_picture");
   const previewImg = document.getElementById("profile-preview");
   const fileStatus = document.querySelector(".file-status");
   const fileButton = document.querySelector(".file-button");
 
-  // Elementos de los campos del formulario
   const firstNameInput = document.getElementById("{{ form.first_name.id_for_label }}");
   const lastNameInput = document.getElementById("{{ form.last_name.id_for_label }}");
   const dniInput = document.getElementById("{{ form.dni.id_for_label }}");
@@ -18,10 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const updateBtn = form.querySelector(".btn-update");
   const updateBtnText = 'Actualizar Perfil';
 
-  // Variable para rastrear si la foto de perfil es válida
   let profilePictureValid = false;
 
-  // Guardar valores iniciales de los campos
   const initialValues = {};
   [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function (input) {
     if (input) {
@@ -29,7 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Icono de candado y tooltip
   function setLockIconAndTooltip(show) {
     if (!updateBtn) return;
     if (show) {
@@ -41,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Verificar si el formulario ha cambiado
   function isFormChanged() {
     let changed = profilePictureValid;
     [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function (input) {
@@ -55,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return changed;
   }
 
-  // Habilitar/deshabilitar botón según cambios
   function checkFormChangeAndToggleBtn() {
     if (isFormChanged()) {
       updateBtn.disabled = false;
@@ -66,13 +59,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Deshabilitar el botón al cargar y poner candado
   if (updateBtn) {
     updateBtn.disabled = true;
     setLockIconAndTooltip(true);
   }
 
-  // Detectar cambios en los campos de texto
   [firstNameInput, lastNameInput, dniInput, emailInput, addressInput, cityInput, phoneInput].forEach(function (input) {
     if (input) {
       input.addEventListener("input", checkFormChangeAndToggleBtn);
@@ -80,7 +71,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Función para crear mensajes de error
   function createErrorMessage(input, message, isWarning = false) {
     removeErrorMessage(input);
     const errorDiv = document.createElement("div");
@@ -94,7 +84,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Función para remover mensajes de error
   function removeErrorMessage(input) {
     const errorMsg = input.parentNode.querySelector(".error-message");
     const warningMsg = input.parentNode.querySelector(".warning-message");
@@ -103,7 +92,6 @@ document.addEventListener("DOMContentLoaded", function () {
     input.classList.remove("error", "warning");
   }
 
-  // Validación de imagen de perfil
   function validateProfilePicture(file) {
     if (!file) {
       return {message: "El campo esta vacio (opcional rellenarlo)", isWarning: true};
@@ -116,7 +104,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Manejo de la foto de perfil
   if (profileInput) {
     profileInput.addEventListener("change", function () {
       removeErrorMessage(this);
@@ -145,7 +132,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Validación de email
   function validateEmail(value) {
     const trimmedValue = value.trim();
     if (!trimmedValue) {
@@ -161,7 +147,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Validación de nombres completos
   function validateFullName(value) {
     const trimmedValue = value.trim();
     if (!trimmedValue) {
@@ -180,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Validación de DNI
   function validateDni(value) {
     const trimmedValue = value.trim();
     if (!trimmedValue) {
@@ -192,7 +176,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!/^\d+$/.test(trimmedValue)) {
       return {message: "La cédula debe contener solo números.", isWarning: false};
     }
-    // Algoritmo de validación ecuatoriano
     const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
     let total = 0;
     for (let i = 0; i < 9; i++) {
@@ -211,7 +194,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Validación de dirección y ciudad
   function validateAddressAndCity(value) {
     const trimmedValue = value.trim();
     if (!trimmedValue) {
@@ -233,7 +215,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Validación de teléfono
   function validatePhone(value) {
     const trimmedValue = value.trim();
     if (!trimmedValue) {
@@ -252,9 +233,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  // Event listeners para validación en blur
-
-  // Nombres (obligatorio)
   if (firstNameInput) {
     firstNameInput.addEventListener("blur", function () {
       const error = validateFullName(this.value);
@@ -266,7 +244,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Apellidos (obligatorio)
   if (lastNameInput) {
     lastNameInput.addEventListener("blur", function () {
       const error = validateFullName(this.value);
@@ -278,7 +255,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Email (obligatorio)
   if (emailInput) {
     emailInput.addEventListener("blur", function () {
       const error = validateEmail(this.value);
@@ -290,7 +266,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // DNI (opcional)
   if (dniInput) {
     dniInput.addEventListener("blur", function () {
       const result = validateDni(this.value);
@@ -302,7 +277,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Dirección (opcional)
   if (addressInput) {
     addressInput.addEventListener("blur", function () {
       const result = validateAddressAndCity(this.value);
@@ -314,7 +288,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Ciudad (opcional)
   if (cityInput) {
     cityInput.addEventListener("blur", function () {
       const result = validateAddressAndCity(this.value);
@@ -326,7 +299,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Teléfono (opcional)
   if (phoneInput) {
     phoneInput.addEventListener("blur", function () {
       const result = validatePhone(this.value);

@@ -12,20 +12,13 @@
 
 {% block content %}
   <div class="patient-container">
-    <!-- Header -->
     <div class="patient-header">
       <h1>{{ page_title }}</h1>
       <p class="subtitle">{{ page_subtitle }}</p>
     </div>
-
-    <!-- Content -->
     <div class="patient-content">
-
-      <!-- Barra de búsqueda y acciones -->
       {% include 'includes/search.html' %}
-
       {% if patients %}
-        <!-- Vista de tabla responsiva -->
         <div class="patients-table-container">
           <table class="patients-table">
             <thead>
@@ -70,8 +63,6 @@
             </tbody>
           </table>
         </div>
-
-        <!-- Modales para detalles de pacientes -->
         {% for patient in patients %}
           <div
             class="modal"
@@ -95,7 +86,6 @@
                 </div>
                 <div class="modal-body">
                   <div class="row" style="display: flex; gap: 20px">
-                    <!-- Datos del paciente -->
                     <div style="flex: 1">
                       <div class="patient-info">
                         <h6>Información del Paciente</h6>
@@ -112,7 +102,6 @@
                         <p><strong>Sexo:</strong> {{ patient.get_sex_display }}</p>
                       </div>
                     </div>
-                    <!-- Reportes del paciente -->
                     <div style="flex: 1">
                       <div class="patient-info">
                         <h6>Reportes</h6>
@@ -145,8 +134,6 @@
             </div>
           </div>
         {% endfor %}
-
-        <!-- Paginación -->
         {% if is_paginated %}
           <div class="pagination-container">
             <ul class="pagination">

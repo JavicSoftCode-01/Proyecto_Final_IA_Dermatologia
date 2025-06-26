@@ -1,7 +1,6 @@
 {% load static %}
 
 <div class="sidebar">
-    <!-- Encabezado del sidebar con logo -->
     <div class="sidebar-header">
         <div class="logo">
             <div class="logo-icon">
@@ -12,43 +11,32 @@
             <span class="logo-text">{{ app_name }}</span>
         </div>
     </div>
-
-    <!-- Menú de navegación principal -->
     <nav class="sidebar-nav">
         <ul class="nav-list">
-            <!-- Item Home -->
             <li class="nav-item {% if current_page == 'home' %}active{% endif %}">
                 <a href="{% url 'core:home' %}" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Inicio</span>
                 </a>
             </li>
-
-            <!-- Item Características -->
             <li class="nav-item {% if current_page == 'characteristics' %}active{% endif %}">
                 <a href="{% url 'core:characteristics' %}" class="nav-link">
-                   <i class="fas fa-puzzle-piece"></i>
+                    <i class="fas fa-puzzle-piece"></i>
                     <span>Características</span>
                 </a>
             </li>
-
-            <!-- Item Análisis -->
             <li class="nav-item {% if current_page == 'analysis' %}active{% endif %}">
                 <a href="{% url 'dermatology:upload_image' %}" class="nav-link">
                     <i class="fas fa-chart-line"></i>
                     <span>Análisis de imágenes</span>
                 </a>
             </li>
-
-            <!-- Item Reportes -->
             <li class="nav-item {% if current_page == 'reports' %}active{% endif %}">
                 <a href="{% url 'dermatology:report_list' %}" class="nav-link">
                     <i class="fas fa-file-alt"></i>
                     <span>Reportes</span>
                 </a>
             </li>
-
-            <!-- Item Pacientes -->
             <li class="nav-item {% if current_page == 'patients' %}active{% endif %}">
                 <a href="{% url 'dermatology:patient-list' %}" class="nav-link">
                     <i class="fas fa-users"></i>
@@ -57,10 +45,7 @@
             </li>
         </ul>
     </nav>
-
-    <!-- Pie del sidebar -->
     <div class="sidebar-footer">
-        <!-- Enlaces de perfil y cierre de sesión -->
         <div class="nav-item {% if current_page == 'profile' %}active{% endif %}">
             <a href="{% url 'auth:view_profile' %}" class="nav-link">
                 <i class="fas fa-user"></i>
@@ -73,10 +58,7 @@
                 <span>Cerrar sesión</span>
             </a>
         </div>
-
-        <!-- Información del usuario -->
         <div class="user-info">
-            <!-- Avatar del usuario -->
             <div class="user-avatar">
                 {% if user.profile_picture %}
                     <img class="profile-picture"
@@ -88,8 +70,6 @@
                          alt="Foto de perfil predeterminada"/>
                 {% endif %}
             </div>
-
-            <!-- Detalles del usuario -->
             <div class="user-details">
                 {% if user.is_authenticated %}
                     <span class="user-name">
