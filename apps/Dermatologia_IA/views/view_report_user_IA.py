@@ -148,55 +148,70 @@ class AIProcessor:
       return None, None
 
   @staticmethod
-  def calculate_gradcam_image_only(img_array, model, pred_index, layer_name='conv5_block1_1_conv'):
-    try:
-      last_conv_layer = None
-      for layer in model.layers:
-        if layer.name == layer_name:
-          last_conv_layer = layer
+  def calculate_gradcam_image_only(img_array, model, pred_index=None, layer_name=None):
+    """
+    Calcula el Grad-CAM para una imagen y devuelve:
+      - heatmap numpy [H, W]
+      - nombre de la capa convolucional usada.
+
+    Parámetros:
+      img_array: imagen preprocesada con shape (1, H, W, 3)
+      model: modelo Keras completo (MobileNetV2+ResNet50+capas densas)
+      pred_index: índice de la clase; si None, se toma argmax de la predicción
+      layer_name: nombre de la capa convolucional a usar; si None, se elige la última Conv2D
+    """
+    # 1. Inferencia y selección de clase
+    preds = model(img_array, training=False)
+    if pred_index is None:
+      pred_index = int(tf.argmax(preds[0]))
+
+    # 2. Localizar la capa convolucional
+    last_conv = None
+    if layer_name:
+      try:
+        last_conv = model.get_layer(layer_name)
+      except (ValueError, AttributeError):
+        last_conv = None
+
+    if last_conv is None:
+      # Busca la última capa Conv2D en todo el modelo
+      from tensorflow.keras.layers import Conv2D
+      for layer in reversed(model.layers):
+        if isinstance(layer, Conv2D):
+          last_conv = layer
+          layer_name = layer.name
           break
-        elif hasattr(layer, 'layers'):
-          for sublayer in layer.layers:
-            if sublayer.name == layer_name:
-              last_conv_layer = sublayer
-              break
-          if last_conv_layer:
-            break
 
-      if not last_conv_layer:
-        raise ValueError(f"No se encontró la capa '{layer_name}' en el modelo")
+    if last_conv is None:
+      raise ValueError("No se encontró ninguna capa Conv2D en el modelo para aplicar Grad-CAM")
 
-      print(f"Usando capa convolucional: {last_conv_layer.name}")
+    print(f"[Grad-CAM] Usando capa: {layer_name}")
 
-      grad_model = tf.keras.Model(
-        inputs=model.input,
-        outputs=[last_conv_layer.output, model.output]
-      )
+    # 3. Crear submodelo que expone la salida de la capa y la salida final
+    grad_model = tf.keras.Model(
+      inputs=model.inputs,
+      outputs=[last_conv.output, model.output]
+    )
 
-      with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(img_array, training=False)
-        loss = predictions[:, pred_index]
+    # 4. Calcular gradientes
+    with tf.GradientTape() as tape:
+      conv_outputs, predictions = grad_model(img_array)
+      loss = predictions[:, pred_index]
+    grads = tape.gradient(loss, conv_outputs)
+    if grads is None:
+      raise RuntimeError("Gradientes nulos al calcular Grad-CAM")
 
-      grads = tape.gradient(loss, conv_outputs)
-      if grads is None:
-        raise ValueError("No se pudieron calcular los gradientes")
+    # 5. Ponderar mapas de activación
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    conv_outputs = conv_outputs[0]
+    heatmap = tf.tensordot(conv_outputs, pooled_grads, axes=[[-1], [0]])
+    heatmap = tf.maximum(heatmap, 0)
+    max_val = tf.reduce_max(heatmap)
+    if max_val > 0:
+      heatmap /= max_val
 
-      pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-      conv_outputs = conv_outputs[0]
-      heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
-      heatmap = tf.squeeze(heatmap)
-
-      heatmap = tf.maximum(heatmap, 0)
-      max_val = tf.math.reduce_max(heatmap)
-      if max_val > 0:
-        heatmap = heatmap / max_val
-
-      print(f"Grad-CAM generado usando capa: {last_conv_layer.name}")
-      return heatmap.numpy(), last_conv_layer.name
-
-    except Exception as e:
-      print(f"Error en Grad-CAM: {str(e)}")
-      return None, None
+    print(f"[Grad-CAM] Mapa generado (min/max): {tf.reduce_min(heatmap).numpy():.3f}/{max_val.numpy():.3f}")
+    return heatmap.numpy(), layer_name
 
   @staticmethod
   def generate_ai_content(condition):
