@@ -18,7 +18,6 @@ body {
   height: 100vh;
 }
 
-/* Panel izquierdo con logo */
 .logo-panel {
   width: 40%;
   background: linear-gradient(135deg, #2c6aa0 0%, #4d90cd 100%);
@@ -40,7 +39,6 @@ body {
   max-width: 700px;
 }
 
-/* Panel derecho con formulario */
 .auth-card {
   width: 60%;
   padding: 3rem;
@@ -50,12 +48,10 @@ body {
   background-color: white;
 }
 
-/* Encabezado del formulario */
 .auth-header {
   display: none;
 }
 
-/* Formulario */
 .auth-form {
   max-width: 500px;
   margin: 0 auto;
@@ -78,7 +74,6 @@ body {
   text-align: center;
 }
 
-/* Campos del formulario */
 .form-row {
   display: flex;
   gap: 20px;
@@ -117,7 +112,6 @@ body {
   color: #a0aec0;
 }
 
-/* Nuevo elemento para el enlace de olvidó contraseña */
 .forgot-password {
   text-align: right;
   margin-top: -0.5rem;
@@ -130,7 +124,6 @@ body {
   font-size: 0.85rem;
 }
 
-/* Botón de acción */
 .btn-auth {
   width: 100%;
   background-color: #3b82f6;
@@ -146,7 +139,6 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Enlaces adicionales */
 .auth-links {
   margin-top: 1rem;
   text-align: center;
@@ -159,7 +151,6 @@ body {
   text-decoration: none;
 }
 
-/* Mensajes de validación */
 .email-availability {
   font-size: 0.8rem;
   margin-top: 0.5rem;
@@ -173,16 +164,15 @@ body {
   color: #ef4444;
 }
 
-/* Estilos para los mensajes de alerta */
 .alert {
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  position: relative;
   display: flex;
   align-items: center;
   font-size: 0.95rem;
-  border-left: 4px solid;
-  position: relative;
   transition: opacity 0.5s ease;
 }
 
@@ -191,20 +181,18 @@ body {
   font-size: 1.1rem;
 }
 
-/* Tipos de alertas */
 .alert-success {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #0d9668;
-  border-left-color: #10b981;
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
 }
 
 .alert-error {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border-left-color: #ef4444;
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
 }
 
-/* Botón para cerrar alerta */
 .alert .close-btn {
   margin-left: auto;
   background: none;
@@ -218,18 +206,16 @@ body {
   opacity: 1;
 }
 
-/* Error específico en campo */
 .error-message {
   color: #dc3545;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-/* Estilos para la página de reseteo de contraseña */
 .check-circle {
   width: 60px;
   height: 60px;
-  background-color: #0d8bf2; /* Color azul más claro como en la imagen */
+  background-color: #0d8bf2;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -244,7 +230,6 @@ body {
   stroke-width: 3;
 }
 
-/* Ajustes para la página de confirmación */
 .auth-card:has(.check-circle) {
   text-align: center;
   padding-top: 0;
@@ -275,14 +260,13 @@ body {
   display: inline-block;
   max-width: 250px;
   margin: 0 auto;
-  background-color: #0d8bf2; /* El mismo azul del círculo */
+  background-color: #0d8bf2;
   border-radius: 4px;
   padding: 12px 24px;
   font-size: 16px;
   font-weight: 500;
 }
 
-/* Para navegadores que no soportan :has */
 @supports not (selector(:has(div))) {
   .auth-card .check-circle ~ h2,
   .auth-card .check-circle ~ p {
@@ -318,7 +302,6 @@ body {
   }
 }
 
-/* Estilos para el formulario de actualización de perfil */
 .profile-update-container {
   width: 100%;
   max-width: 1200px;
@@ -392,7 +375,6 @@ body {
   display: none;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
@@ -402,8 +384,6 @@ body {
     width: 100%;
     height: 30%;
   }
-
-
 
   .auth-card {
     width: 100%;
@@ -443,4 +423,14 @@ body {
     width: 100%;
     margin: 0;
   }
+}
+
+.close-btn {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: 10px;
+  color: inherit;
 }

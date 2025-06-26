@@ -1,226 +1,217 @@
-/* Estilos para las páginas de perfil con diseño moderno y amplio */
-
 body {
-    background-color: #f8f9fa;
+  background-color: #f8f9fa;
 }
 
 .profile-header-bar {
-    background-color: #3c70b4;
-    color: white;
-    padding: 15px 24px;
-    margin-bottom: 20px;
-    width: 100%;
+  background-color: #3c70b4;
+  color: white;
+  padding: 15px 24px;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 .profile-header-title {
-    font-size: 20px;
-    font-weight: 500;
-    margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
 }
 
 .profile-container {
-    padding: 40px;
-    max-width: 100%;
-    margin: 0 auto;
+  padding: 40px;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .profile-card {
-    background: white;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Estructura principal del perfil */
 .profile-layout {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    gap: 50px;
-    align-items: start;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 50px;
+  align-items: start;
 }
 
-/* Sección de foto de perfil */
 .profile-photo-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .profile-picture-container {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: #e5e7eb;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #e5e7eb;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .profile-picture {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .photo-label {
-    color: #6b7280;
-    font-size: 16px;
-    margin-bottom: 10px;
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 10px;
 }
 
-/* Sección de información del perfil */
 .profile-info-section {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .profile-field {
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 }
 
 .profile-field-label {
-    font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 6px;
 }
 
 .profile-field-value {
-    font-size: 16px;
-    color: #1f2937;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e5e7eb;
+  font-size: 16px;
+  color: #1f2937;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .profile-field-value.empty {
-    color: #9ca3af;
-    font-style: italic;
+  color: #9ca3af;
+  font-style: italic;
 }
 
-/* Estilos para botones */
 .btn-primary {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-    min-width: 150px;
-    display: inline-block;
-    text-align: center;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+  min-width: 150px;
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-primary:hover {
-    background-color: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-secondary {
-    padding: 12px 24px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(108, 117, 125, 0.2);
-    min-width: 150px;
-    display: inline-block;
-    text-align: center;
+  padding: 12px 24px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(108, 117, 125, 0.2);
+  min-width: 150px;
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3);
-    text-decoration: none;
-    color: white;
+  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3);
+  text-decoration: none;
+  color: white;
 }
 
 .profile-actions {
-    margin-top: 20px;
-    display: flex;
-    gap: 15px;
-    justify-content: flex-start;
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+  justify-content: flex-start;
 }
 
-/* Botón de acción (para mantener compatibilidad con la vista de perfil) */
 .btn-update-profile {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-    display: inline-block;
-    text-align: center;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-update-profile:hover {
-    background-color: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Estilos para formularios */
 input[type="text"],
 input[type="email"],
 input[type="tel"],
 textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 16px;
-    color: #1f2937;
-    transition: border-color 0.3s ease;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #1f2937;
+  transition: border-color 0.3s ease;
 }
 
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="tel"]:focus,
 textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .file-input-container {
-    margin-top: 15px;
+  margin-top: 15px;
 }
 
 .error-message {
-    color: #ef4444;
-    font-size: 14px;
-    margin-top: 6px;
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
 .warning-message {
-    color: #c7bc00;
-    font-size: 14px;
-    margin-top: 6px;
+  color: #c7bc00;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
-/* Título de página */
 .page-title {
-    font-size: 28px;
-    margin-bottom: 30px;
-    font-weight: bold;
+  font-size: 28px;
+  margin-bottom: 30px;
+  font-weight: bold;
 }
 
 .update-photo-section {
@@ -337,11 +328,10 @@ textarea:focus {
 }
 
 .btn-cancel:hover {
-    background-color: #5f6368;
+  background-color: #5f6368;
 
 }
 
-/* Estilos para el formulario de actualización de perfil */
 .profile-update-container {
   width: 100%;
   margin: 1rem auto;
@@ -470,7 +460,6 @@ textarea:focus {
   margin-top: 2rem;
 }
 
-/* Botones */
 .btn-auth {
   background-color: #3b82f6;
   color: white;
@@ -504,48 +493,47 @@ textarea:focus {
   background-color: #e5e7eb;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-    .profile-layout {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
+  .profile-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
 
-    .profile-container {
-        padding: 20px;
-    }
+  .profile-container {
+    padding: 20px;
+  }
 
-    .profile-actions {
-        justify-content: center;
-    }
+  .profile-actions {
+    justify-content: center;
+  }
 
-    .profile-update-card {
-    padding: 1.5rem;
+  .profile-update-card {
+  padding: 1.5rem;
   }
 
   .form-row {
-    flex-direction: column;
-    gap: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
   }
 
   .form-group {
-    width: 100%;
+  width: 100%;
   }
 
   .form-actions {
-    flex-direction: column;
+  flex-direction: column;
   }
 
   .btn-auth,
   .btn-secondary {
-    width: 100%;
-    text-align: center;
+  width: 100%;
+  text-align: center;
   }
 }
 
 @media (max-width: 767px) {
   .update-form-column {
-    flex: 0 0 100%;
-    max-width: 100%;
+  flex: 0 0 100%;
+  max-width: 100%;
   }
 }

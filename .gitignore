@@ -1,5 +1,6 @@
 IA
 .venv
+venv
 .env
 media
 .qodo

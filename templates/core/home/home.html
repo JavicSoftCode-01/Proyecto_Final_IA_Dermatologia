@@ -1,10 +1,8 @@
 {% extends 'components/base.html' %}
 {% load static %}
 
-
 {% block content %}
   <div class="home-container">
-    <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-background">
         <img src="{% static 'img/fondo.png' %}" alt="Dermatología AI">
@@ -21,11 +19,8 @@
         </a>
       </div>
     </div>
-
-    <!-- Reportes Recientes -->
     <div class="reports-section">
       <h2 class="section-title">Reportes recientes</h2>
-
       <div class="reports-grid">
         {% for img in recent_images %}
           <div class="report-card">
@@ -35,7 +30,6 @@
               </div>
               <strong class="report-status">Reporte {{ img.condition|default:"Pendiente" }}</strong>
             </div>
-
             <div class="report-body">
               <strong>Paciente:</strong> {{ img.patient.get_full_name|default:"Desconocido" }} -
               CI: {{ img.patient.dni }}
@@ -45,17 +39,15 @@
                   <strong>Localización:</strong> {{ img.get_anatom_site_general_display }}
                 </div>
               </div>
-              <div class="report-date">Realizado el {{ img.created_at|date:"d \\d\\e F, Y - h:i A" }}
-              </div>
+              <div class="report-date">Realizado el {{ img.created_at|date:"d \\d\\e F, Y - h:i A" }}</div>
             </div>
-
             <div class="report-footer">
-              <a href="{% url 'dermatology:report_detail' img.id %}" class="btn-secondary"><i class="fas fa-eye"></i>
-                Detalles</a>
+              <a href="{% url 'dermatology:report_detail' img.id %}" class="btn-secondary">
+                <i class="fas fa-eye"></i> Detalles
+              </a>
             </div>
           </div>
         {% empty %}
-          <!-- Mensaje cuando no hay datos -->
           <div class="no-reports">
             <p>No hay imágenes recientes.</p>
           </div>

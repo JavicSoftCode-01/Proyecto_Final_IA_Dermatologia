@@ -1,21 +1,16 @@
 {% extends 'components/base.html' %}
 {% load static %}
 
-{# Estilos específicos de la página de características #}
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/characteristics.css' %}"/>
 {% endblock %}
 
 {% block content %}
-  {# Contenedor principal de características #}
   <div class="features-container">
-    {# Encabezado de la sección #}
     <div class="features-header">
       <h1 class="features-title">{{ main_title }}</h1>
       <p class="features-description">{{ main_description }}</p>
     </div>
-
-    {# Grid de tarjetas de características en dos columnas fijas #}
     <div class="features-grid">
       {% for feature in features %}
         <div class="feature-card">
